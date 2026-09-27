@@ -192,15 +192,17 @@ function dispatch(){
   if((m=/^tool\/([\w-]+)$/.exec(h))){var t=toolById(m[1]);if(t){TOOL_VIEWS[t.id](t);return 'top';}}
   if((m=/^pc\/([\w-]+)$/.exec(h))){viewPC(m[1]);return 'top';}
   if((m=/^player\/([\w-]+)$/.exec(h))){viewPlayer(m[1]);return 'top';}
+  if(h==='admin/users'){if(SESSION&&SESSION.role==='admin'){viewAdminUsers();return 'top';}viewHome();return 'top';}
   if((m=/^([\w-]+)\/([\w-]+)$/.exec(h))){var cc=catByRoute(m[1]);if(cc){viewEntry(cc,m[2]);return cc.kind==='cards'?'keep':'top';}}
   viewHome();return 'top';
 }
 function route(){var r=dispatch();if(r==='top')window.scrollTo(0,0);activateRolls(app);}
 window.addEventListener('hashchange',route);
-initDock();
-initSearch();
-initSession();
-route();
-</script>
-</body>
-</html>
+/* Раньше здесь сразу вызывался route() — теперь всё приложение стартует только
+   после успешного входа, см. bootAuth() в p3f_auth.js (§1.3 в комментарии). */
+bootAuth(function(){
+  initDock();
+  initSearch();
+  initSession();
+  route();
+});

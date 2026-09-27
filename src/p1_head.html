@@ -540,5 +540,36 @@ footer .sp{margin-left:auto}
   .rise{opacity:1;transform:none}
   .ash,.rain{display:none}
 }
+
+/* ============ АВТОРИЗАЦИЯ ============ */
+#authGate{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%,rgba(24,12,19,.97),var(--bg) 78%);padding:22px}
+#authGate.hidden{display:none}
+.auth-card{width:100%;max-width:368px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:30px 28px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.auth-card h2{font-size:23px}
+.auth-card .sub{color:var(--ink-dim);font-size:13px;margin:4px 0 20px}
+.auth-card label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-dim);margin:14px 0 5px}
+.auth-card input,.auth-card select{width:100%}
+.auth-card .err{color:var(--bad);font-size:12.5px;margin-top:12px;min-height:1.2em}
+.auth-card .note{color:var(--ink-dim);font-size:12px;margin-top:12px;line-height:1.5}
+.auth-card button.pri{width:100%;margin-top:20px;padding:11px;font-size:11px}
+#userBadge{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink-dim);white-space:nowrap;
+  display:flex;align-items:center;gap:8px}
+#userBadge b{color:var(--ink);font-weight:700}
+#userBadge a{color:var(--ink-dim);text-decoration:underline;cursor:pointer}
+#userBadge a:hover{color:var(--acc-2)}
+.admin-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.admin-row:last-child{border-bottom:none}
+.admin-row .who{flex:1 1 160px;min-width:0}
+.admin-row .who b{display:block}
+.admin-row .who span{color:var(--ink-dim);font-size:12px}
+.addrow.admin-new{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:18px 0}
+.addrow.admin-new label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);display:block;margin-bottom:5px}
 </style>
+<!-- Firebase (compat-сборка — глобальный объект firebase, работает в обычном не-модульном <script> ниже, см. p3f_auth.js) -->
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
 </head>

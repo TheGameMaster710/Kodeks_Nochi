@@ -14,6 +14,7 @@ with sync_playwright() as p:
     errs=[]
     pg.on('pageerror',lambda e: errs.append(('PAGEERR',str(e))))
     pg.on('console',lambda m: errs.append(('CONSOLE',m.text)) if m.type=='error' else None)
+    pg.add_init_script("window.name='KODEKS_TEST_BYPASS'")  # см. bootAuth() в p3f_auth.js — обходит вход при тестах, Firebase недоступен из песочницы
     pg.goto('file://'+os.path.abspath(f)); pg.wait_for_timeout(500)
     for r in routes:
         n=len(errs)
