@@ -125,11 +125,16 @@ function showBootstrapForm(cb){
     if(p.length<4){err.textContent='Пароль слишком короткий (мин. 4 символа).';return;}
     go.disabled=true;go.textContent='Создание…';
     sha256Hex(p).then(function(hash){
-      var uid=fbAuth.currentUser.uid,batch=fbDb.batch();
-      batch.set(fbDb.collection('users').doc(u),{passwordHash:hash,role:'admin',displayName:u,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-      batch.set(fbDb.collection('sessions').doc(uid),{username:u,passwordHash:hash,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-      batch.set(fbDb.collection('meta').doc('bootstrap'),{done:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-      return batch.commit();
+      var uid=fbAuth.currentUser.uid;
+      /* Не batch(): правила Firestore проверяют каждую запись batch по снимку
+         базы ДО всего пакета, поэтому sessions/{uid} не увидел бы только что
+         созданный в том же batch users/{u} (см. v1.34 в комментарии). Пишем
+         последовательно — users сначала, meta/bootstrap последним, чтобы
+         каждая следующая проверка правил видела уже сохранённый результат
+         предыдущей записи. */
+      return fbDb.collection('users').doc(u).set({passwordHash:hash,role:'admin',displayName:u,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+        .then(function(){return fbDb.collection('sessions').doc(uid).set({username:u,passwordHash:hash,createdAt:firebase.firestore.FieldValue.serverTimestamp()});})
+        .then(function(){return fbDb.collection('meta').doc('bootstrap').set({done:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});});
     }).then(function(){
       SESSION={uid:fbAuth.currentUser.uid,username:u,role:'admin',displayName:u};
       gate.classList.add('hidden');renderUserBadge();cb();
