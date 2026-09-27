@@ -185,6 +185,10 @@ function initSearch(){
 
 /* ================= РОУТЕР ================= */
 function dispatch(){
+  /* уходим со страницы — снимаем подписку на живой лист персонажа, если она
+     была; если новый маршрут снова #/pc/<живой>, viewPC() откроет её заново
+     (см. startPcSyncIfLive() в p3g_pcsync.js) */
+  stopPcSync();
   var h=location.hash.replace(/^#\/?/,''),m;
   if(!h){viewHome();return 'top';}
   if(h==='world'||h==='cons'||h==='tools'||h==='cats'){viewHome(h);return 'anchor';}

@@ -110,7 +110,7 @@ function viewPC(id){
     ['Сир',x.sire?nameLink(x.sire):'',1]];
   var out='<div class="wrap rise"><a class="back" href="'+(pl?'#/player/'+pl.id:'#/cat/players')+'">← '+(pl?esc(pl.name.toLowerCase()):'котерия')+'</a>'+chain+
     jcard(x,'персонаж игрока'+(pl?' · '+esc(pl.name):''),strip)+
-    section('Трекеры','сохраняются в браузере',trackerHtml(x));
+    section('Трекеры',isLivePc(x)?'живой лист — Firestore':'сохраняются в браузере',trackerHtml(x));
   if(x.disciplines&&x.disciplines.length) out+=section('Дисциплины',x.disciplines.length,'<div class="defs">'+x.disciplines.map(function(d){
     return '<div class="def"><span class="l">'+wikiTag(d[0],esc(d[0]))+'</span><div class="v">'+dots(d[1])+'</div></div>';}).join('')+'</div>');
   if(x.convictions&&x.convictions.length) out+=section('Убеждения и Якоря',x.convictions.length,tableHtml({head:['Убеждение','Якорь'],
@@ -118,6 +118,7 @@ function viewPC(id){
   out+=politicsHtml(x)+commonTail(x);
   app.innerHTML=out+'<div style="height:30px"></div></div>';
   wireTrackers(app);
+  startPcSyncIfLive(x);
 }
 
 /* ================= ЛОКАЦИИ: ДЕРЕВО ================= */

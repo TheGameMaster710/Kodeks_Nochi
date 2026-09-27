@@ -6,14 +6,24 @@ function trkDefault(x){var t=x.track||{};
   return {hunger:t.hunger!=null?t.hunger:1,hMax:t.healthMax||7,hSup:0,hAgg:0,wMax:t.wpMax||5,wSup:0,wAgg:0,
     hum:t.humanity!=null?t.humanity:7,stains:0};}
 function trkGet(key){var x=TRK_OBJ[key];if(!x)return null;
-  var d=trkDefault(x),s=STORE.get('trk:'+key,null);
-  if(s){for(var k in d) if(s[k]!=null) d[k]=s[k];}
+  var d=trkDefault(x);
+  if(isLivePc(x)){
+    var live=PCSTATE_CACHE[key];
+    if(live) for(var k in d) if(live[k]!=null) d[k]=live[k];
+  } else {
+    var s=STORE.get('trk:'+key,null);
+    if(s) for(var k2 in d) if(s[k2]!=null) d[k2]=s[k2];
+  }
   d.hMax=(x.track&&x.track.healthMax)||d.hMax;d.wMax=(x.track&&x.track.wpMax)||d.wMax;
   return d;}
 function trkSet(key,st){
+  var x=TRK_OBJ[key];
+  if(isLivePc(x)&&!canEditLivePc(x)){refreshTrackers(key);return;} /* нет прав на этот живой лист — откатываем показ к последнему известному состоянию */
   st.hunger=Math.max(0,Math.min(5,st.hunger));st.hum=Math.max(0,Math.min(10,st.hum));st.stains=Math.max(0,Math.min(10,st.stains));
   ['h','w'].forEach(function(p){var mx=st[p+'Max'];st[p+'Agg']=Math.max(0,Math.min(mx,st[p+'Agg']));st[p+'Sup']=Math.max(0,Math.min(mx-st[p+'Agg'],st[p+'Sup']));});
-  STORE.set('trk:'+key,st);refreshTrackers(key);}
+  STORE.set('trk:'+key,st); /* локальная копия всегда — офлайн-страховка, а для NPC/угроз это и есть единственное хранилище */
+  if(isLivePc(x)){PCSTATE_CACHE[key]=st;pcSyncWrite(x,st);}
+  refreshTrackers(key);}
 function damage(st,p,kind,sign){
   var mx=st[p+'Max'];
   if(sign<0){if(kind==='s')st[p+'Sup']--;else st[p+'Agg']--;return;}
@@ -24,31 +34,38 @@ function damage(st,p,kind,sign){
 function boxes(max,agg,sup){var s='';for(var i=0;i<max;i++){
   var c=i<agg?'a':i<agg+sup?'s':'';s+='<span class="box '+c+'" style="display:inline-grid;place-items:center;cursor:default">'+(c==='a'?'✕':c==='s'?'╱':'')+'</span>';}return s;}
 function trkInner(key){
+  var x=TRK_OBJ[key],live=isLivePc(x);
+  if(live&&!(key in PCSTATE_CACHE)) return '<div class="trk"><div class="tsync load">Загрузка живого листа…</div></div>';
   var st=trkGet(key);if(!st)return '';
+  var editable=!live||canEditLivePc(x);
+  function ctl(html){return editable?html:'';}
   var hFull=st.hSup+st.hAgg>=st.hMax,wFull=st.wSup+st.wAgg>=st.wMax;
-  var pips='';for(var i=1;i<=5;i++) pips+='<button class="pip'+(i<=st.hunger?' on':'')+'" type="button" data-act="hun" data-v="'+i+'" title="Голод '+i+'"></button>';
+  var pips='';for(var i=1;i<=5;i++){var on=i<=st.hunger;
+    pips+=editable?('<button class="pip'+(on?' on':'')+'" type="button" data-act="hun" data-v="'+i+'" title="Голод '+i+'"></button>')
+                  :('<span class="pip'+(on?' on':'')+'" style="cursor:default" title="Голод '+i+'"></span>');}
   var hum='';for(var j=0;j<10;j++){var filled=j<st.hum,stn=j>=10-st.stains;
     hum+='<span class="box'+(filled?' h':'')+(stn?' st':'')+'" style="display:inline-grid;place-items:center;cursor:default">'+(stn?'╱':'')+'</span>';}
   var remorseDice=Math.max(1,10-st.hum-st.stains);
-  return '<div class="trk">'+
+  var sync=live?('<div class="tsync">● живой лист'+(editable?' — правки видят все за столом':' игрока @'+esc(x.owner)+' — только просмотр')+'</div>'):'';
+  return sync+'<div class="trk">'+
    '<div class="tbox"><div class="th"><b>Голод</b><span class="val">'+st.hunger+'</span></div><div class="pips">'+pips+'</div>'+
-     '<div class="ctl"><button class="mini" data-act="hun0">сбросить в 0</button><button class="mini pri" data-act="rouse">Пробуждение</button></div>'+
+     ctl('<div class="ctl"><button class="mini" data-act="hun0">сбросить в 0</button><button class="mini pri" data-act="rouse">Пробуждение</button></div>')+
      (st.hunger>=5?'<div class="warn">Голод 5: проверки пробуждения невозможны, Зверь у самой поверхности.</div>':'')+'</div>'+
    '<div class="tbox"><div class="th"><b>Здоровье</b><span class="val">'+(st.hMax-st.hSup-st.hAgg)+'/'+st.hMax+'</span></div><div class="pips">'+boxes(st.hMax,st.hAgg,st.hSup)+'</div>'+
-     '<div class="ctl"><button class="mini" data-act="d" data-p="h" data-k="s">+ ╱</button><button class="mini" data-act="d" data-p="h" data-k="a">+ ✕</button>'+
-     '<button class="mini" data-act="h" data-p="h" data-k="s">− ╱</button><button class="mini" data-act="h" data-p="h" data-k="a">− ✕</button></div>'+
+     ctl('<div class="ctl"><button class="mini" data-act="d" data-p="h" data-k="s">+ ╱</button><button class="mini" data-act="d" data-p="h" data-k="a">+ ✕</button>'+
+     '<button class="mini" data-act="h" data-p="h" data-k="s">− ╱</button><button class="mini" data-act="h" data-p="h" data-k="a">− ✕</button></div>')+
      (st.hAgg>=st.hMax?'<div class="warn">Все клетки тяжёлые: торпор (или окончательная смерть).</div>':hFull?'<div class="warn">Ослаблен: −2 к физическим пулам.</div>':'')+'</div>'+
    '<div class="tbox"><div class="th"><b>Сила воли</b><span class="val">'+(st.wMax-st.wSup-st.wAgg)+'/'+st.wMax+'</span></div><div class="pips">'+boxes(st.wMax,st.wAgg,st.wSup)+'</div>'+
-     '<div class="ctl"><button class="mini" data-act="d" data-p="w" data-k="s">+ ╱</button><button class="mini" data-act="d" data-p="w" data-k="a">+ ✕</button>'+
-     '<button class="mini" data-act="h" data-p="w" data-k="s">− ╱</button><button class="mini" data-act="h" data-p="w" data-k="a">− ✕</button></div>'+
+     ctl('<div class="ctl"><button class="mini" data-act="d" data-p="w" data-k="s">+ ╱</button><button class="mini" data-act="d" data-p="w" data-k="a">+ ✕</button>'+
+     '<button class="mini" data-act="h" data-p="w" data-k="s">− ╱</button><button class="mini" data-act="h" data-p="w" data-k="a">− ✕</button></div>')+
      (wFull?'<div class="warn">Ослаблен: −2 к социальным и ментальным пулам.</div>':'')+'</div>'+
    '<div class="tbox"><div class="th"><b>Человечность</b><span class="val">'+st.hum+'</span></div><div class="pips">'+hum+'</div>'+
-     '<div class="ctl"><button class="mini" data-act="hum" data-v="-1">− Чел.</button><button class="mini" data-act="hum" data-v="1">+ Чел.</button>'+
+     ctl('<div class="ctl"><button class="mini" data-act="hum" data-v="-1">− Чел.</button><button class="mini" data-act="hum" data-v="1">+ Чел.</button>'+
      '<button class="mini" data-act="stn" data-v="1">+ Скверна</button><button class="mini" data-act="stn" data-v="-1">− Скверна</button>'+
-     '<button class="mini pri" data-act="remorse" title="Кубов: '+remorseDice+'">Раскаяние ('+remorseDice+'к)</button></div>'+
+     '<button class="mini pri" data-act="remorse" title="Кубов: '+remorseDice+'">Раскаяние ('+remorseDice+'к)</button></div>')+
      (st.stains>10-st.hum?'<div class="warn">Скверна залезла на Человечность: персонаж ослаблен, деградация.</div>':'')+
      '<div class="tsub">Проверка раскаяния — в конце сессии, если есть Скверна.</div></div>'+
-   '</div><div class="ctl" style="margin-top:8px"><button class="mini" data-act="reset" title="Вернуть стартовые значения персонажа">Сброс к стартовым</button></div>';
+   '</div>'+ctl('<div class="ctl" style="margin-top:8px"><button class="mini" data-act="reset" title="Вернуть стартовые значения персонажа">Сброс к стартовым</button></div>');
 }
 function trackerHtml(x){var key=trkKey(x);TRK_OBJ[key]=x;return '<div class="trkwrap" data-trk="'+key+'">'+trkInner(key)+'</div>';}
 function refreshTrackers(key){
@@ -78,7 +95,13 @@ function onTrk(e){
   else if(a==='stn') st.stains+=v;
   else if(a==='remorse'){remorse(key);return;}
   else if(a==='rouse'){rouseFor(key,false);return;}
-  else if(a==='reset'){STORE.del('trk:'+key);refreshTrackers(key);return;}
+  else if(a==='reset'){
+    var x2=TRK_OBJ[key];
+    if(isLivePc(x2)&&!canEditLivePc(x2)){refreshTrackers(key);return;}
+    STORE.del('trk:'+key);
+    if(isLivePc(x2)){var d0=trkDefault(x2);PCSTATE_CACHE[key]=d0;pcSyncWrite(x2,d0);}
+    refreshTrackers(key);return;
+  }
   else return;
   trkSet(key,st);
 }
