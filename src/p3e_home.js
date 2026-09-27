@@ -206,3 +206,7 @@ bootAuth(function(){
   initSession();
   route();
 });
+</script>
+</body>
+</html>
+

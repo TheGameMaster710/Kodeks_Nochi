@@ -226,6 +226,3 @@ function loadAdminUsers(){
     });
   }).catch(function(e){box.innerHTML='<b>Ошибка загрузки</b><span>'+esc(e.message||String(e))+'</span>';});
 }
-</script>
-</body>
-</html>
