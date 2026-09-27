@@ -2,7 +2,7 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║  КОДЕКС НОЧИ — ИНСТРУКЦИЯ ДЛЯ ИИ-АГЕНТА, РЕДАКТИРУЮЩЕГО ЭТОТ ФАЙЛ         ║
-║  Хроника Vampire: The Masquerade 5 (Renegade). Шаблон v1.37              ║
+║  Хроника Vampire: The Masquerade 5 (Renegade). Шаблон v1.38              ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 
 Прочитай этот комментарий ЦЕЛИКОМ перед любой правкой. Он — единственная
@@ -220,8 +220,10 @@ Pages (§1.1) на Firebase (Auth + Firestore + Storage), чтобы получ�
   хоть использование и остаётся в бесплатной квоте). Финальную схему
   аккаунтов проектировать отдельно, не раньше самого начала миграции.
 
-  СТАТУС (обновлено v1.37): фундамент (доступ и роли, п.2 выше) — РЕАЛИЗОВАН,
-  см. §1.3. Из группы 1 (игровая механика) реализован первый пункт — живые
+  СТАТУС (обновлено v1.38): фундамент (доступ и роли, п.2 выше) — РЕАЛИЗОВАН,
+  см. §1.3, и с v1.38 включает самостоятельную регистрацию игроков (§1.3.3) —
+  админ больше не заводит новых игроков руками, они делают это сами на
+  экране входа. Из группы 1 (игровая механика) реализован первый пункт — живые
   листы персонажей, см. §1.3.1, и расширен самостоятельным созданием чарников
   игроками/мастером через вкладку Котерия — см. §1.3.2 (v1.37; фактически
   первый кусочек будущей «приватности контента» из бэклога ниже, только для
@@ -482,6 +484,67 @@ Firestore, в НОВОЙ коллекции pcs (не pcstate — это раз�
   настоящего «тумана войны» (§1.2) было бы утечкой. Ограничение
   осознанное, а не забытое — не «чинить», а «разворачивать вместе с
   приватностью контента из бэклога», если вообще понадобится.
+
+
+1.3.3 РЕГИСТРАЦИЯ ИГРОКОВ (p3f_auth.js, с v1.38)
+────────────────────────────────────────────────────────────────────────────
+Сказано рассказчиком явно (v1.38): новых игроков больше не заводит админ
+руками через #/admin/users — они сами создают себе логин и пароль на
+экране входа. Спрошено явно и открыто ПОЛНОСТЬЮ (без кода-приглашения) —
+любой человек со ссылкой на сайт может завести себе аккаунт-игрока.
+
+ЧТО ДОБАВЛЕНО: на экране входа (showLoginForm) — ссылка «Ещё нет аккаунта?
+Зарегистрироваться», переключающая на новую showRegisterForm (логин,
+пароль, повтор пароля). Обе формы переключаются друг в друга без
+перезагрузки страницы. Роль всегда жёстко 'player' — форма её вообще не
+спрашивает, так что подделать через devtools можно разве что сам POST в
+Firestore, а не то, что видно в разметке; правило ниже всё равно
+перепроверяет role на сервере, а не верит клиенту.
+
+FIRESTORE-ПРАВИЛО (firestore.rules, users/{username}): в allow create
+добавлена третья ветка `|| request.resource.data.role == 'player'` — то
+есть создание документа с role:'player' разрешено ЛЮБОЙ вошедшей (хотя бы
+анонимно) сессии, без исключений. 'master'/'admin' по-прежнему заводит
+только первый бутстрап (первая ветка) или сам админ руками (isAdmin(),
+вторая ветка) — самостоятельная форма роль повыше прописать не может,
+даже если бы попыталась, потому что правило проверяет её в самой
+отправляемой записи, а не то, что показала клиентская форма.
+
+«ЛОГИН УЖЕ ЗАНЯТ» — без отдельного чтения наперёд: правило read на
+users/{username} не пускает ещё не вошедшего читать чужую запись, значит
+заранее узнать «свободен ли логин» нечем. Вместо этого сама попытка
+create — это и есть проверка: если документ с таким id уже существует,
+Firestore трактует запись как update (независимо от того, что вызвал
+клиент — .set() или .update()), а update требует isAdmin() — то есть
+попытка занятым логином сама получит permission-denied, и клиент просто
+показывает «попробуй другой логин». Гонки состояний тут нет: Firestore
+сам решает create/update по факту существования документа на сервере, а
+не по догадке клиента.
+
+ПОСЛЕ РЕГИСТРАЦИИ вход происходит сразу же — showRegisterForm вслед за
+users/{u}.set() сама создаёт sessions/{uid} с тем же passwordHash (тот же
+шаг, что делает обычный логин), и только затем зовёт общий cb(). Если
+первый шаг (создание users/{u}) прошёл, а второй (sessions/{uid}) неудачно
+оборвался (сеть моргнула) — аккаунт уже реально создан с нужным паролем,
+просто клиент об этом не знает; в этом случае показывается отдельное
+сообщение «аккаунт создан, обновите страницу и войдите» вместо «логин
+занят», чтобы не запутать игрока лишней попыткой регистрации тем же
+логином (которая на этот раз закономерно получит «занят»).
+
+Страница #/admin/users (viewAdminUsers) не убрана — админ по-прежнему
+может завести мастера/другого админа, сменить роль, сбросить пароль или
+удалить запись; в описании страницы добавлена строка о том, что игроки
+теперь регистрируются сами.
+
+Не проверено против реального Firebase (см. оговорку в §1.3.2 выше) —
+структура проверена макетом (test_register.py): переключение форм;
+валидация логина (только [a-z0-9_]), длины пароля (мин. 4) и совпадения
+паролей; попытка занятым логином корректно отклоняется с понятной
+ошибкой и остаётся на форме регистрации; успешная регистрация создаёт
+запись с role:'player', сразу создаёт сессию и заходит; повторный вход
+тем же логином/паролем (как после перезагрузки страницы) отрабатывает
+штатно. Реальные правила Firestore нужно проверить на живом сайте после
+публикации.
 
 
 ════════════════════════════════════════════════════════════════════════════
@@ -966,6 +1029,31 @@ BOON_LEVELS, BOON_STATUS — термины (trivial/minor/major/life boon)
 ════════════════════════════════════════════════════════════════════════════
 11. ЖУРНАЛ ИЗМЕНЕНИЙ ФАЙЛА  (новые строки — сверху)
 ════════════════════════════════════════════════════════════════════════════
+  v1.38 РЕАЛИЗОВАНО расширение §1.3 — самостоятельная регистрация игроков
+        (см. новый §1.3.3). Сказано рассказчиком явно: админ больше не
+        заводит новых игроков руками через #/admin/users, они сами создают
+        логин и пароль на экране входа (ссылка «Зарегистрироваться» рядом
+        с формой логина). Спрошено явно: открыто ПОЛНОСТЬЮ, без кода-
+        приглашения — любой человек со ссылкой на сайт может завести себе
+        аккаунт-игрока. Роль всегда 'player' — форма её не спрашивает и
+        не может прописать выше, правило firestore.rules перепроверяет
+        role на сервере. Новая ветка в users/{username} allow create:
+        `|| request.resource.data.role == 'player'` — ОБЯЗАТЕЛЬНО
+        перевставить правила целиком в Firebase Console → Firestore →
+        Rules → Publish (та же вставка, что для pcs из v1.37, если ещё не
+        публиковалась). «Логин занят» определяется не отдельным чтением
+        (правило read не пускает читать чужую запись до входа), а самой
+        попыткой create: занятый id трактуется Firestore как update, а
+        update требует isAdmin() — само по себе даёт нужный «занят».
+        Правка только в p3f_auth.js (showLoginForm — добавлена ссылка-
+        переключатель; новая showRegisterForm) и firestore.rules — новых
+        файлов/маршрутов нет. Админская страница #/admin/users не убрана
+        (по-прежнему нужна для master/admin и для сброса пароля/удаления).
+        Не проверено против реального Firebase (см. общую оговорку в
+        §1.3.2/§1.3.3) — структура проверена макетом (test_register.py):
+        переключение форм, вся валидация, отказ на занятый логин, успешная
+        регистрация с немедленным входом, повторный вход тем же логином —
+        всё чисто.
   v1.37 РЕАЛИЗОВАНО расширение §1.2 «игровая механика»/«доступ и роли» —
         самостоятельные чарники (см. новый §1.3.2). Игрок теперь заводит
         своего персонажа САМ во вкладке Котерия, без участия агента; мастер
@@ -2091,6 +2179,8 @@ footer .sp{margin-left:auto}
 .auth-card .err{color:var(--bad);font-size:12.5px;margin-top:12px;min-height:1.2em}
 .auth-card .note{color:var(--ink-dim);font-size:12px;margin-top:12px;line-height:1.5}
 .auth-card button.pri{width:100%;margin-top:20px;padding:11px;font-size:11px}
+.auth-card .switch{margin-top:16px}
+.auth-card .switch a{color:var(--acc);text-decoration:underline;cursor:pointer}
 #userBadge{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink-dim);white-space:nowrap;
   display:flex;align-items:center;gap:8px}
 #userBadge b{color:var(--ink);font-weight:700}
@@ -3900,6 +3990,7 @@ function showLoginForm(cb,note){
     '<label for="authPass">Пароль</label><input id="authPass" type="password" autocomplete="current-password">'+
     '<div class="err" id="authErr"></div>'+
     '<button class="mini pri" type="button" id="authGo">Войти</button>'+
+    '<p class="sub switch">Ещё нет аккаунта? <a id="authToReg">Зарегистрироваться</a></p>'+
     '</div>';
   var user=document.getElementById('authUser'),pass=document.getElementById('authPass'),
       err=document.getElementById('authErr'),go=document.getElementById('authGo');
@@ -3923,6 +4014,69 @@ function showLoginForm(cb,note){
   }
   go.addEventListener('click',submit);
   pass.addEventListener('keydown',function(e){if(e.key==='Enter')submit();});
+  document.getElementById('authToReg').addEventListener('click',function(){showRegisterForm(cb);});
+  user.focus();
+}
+
+/* ================= ВХОД: САМОСТОЯТЕЛЬНАЯ РЕГИСТРАЦИЯ ИГРОКА (с v1.38) =================
+   Сказано рассказчиком явно (v1.38): новых игроков больше не заводит админ руками
+   через #/admin/users — они сами создают себе логин/пароль прямо на экране входа.
+   Открыто полностью (спрошено явно) — без кода-приглашения, любой человек со
+   ссылкой на сайт может завести себе аккаунт-игрока.
+   Роль всегда 'player' — 'master'/'admin' по-прежнему заводит только сам админ
+   (см. viewAdminUsers ниже), самостоятельная форма роль не спрашивает и в
+   Firestore шлёт её жёстко зашитой, а не берёт с формы — правило create в
+   firestore.rules отдельно перепроверяет, что это 'player', так что подделать
+   роль через devtools не выйдет.
+   «Логин не занят» не проверяется отдельным чтением заранее — правило read
+   не пускает ещё не вошедшего читать чужой users/{u} (см. firestore.rules), а
+   значит и не узнать заранее. Вместо этого сама попытка create — это и есть
+   проверка: если документ с таким id уже существует, Firestore трактует
+   запись как update (не create) независимо от того, что вызвал клиент, а
+   правило update требует isAdmin() — значит попытка с занятым логином сама
+   получит permission-denied, ровно нужное поведение, без гонки состояний. */
+function showRegisterForm(cb){
+  var gate=document.getElementById('authGate');
+  gate.innerHTML='<div class="auth-card">'+
+    '<h2>Кодекс Ночи</h2><p class="sub">Регистрация игрока</p>'+
+    '<label for="regUser">Логин</label><input id="regUser" type="text" autocomplete="username" autocapitalize="off" autocorrect="off">'+
+    '<label for="regPass">Пароль</label><input id="regPass" type="password" autocomplete="new-password">'+
+    '<label for="regPass2">Повторите пароль</label><input id="regPass2" type="password" autocomplete="new-password">'+
+    '<div class="err" id="regErr"></div>'+
+    '<button class="mini pri" type="button" id="regGo">Зарегистрироваться</button>'+
+    '<p class="sub switch">Уже есть аккаунт? <a id="regToLogin">Войти</a></p>'+
+    '</div>';
+  var user=document.getElementById('regUser'),pass=document.getElementById('regPass'),pass2=document.getElementById('regPass2'),
+      err=document.getElementById('regErr'),go=document.getElementById('regGo');
+  function submit(){
+    var u=user.value.trim().toLowerCase(),p=pass.value,p2=pass2.value;
+    err.textContent='';
+    if(!u||!p){err.textContent='Заполните логин и пароль.';return;}
+    if(!/^[a-z0-9_]+$/.test(u)){err.textContent='Логин — латиница, цифры и «_», без пробелов.';return;}
+    if(p.length<4){err.textContent='Пароль слишком короткий (мин. 4 символа).';return;}
+    if(p!==p2){err.textContent='Пароли не совпадают.';return;}
+    go.disabled=true;go.textContent='Создание…';
+    sha256Hex(p).then(function(hash){
+      return fbDb.collection('users').doc(u).set({passwordHash:hash,role:'player',displayName:u,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+        .catch(function(e){e.__step='create';throw e;})
+        .then(function(){
+          var uid=fbAuth.currentUser.uid;
+          return fbDb.collection('sessions').doc(uid).set({username:u,passwordHash:hash,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+            .catch(function(e){e.__step='session';throw e;});
+        });
+    }).then(function(){
+      SESSION={uid:fbAuth.currentUser.uid,username:u,role:'player',displayName:u};
+      gate.classList.add('hidden');renderUserBadge();cb();
+    }).catch(function(e){
+      go.disabled=false;go.textContent='Зарегистрироваться';
+      err.textContent=(e&&e.__step==='session')
+        ? 'Аккаунт создан, но не получилось сразу войти — обновите страницу и войдите с этим логином и паролем.'
+        : 'Не получилось — возможно, такой логин уже занят. Попробуй другой.';
+    });
+  }
+  go.addEventListener('click',submit);
+  pass2.addEventListener('keydown',function(e){if(e.key==='Enter')submit();});
+  document.getElementById('regToLogin').addEventListener('click',function(){showLoginForm(cb);});
   user.focus();
 }
 
@@ -3988,7 +4142,9 @@ function viewAdminUsers(){
   app.innerHTML='<section class="sec"><div class="wrap rise"><a class="back" href="#/">← к титулу</a>'+
     '<div class="sec-head" style="margin-top:22px"><h2>Пользователи</h2><span class="eyebrow">только для админа</span></div>'+
     '<p class="lede" style="margin:0 0 20px">Роли и пароли учётных записей сайта. Пароль игрока не хранится в открытом виде — '+
-    'при необходимости его можно только сбросить (задать новый), не посмотреть старый.</p>'+
+    'при необходимости его можно только сбросить (задать новый), не посмотреть старый. Игроки с v1.38 заводят себе аккаунт '+
+    'сами через форму на экране входа — сюда попадают, только если нужно поменять роль, сбросить пароль или удалить запись. '+
+    'Роль admin/master по-прежнему заводится только здесь.</p>'+
     '<div id="adminUserList" class="empty"><b>Загрузка…</b></div>'+
     '<div class="addrow admin-new">'+
       '<div><label>Новый логин</label><input id="newUser" type="text" autocapitalize="off" autocorrect="off" style="width:150px"></div>'+
