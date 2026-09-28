@@ -282,7 +282,7 @@ function loadAdminUsers(){
     box.innerHTML=rows.map(function(r){
       return '<div class="admin-row" data-u="'+esc(r.u)+'">'+
         '<div class="who"><b>'+esc(r.name)+'</b><span>@'+esc(r.u)+'</span></div>'+
-        '<select class="mini roleSel">'+['player','master','admin'].map(function(k){
+        '<select class="mini roleSel"'+(r.u===SESSION.username?' disabled title="Свою роль поменять нельзя — это защита от случайного понижения себя"':'')+'>'+['player','master','admin'].map(function(k){
           return '<option value="'+k+'"'+(k===r.role?' selected':'')+'>'+ROLE_NAMES[k]+'</option>';}).join('')+'</select>'+
         '<button class="mini" type="button" data-act="reset">Сбросить пароль</button>'+
         (r.u!==SESSION.username?'<button class="mini" type="button" data-act="del">Удалить</button>':'')+
@@ -290,8 +290,12 @@ function loadAdminUsers(){
     }).join('');
     [].forEach.call(box.querySelectorAll('.admin-row'),function(row){
       var u=row.getAttribute('data-u');
-      row.querySelector('.roleSel').addEventListener('change',function(e){
-        fbDb.collection('users').doc(u).update({role:e.target.value});
+      var rs=row.querySelector('.roleSel'),was=rs.value;
+      rs.addEventListener('change',function(e){
+        var nv=e.target.value;
+        if(!confirm('Сменить роль «'+u+'» на «'+ROLE_NAMES[nv]+'»?')){rs.value=was;return;}
+        fbDb.collection('users').doc(u).update({role:nv}).then(function(){was=nv;})
+          .catch(function(er){rs.value=was;alert('Не получилось: '+(er.message||er));});
       });
       row.querySelector('[data-act="reset"]').addEventListener('click',function(){
         var np=prompt('Новый пароль для «'+u+'»:');

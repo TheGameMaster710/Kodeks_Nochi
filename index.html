@@ -2,7 +2,7 @@
 <!--
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║  КОДЕКС НОЧИ — ИНСТРУКЦИЯ ДЛЯ ИИ-АГЕНТА, РЕДАКТИРУЮЩЕГО ЭТОТ ФАЙЛ         ║
-║  Хроника Vampire: The Masquerade 5 (Renegade). Шаблон v1.45              ║
+║  Хроника Vampire: The Masquerade 5 (Renegade). Шаблон v1.46              ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 
 Прочитай этот комментарий ЦЕЛИКОМ перед любой правкой. Он — единственная
@@ -1189,6 +1189,20 @@ BOON_LEVELS, BOON_STATUS — термины (trivial/minor/major/life boon)
 ════════════════════════════════════════════════════════════════════════════
 11. ЖУРНАЛ ИЗМЕНЕНИЙ ФАЙЛА  (новые строки — сверху)
 ════════════════════════════════════════════════════════════════════════════
+  v1.46 ИСПРАВЛЕНА ДЫРА В ПРАВИЛАХ users (найдено на живом сайте):
+        запись админа рассказчика превратилась в игрока, createdAt — дата
+        регистрации тестового игрока, то есть документ был целиком
+        перезаписан set() (так пишут только регистрация и первый запуск).
+        Причина: set() в существующий документ правила считают update, а
+        update разрешался любому isAdmin(); анонимный uid общий для всех
+        вкладок браузера, так что при открытой рядом сессии админа форма
+        регистрации могла переписать чужую запись (включая самого админа).
+        Теперь update не может менять createdAt (правка роли и сброс
+        пароля — update() отдельных полей — проходят, полная перезапись —
+        нет), админ не может понизить или удалить сам себя; на странице
+        «пользователи» смена роли спрашивает подтверждение, а свой
+        собственный выпадающий список ролей заблокирован. Роль рассказчику
+        вернули вручную в консоли Firebase. Правила — опубликовать заново.
   v1.45 ИНТЕРАКТИВНЫЙ ЧАРНИК V5 в Котерии (новый §1.3.5, p3j_sheet.js).
         Сказано рассказчиком после проверки живого сайта: в живых чарниках
         только трекеры — нет атрибутов, навыков, интегрированного броска,
@@ -4660,7 +4674,7 @@ function loadAdminUsers(){
     box.innerHTML=rows.map(function(r){
       return '<div class="admin-row" data-u="'+esc(r.u)+'">'+
         '<div class="who"><b>'+esc(r.name)+'</b><span>@'+esc(r.u)+'</span></div>'+
-        '<select class="mini roleSel">'+['player','master','admin'].map(function(k){
+        '<select class="mini roleSel"'+(r.u===SESSION.username?' disabled title="Свою роль поменять нельзя — это защита от случайного понижения себя"':'')+'>'+['player','master','admin'].map(function(k){
           return '<option value="'+k+'"'+(k===r.role?' selected':'')+'>'+ROLE_NAMES[k]+'</option>';}).join('')+'</select>'+
         '<button class="mini" type="button" data-act="reset">Сбросить пароль</button>'+
         (r.u!==SESSION.username?'<button class="mini" type="button" data-act="del">Удалить</button>':'')+
@@ -4668,8 +4682,12 @@ function loadAdminUsers(){
     }).join('');
     [].forEach.call(box.querySelectorAll('.admin-row'),function(row){
       var u=row.getAttribute('data-u');
-      row.querySelector('.roleSel').addEventListener('change',function(e){
-        fbDb.collection('users').doc(u).update({role:e.target.value});
+      var rs=row.querySelector('.roleSel'),was=rs.value;
+      rs.addEventListener('change',function(e){
+        var nv=e.target.value;
+        if(!confirm('Сменить роль «'+u+'» на «'+ROLE_NAMES[nv]+'»?')){rs.value=was;return;}
+        fbDb.collection('users').doc(u).update({role:nv}).then(function(){was=nv;})
+          .catch(function(er){rs.value=was;alert('Не получилось: '+(er.message||er));});
       });
       row.querySelector('[data-act="reset"]').addEventListener('click',function(){
         var np=prompt('Новый пароль для «'+u+'»:');

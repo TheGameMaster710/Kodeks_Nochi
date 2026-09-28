@@ -62,7 +62,22 @@ service cloud.firestore {
         || isAdmin()
         || request.resource.data.role == 'player'
       );
-      allow update, delete: if isAdmin();
+      /* ЗАЩИТА ОТ ПЕРЕЗАПИСИ (v1.46 — найдено на живом сайте: запись
+         админа превратилась в игрока, createdAt сменился на дату, когда
+         регистрировали тестового игрока). Запись set() в уже существующий
+         документ Firestore считает update, а update раньше разрешался
+         любому isAdmin() — то есть если в этом браузере (анонимный uid
+         общий для всех вкладок) параллельно была открыта сессия админа,
+         форма регистрации могла целиком перезаписать чужую запись, в том
+         числе запись самого админа, ролью player и новым паролем.
+         Теперь: 1) update не может менять createdAt — правка роли/пароля
+         на странице «пользователи» (update() отдельных полей) проходит,
+         а полная перезапись set() с новым createdAt — нет, ни у кого;
+         2) админ не может понизить сам себя и удалить сам себя. */
+      allow update: if isAdmin()
+        && request.resource.data.get('createdAt', null) == resource.data.get('createdAt', null)
+        && !(username == sessionUsername() && request.resource.data.role != 'admin');
+      allow delete: if isAdmin() && username != sessionUsername();
     }
 
     match /sessions/{uid} {
