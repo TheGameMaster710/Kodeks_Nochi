@@ -196,6 +196,18 @@ a.chip:hover{border-color:var(--acc);color:var(--acc)}
 .back{display:inline-block;margin:26px 0 0;font-family:var(--mono);font-size:11px;
   letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);text-decoration:none}
 .back:hover{color:var(--acc)}
+.gmtog{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden;
+  font:700 9.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;background:var(--panel)}
+.gmtog .l{padding:0 10px;color:var(--ink-dim)}
+.gmtog button{background:none;border:0;border-left:1px solid var(--line);color:var(--ink-dim);padding:9px 13px;
+  font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer}
+.gmtog button.on{background:var(--acc);color:var(--acc-ink)}
+.wrap>.gmtog{float:right;margin-top:18px}
+.wrap>.jcard,.wrap>.chain{clear:both}
+.gmrow{margin:0 0 18px}
+.gm-block{border-left:2px dashed var(--acc);padding-left:14px}
+.gm-badge{display:inline-block;font:700 8.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--acc);
+  border:1px dashed var(--acc);border-radius:999px;padding:3px 7px;vertical-align:middle;white-space:nowrap}
 .jcard{position:relative;margin-top:22px;border:1px solid var(--line);border-radius:var(--r);
   background:linear-gradient(150deg,rgba(var(--glow),.16),transparent 55%),var(--panel);overflow:hidden;backdrop-filter:blur(10px)}
 .jcard.dead::before{content:'✝ ОКОНЧАТЕЛЬНАЯ СМЕРТЬ';position:absolute;top:0;left:0;z-index:2;
@@ -557,6 +569,8 @@ footer .sp{margin-left:auto}
 .auth-card .err{color:var(--bad);font-size:12.5px;margin-top:12px;min-height:1.2em}
 .auth-card .note{color:var(--ink-dim);font-size:12px;margin-top:12px;line-height:1.5}
 .auth-card button.pri{width:100%;margin-top:20px;padding:11px;font-size:11px}
+.auth-card .switch{margin-top:16px}
+.auth-card .switch a{color:var(--acc);text-decoration:underline;cursor:pointer}
 #userBadge{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink-dim);white-space:nowrap;
   display:flex;align-items:center;gap:8px}
 #userBadge b{color:var(--ink);font-weight:700}
@@ -569,6 +583,73 @@ footer .sp{margin-left:auto}
 .admin-row .who span{color:var(--ink-dim);font-size:12px}
 .addrow.admin-new{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:18px 0}
 .addrow.admin-new label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);display:block;margin-bottom:5px}
+
+/* ============ КОТЕРИЯ: САМОСТОЯТЕЛЬНЫЕ ЧАРНИКИ (с v1.37) ============ */
+.pc-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin:0 0 14px}
+.pc-panel h3{font-size:17px;margin:0 0 4px}
+.pc-panel .sub{color:var(--ink-dim);font-size:12.5px;margin:0 0 14px}
+.pc-mini-list{display:flex;flex-direction:column;gap:8px}
+.pc-mini-list .row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(0,0,0,.22);
+  border:1px solid var(--line);border-radius:8px;flex-wrap:wrap}
+.pc-mini-list .row a{color:var(--ink);text-decoration:none;font-weight:700;flex:1 1 auto;min-width:0}
+.pc-mini-list .row a:hover{color:var(--acc)}
+.pc-mini-list .row .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim)}
+.pc-pick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 16px}
+.pc-pick select{min-width:180px}
+.pc-form{margin-top:14px}
+.pc-form label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-dim);margin:12px 0 5px}
+.pc-form input,.pc-form select,.pc-form textarea{width:100%}
+.pc-form textarea{resize:vertical;min-height:44px}
+.pc-form .g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.pc-form .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+.pc-form .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0 14px}
+@media(max-width:640px){.pc-form .g2,.pc-form .g3,.pc-form .g4{grid-template-columns:1fr 1fr}}
+.pc-form .rep-head{margin:18px 0 2px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc-2)}
+.pc-form .rep-row{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.pc-form .rep-row.disc{grid-template-columns:2fr 1fr}
+.pc-form .err{color:var(--bad);font-size:12.5px;margin-top:12px;min-height:1.2em}
+.pc-form .tsub{font-size:11.5px;color:var(--ink-dim)}
+/* ИНТЕРАКТИВНЫЙ ЧАРНИК (p3j_sheet.js, v1.45) */
+.sheet .sh-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:22px 0 0}
+.sheet .tag{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc-2);border:1px solid var(--line);border-radius:999px;padding:2px 6px;margin-left:4px;vertical-align:middle}
+.sh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 22px}
+@media(max-width:760px){.sh-grid{grid-template-columns:1fr}}
+.sh-gh{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc-2);margin:4px 0 6px;padding-left:8px}
+.sh-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 8px;border-radius:8px;border:1px solid transparent}
+.sh-row.sel{background:rgba(var(--glow),.16);border-color:var(--acc)}
+.sh-row.zero .sh-name{color:var(--ink-dim)}
+.sh-name{background:none;border:0;color:var(--ink);font:inherit;font-size:14.5px;text-align:left;cursor:pointer;padding:0;min-width:0}
+.sh-name:hover{color:var(--acc)}
+.sh-name.static{cursor:default}.sh-name.static:hover{color:var(--ink)}
+.sdots{display:inline-flex;gap:5px;flex:none}
+.sd{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--acc);background:transparent;padding:0;display:inline-block;box-sizing:border-box}
+.sd.on{background:var(--acc)}
+button.sd{cursor:pointer}button.sd:hover{box-shadow:0 0 0 3px rgba(var(--glow),.35)}
+.sh-roll{border:1px solid var(--line);border-radius:var(--r);padding:14px;background:var(--panel)}
+.sh-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.sh-chips button.chip{cursor:pointer;background:none}
+.sh-rctl{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-bottom:10px}
+.sh-rctl label{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim)}
+.sh-rctl input[type=number]{width:84px}
+.sh-rctl label.chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-family:inherit;font-size:13px}
+.sh-total{margin:4px 0 12px;font-size:15px}.sh-total b{font-size:18px;color:var(--acc)}
+.sh-disc{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.sh-dcard{border:1px solid var(--line);border-radius:var(--r);padding:8px 6px;background:var(--panel)}
+.sh-dcard.sel{border-color:var(--acc)}
+.sh-dcard ul{margin:4px 0 4px 26px;padding:0;font-size:13.5px;color:var(--ink-dim)}
+.sheet textarea,.sh-drow select,.sh-arow input,.sh-arow select,.sheet .g3 input,.sheet .g3 select{width:100%}
+.sheet textarea{resize:vertical}
+.sh-drow,.sh-arow{display:grid;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--line)}
+.sh-drow{grid-template-columns:1fr auto auto}
+.sh-arow{grid-template-columns:1fr 140px auto auto}
+.sh-drow textarea,.sh-arow input[data-shf=at]{grid-column:1/-1}
+@media(max-width:640px){.sh-arow{grid-template-columns:1fr auto auto}.sh-arow select{grid-column:1/-1;grid-row:2}}
+.sh-lab{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:12px 0 4px}
+.sheet .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+@media(max-width:640px){.sheet .g3{grid-template-columns:1fr}}
+.pc-form .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
 </style>
 <!-- Firebase (compat-сборка — глобальный объект firebase, работает в обычном не-модульном <script> ниже, см. p3f_auth.js) -->
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>

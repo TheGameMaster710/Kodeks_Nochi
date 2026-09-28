@@ -68,7 +68,7 @@ function viewCourt(t){
 
 /* ================= ДОЛГИ ================= */
 function viewBoons(t){
-  var open=BOONS.filter(function(b){return b.status==='open'||!b.status;});
+  var open=BOONS.filter(gmOk).filter(function(b){return b.status==='open'||!b.status;});
   var sum='<div class="facts" style="margin:0 0 26px">'+Object.keys(BOON_LEVELS).map(function(k){
     var n=open.filter(function(b){return b.level===k;}).length;
     return '<div class="fact"><div class="num">'+BOON_LEVELS[k][1]+'</div><h3>'+BOON_LEVELS[k][0]+'</h3><p>'+n+' '+plural(n,'непогашенный','непогашенных','непогашенных')+'</p></div>';}).join('')+'</div>';
@@ -95,10 +95,11 @@ function graphData(){
   var nodes={},list=[],edges=[];
   function node(n){var k=hrefOf(n)||n;if(!nodes[k]){var pc=PCS.some(function(p){return same(p.name,n);}),pe=PEOPLE.some(function(p){return same(p.name,n);});
     nodes[k]={id:k,name:n,href:hrefOf(n),kind:pc?'pc':pe?'person':'other'};list.push(nodes[k]);}return nodes[k];}
-  function edge(a,b,type,note){if(!a||!b)return;edges.push({a:node(a),b:node(b),type:REL_TYPES[type]?type:'other',note:note||''});}
-  RELATIONS.forEach(function(r){edge(r.a,r.b,r.type,r.note);});
-  BONDS.forEach(function(b){edge(b.thrall,b.regnant,'bond','ступень '+b.level+(b.note?' · '+b.note:''));});
-  BOONS.filter(function(b){return b.status==='open'||!b.status;}).forEach(function(b){edge(b.debtor,b.creditor,'debt',(BOON_LEVELS[b.level]||['долг'])[0]+' долг');});
+  function edge(a,b,type,note,gm){if(!a||!b)return;edges.push({a:node(a),b:node(b),type:REL_TYPES[type]?type:'other',note:note||'',gm:!!gm});}
+  /* gm-рёбра (с v1.42, §1.3.4) — только при виде «Мастер» */
+  RELATIONS.filter(gmOk).forEach(function(r){edge(r.a,r.b,r.type,r.note,r.gm);});
+  BONDS.filter(gmOk).forEach(function(b){edge(b.thrall,b.regnant,'bond','ступень '+b.level+(b.note?' · '+b.note:''));});
+  BOONS.filter(gmOk).filter(function(b){return b.status==='open'||!b.status;}).forEach(function(b){edge(b.debtor,b.creditor,'debt',(BOON_LEVELS[b.level]||['долг'])[0]+' долг');});
   allPeople().forEach(function(p){if(p.sire)edge(p.sire,p.name,'sire','');});
   PCS.forEach(function(p){(p.convictions||[]).forEach(function(c){if(c[1])edge(p.name,c[1],'touch',c[0]);});});
   return {nodes:list,edges:edges};
@@ -112,11 +113,12 @@ function viewWeb(t){
   var G=graphData();
   var filt='<div class="filt">'+Object.keys(REL_TYPES).map(function(k){var n=G.edges.filter(function(e){return e.type===k;}).length;
     return '<button class="mini'+(WEB_OFF[k]?' off':'')+'" data-f="'+k+'"><i style="background:'+REL_TYPES[k][1]+'"></i>'+REL_TYPES[k][0]+' '+n+'</button>';}).join('')+'</div>';
-  var bonds=BONDS.length?tableHtml({head:['Раб уз','Регнант','Ступень','Заметка'],rows:BONDS.map(function(b){return ['[['+b.thrall+']]','[['+b.regnant+']]','•'.repeat(b.level||1),b.note||''];})}).replace(/<td>(•+)<\/td>/g,function(_,v){return '<td>'+dots(v.length,3)+'</td>';})
+  var VB=BONDS.filter(gmOk);
+  var bonds=VB.length?tableHtml({head:['Раб уз','Регнант','Ступень','Заметка'],rows:VB.map(function(b){return ['[['+b.thrall+']]','[['+b.regnant+']]','•'.repeat(b.level||1),b.note||''];})}).replace(/<td>(•+)<\/td>/g,function(_,v){return '<td>'+dots(v.length,3)+'</td>';})
     :emptyBox('Кровных уз пока нет','Ничья кровь ещё никого не держит.');
-  var inner=(G.nodes.length?filt+'<div class="web" id="web"></div><p class="hint">Тяните узлы мышью. Наведите — подсветятся связи. Клик — открыть заметку. Колесо мыши или кнопки в углу — масштаб; перетаскивание фона — панорама.</p>'
+  var inner=(canGm()?'<div class="gmrow">'+gmToggleHtml()+'</div>':'')+(G.nodes.length?filt+'<div class="web" id="web"></div><p class="hint">Тяните узлы мышью. Наведите — подсветятся связи. Клик — открыть заметку. Колесо мыши или кнопки в углу — масштаб; перетаскивание фона — панорама.</p>'
       :emptyBox('Граф пуст','Отношения, кровные узы, долги, сиры и Якоря персонажей сложатся здесь в сеть.'))+
-    section('Кровные узы',BONDS.length,bonds+'<div class="note"><b>Ступени</b>Первый глоток — симпатия. Второй — сильная привязанность. Третий — полные узы: регнант становится центром жизни раба. Узы слабеют, если не пить из регнанта долгое время.</div>');
+    section('Кровные узы',VB.length,bonds+'<div class="note"><b>Ступени</b>Первый глоток — симпатия. Второй — сильная привязанность. Третий — полные узы: регнант становится центром жизни раба. Узы слабеют, если не пить из регнанта долгое время.</div>');
   toolShell(t,'Кто кого любит, кто кому служит и чья кровь держит кого на поводке. Граф собирается из всех данных кодекса.',inner);
   if(G.nodes.length) drawWeb(G);
   [].forEach.call(app.querySelectorAll('[data-f]'),function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-f');WEB_OFF[k]=!WEB_OFF[k];viewWeb(t);});});
@@ -141,7 +143,7 @@ function drawWeb(G){
   var s='<svg viewBox="'+vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+vb.h.toFixed(1)+'">'+defs;
   var pairN={};edges.forEach(function(e){var k=[e.a.id,e.b.id].sort().join('~');e.k=pairN[k]=(pairN[k]||0)+1;e.flip=e.a.id>e.b.id;});
   edges.forEach(function(e,i){s+='<path class="edge" fill="none" data-e="'+i+'" stroke="'+REL_TYPES[e.type][1]+'" stroke-width="2.2"'+(dir[e.type]?' marker-end="url(#ar-'+e.type+')"':'')+
-    (e.type==='touch'?' stroke-dasharray="5 5"':'')+'><title>'+esc(REL_TYPES[e.type][0]+(e.note?': '+e.note:''))+'</title></path>';});
+    (e.type==='touch'?' stroke-dasharray="5 5"':e.gm?' stroke-dasharray="2 4"':'')+'><title>'+esc((e.gm?'[для мастера] ':'')+REL_TYPES[e.type][0]+(e.note?': '+e.note:''))+'</title></path>';});
   N.forEach(function(n,i){s+='<g class="node" data-n="'+i+'"><circle r="'+(n.kind==='other'?9:13)+'" fill="'+col[n.kind]+'" stroke="#000" stroke-width="2"/>'+
     '<text y="-18" text-anchor="middle">'+esc(n.name)+'</text></g>';});
   var zoomHtml='<div class="zoomctl"><button type="button" data-zoom="in" title="Приблизить" aria-label="Приблизить">+</button>'+

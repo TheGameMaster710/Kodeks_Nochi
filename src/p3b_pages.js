@@ -71,7 +71,7 @@ function viewEntry(c,id){
     strip=[['Вид',x.kind]].concat(x.stat||[]);
     if(x.track) top+=section('Трекеры','сохраняются в браузере',trackerHtml(x));
   }
-  app.innerHTML='<div class="wrap rise"><a class="back" href="#/cat/'+c.id+'">← '+esc(c.name.toLowerCase())+'</a>'+
+  app.innerHTML='<div class="wrap rise"><a class="back" href="#/cat/'+c.id+'">← '+esc(c.name.toLowerCase())+'</a>'+gmToggleHtml()+
     (c.id==='places'?top:'')+jcard(x,eyebrow,strip)+(c.id!=='places'?top:'')+mid+commonTail(x)+'<div style="height:30px"></div></div>';
   wireTrackers(app);
 }
@@ -89,7 +89,9 @@ function viewPlayers(){
   var inner=PLAYERS.length||PCS.length?'<div class="gods">'+cards+'</div>'+
     (orphans.length?'<div class="sec-head" style="margin:34px 0 14px"><h3>Без игрока</h3></div><div class="subgrid">'+orphans.map(personSub).join('')+'</div>':'')
     :emptyBox('Котерия ещё не собрана','Здесь появятся игроки и их персонажи — у каждого персонажа будет страница с трекерами.');
+  inner+=coterieLiveHtml();
   listShell(c,inner,PLAYERS.length);
+  wireCoterieLive(app);
 }
 function viewPlayer(id){
   var pl=findIn(PLAYERS,id);if(!pl){location.hash='#/cat/players';return;}
@@ -108,7 +110,7 @@ function viewPC(id){
   var strip=[['Клан',x.clan?wikiTag(x.clan,esc(x.clan)):'',1],['Секта',x.sect?wikiTag(x.sect,esc(x.sect)):'',1],
     ['Поколение',x.gen],['Мощь крови',x.bp!=null?String(x.bp):''],['Тип хищника',x.predator?wikiTag(x.predator,esc(x.predator)):'',1],
     ['Сир',x.sire?nameLink(x.sire):'',1]];
-  var out='<div class="wrap rise"><a class="back" href="'+(pl?'#/player/'+pl.id:'#/cat/players')+'">← '+(pl?esc(pl.name.toLowerCase()):'котерия')+'</a>'+chain+
+  var out='<div class="wrap rise"><a class="back" href="'+(pl?'#/player/'+pl.id:'#/cat/players')+'">← '+(pl?esc(pl.name.toLowerCase()):'котерия')+'</a>'+gmToggleHtml()+chain+
     jcard(x,'персонаж игрока'+(pl?' · '+esc(pl.name):''),strip)+
     section('Трекеры',isLivePc(x)?'живой лист — Firestore':'сохраняются в браузере',trackerHtml(x));
   if(x.disciplines&&x.disciplines.length) out+=section('Дисциплины',x.disciplines.length,'<div class="defs">'+x.disciplines.map(function(d){

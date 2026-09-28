@@ -195,7 +195,9 @@ function dispatch(){
   if((m=/^cat\/([\w-]+)$/.exec(h))){var c=catById(m[1]);if(c){viewList(c);return 'top';}}
   if((m=/^tool\/([\w-]+)$/.exec(h))){var t=toolById(m[1]);if(t){TOOL_VIEWS[t.id](t);return 'top';}}
   if((m=/^pc\/([\w-]+)$/.exec(h))){viewPC(m[1]);return 'top';}
+  if((m=/^coterie\/([\w-]+)$/.exec(h))){viewLivePC(m[1]);return 'top';}
   if((m=/^player\/([\w-]+)$/.exec(h))){viewPlayer(m[1]);return 'top';}
+  if(h==='master/gm'){if(canGm()){viewGmLayer();return 'top';}viewHome();return 'top';}
   if(h==='admin/users'){if(SESSION&&SESSION.role==='admin'){viewAdminUsers();return 'top';}viewHome();return 'top';}
   if((m=/^([\w-]+)\/([\w-]+)$/.exec(h))){var cc=catByRoute(m[1]);if(cc){viewEntry(cc,m[2]);return cc.kind==='cards'?'keep':'top';}}
   viewHome();return 'top';
@@ -208,6 +210,8 @@ bootAuth(function(){
   initDock();
   initSearch();
   initSession();
+  startCoterieSync(); /* см. p3h_coterie.js — самостоятельные чарники игроков, живая подписка на всю сессию, не только на страницу */
+  startGmLayer(); /* p3i_gm.js — мастерский слой (туман войны): игроку ничего, мастеру тайны из Firestore */
   route();
 });
 </script>

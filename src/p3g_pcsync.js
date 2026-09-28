@@ -22,13 +22,28 @@
    группы, та же, что и для паролей без соли — см. §1.3). Кнопки правки на
    чужом живом листе просто не рисуются (см. изменения в trkInner). */
 
-var PCSTATE_CACHE={};  /* {trkKey: {...track...}|null} — последний снимок Firestore для персонажей, чья страница сейчас открыта */
+var PCSTATE_CACHE={};  /* {trkKey: {...track...}|null} — последний снимок Firestore для персонажей PCS[], чья страница сейчас открыта (см. ниже — самостоятельные чарники x._liveKind==='pcs' эту кэш-таблицу не используют, у них снимок уже лежит прямо в самом объекте, см. p3h_coterie.js) */
 var pcstateUnsub=null; /* отписка от текущего onSnapshot — вызывается при уходе со страницы персонажа, см. dispatch() в p3e_home.js */
 
+/* С v1.37 «живой лист» бывает ДВУХ видов — важно не путать (см. §1.3.2 в
+   комментарии):
+   1) СТАРЫЙ (с v1.35): запись в статичном PCS[] с полем owner — полную
+      анкету по-прежнему пишет рассказчик (агент) по надиктовке, живой
+      только track (голод/здоровье/воля/человечность), см. pcstate/{id}
+      ниже. Мастер/админ могут править ЛЮБОЙ такой лист.
+   2) НОВЫЙ (с v1.37): персонаж, которого игрок/мастер завёл САМ прямо на
+      сайте (вкладка Котерия) — вся анкета целиком живёт в Firestore
+      (коллекция pcs), не только track. Такие объекты помечены полем
+      x._liveKind==='pcs' (проставляется в p3h_coterie.js при получении
+      снимка коллекции). Здесь правило ИНАЧЕ: править может ТОЛЬКО
+      владелец — даже мастер и админ такой лист не редактируют, только
+      просматривают (см. панель мастера/просмотр админа в p3h_coterie.js;
+      сказано рассказчиком явно, v1.37). */
 function pcOwnerOf(x){return x&&x.owner?String(x.owner).toLowerCase():null;}
-function isLivePc(x){return !!x && PCS.indexOf(x)>-1 && !!pcOwnerOf(x) && !!fbDb;}
+function isLivePc(x){return !!x && !!fbDb && (x._liveKind==='pcs' || (PCS.indexOf(x)>-1 && !!pcOwnerOf(x)));}
 function canEditLivePc(x){
   if(!SESSION) return false;
+  if(x._liveKind==='pcs') return pcOwnerOf(x)===SESSION.username; /* самостоятельный чарник — без исключений для мастера/админа */
   if(SESSION.role==='admin'||SESSION.role==='master') return true;
   return pcOwnerOf(x)===SESSION.username;
 }
@@ -56,7 +71,12 @@ function pcSyncWrite(x,st){
   var data={};for(var k in st) data[k]=st[k];
   data.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
   data.updatedBy=SESSION.username;
-  fbDb.collection('pcstate').doc(x.id).set(data).catch(function(){
+  /* самостоятельный чарник (x._liveKind==='pcs') хранит track ПРЯМО в своём
+     документе pcs/{id} вместе с анкетой — merge:true, чтобы не затереть
+     остальные поля анкеты; старый механизм пишет в отдельный pcstate/{id},
+     там merge не нужен, но и не мешает. */
+  var col=x._liveKind==='pcs'?'pcs':'pcstate';
+  fbDb.collection(col).doc(x.id).set(data,{merge:true}).catch(function(){
     /* офлайн/ошибка сети — локальная копия в STORE (см. trkSet) уже сохранена,
        при следующем подключении onSnapshot подтянет актуальную версию сервера */
   });

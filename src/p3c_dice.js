@@ -1,13 +1,16 @@
 
 /* ================= ТРЕКЕРЫ ПЕРСОНАЖЕЙ ================= */
 var TRK_OBJ={};
-function trkKey(x){return (PCS.indexOf(x)>-1?'pc:':PEOPLE.indexOf(x)>-1?'person:':'threat:')+x.id;}
+function trkKey(x){return (x._liveKind==='pcs'?'lpc:':PCS.indexOf(x)>-1?'pc:':PEOPLE.indexOf(x)>-1?'person:':'threat:')+x.id;}
 function trkDefault(x){var t=x.track||{};
   return {hunger:t.hunger!=null?t.hunger:1,hMax:t.healthMax||7,hSup:0,hAgg:0,wMax:t.wpMax||5,wSup:0,wAgg:0,
     hum:t.humanity!=null?t.humanity:7,stains:0};}
 function trkGet(key){var x=TRK_OBJ[key];if(!x)return null;
   var d=trkDefault(x);
-  if(isLivePc(x)){
+  if(x._liveKind==='pcs'){
+    /* самостоятельный чарник — снимок Firestore лежит прямо в x (см. p3h_coterie.js) */
+    ['hunger','hMax','hSup','hAgg','wMax','wSup','wAgg','hum','stains'].forEach(function(k){if(x[k]!=null)d[k]=x[k];});
+  } else if(isLivePc(x)){
     var live=PCSTATE_CACHE[key];
     if(live) for(var k in d) if(live[k]!=null) d[k]=live[k];
   } else {
@@ -15,6 +18,7 @@ function trkGet(key){var x=TRK_OBJ[key];if(!x)return null;
     if(s) for(var k2 in d) if(s[k2]!=null) d[k2]=s[k2];
   }
   d.hMax=(x.track&&x.track.healthMax)||d.hMax;d.wMax=(x.track&&x.track.wpMax)||d.wMax;
+  if(x._liveKind==='pcs'&&x.attrs){var dv=pcDerived(x);d.hMax=dv.hMax;d.wMax=dv.wMax;} /* интерактивный чарник: из атрибутов, p3j_sheet.js */
   return d;}
 function trkSet(key,st){
   var x=TRK_OBJ[key];
@@ -22,7 +26,8 @@ function trkSet(key,st){
   st.hunger=Math.max(0,Math.min(5,st.hunger));st.hum=Math.max(0,Math.min(10,st.hum));st.stains=Math.max(0,Math.min(10,st.stains));
   ['h','w'].forEach(function(p){var mx=st[p+'Max'];st[p+'Agg']=Math.max(0,Math.min(mx,st[p+'Agg']));st[p+'Sup']=Math.max(0,Math.min(mx-st[p+'Agg'],st[p+'Sup']));});
   STORE.set('trk:'+key,st); /* локальная копия всегда — офлайн-страховка, а для NPC/угроз это и есть единственное хранилище */
-  if(isLivePc(x)){PCSTATE_CACHE[key]=st;pcSyncWrite(x,st);}
+  if(x&&x._liveKind==='pcs') for(var sk in st) x[sk]=st[sk]; /* свой лист: сразу в объект — бросок видит новый Голод до ответа сервера, а предпросмотр без сервера вообще только так и работает */
+  if(isLivePc(x)){if(x._liveKind!=='pcs')PCSTATE_CACHE[key]=st;pcSyncWrite(x,st);}
   refreshTrackers(key);}
 function damage(st,p,kind,sign){
   var mx=st[p+'Max'];
@@ -35,7 +40,7 @@ function boxes(max,agg,sup){var s='';for(var i=0;i<max;i++){
   var c=i<agg?'a':i<agg+sup?'s':'';s+='<span class="box '+c+'" style="display:inline-grid;place-items:center;cursor:default">'+(c==='a'?'✕':c==='s'?'╱':'')+'</span>';}return s;}
 function trkInner(key){
   var x=TRK_OBJ[key],live=isLivePc(x);
-  if(live&&!(key in PCSTATE_CACHE)) return '<div class="trk"><div class="tsync load">Загрузка живого листа…</div></div>';
+  if(live&&x._liveKind!=='pcs'&&!(key in PCSTATE_CACHE)) return '<div class="trk"><div class="tsync load">Загрузка живого листа…</div></div>';
   var st=trkGet(key);if(!st)return '';
   var editable=!live||canEditLivePc(x);
   function ctl(html){return editable?html:'';}
@@ -99,7 +104,7 @@ function onTrk(e){
     var x2=TRK_OBJ[key];
     if(isLivePc(x2)&&!canEditLivePc(x2)){refreshTrackers(key);return;}
     STORE.del('trk:'+key);
-    if(isLivePc(x2)){var d0=trkDefault(x2);PCSTATE_CACHE[key]=d0;pcSyncWrite(x2,d0);}
+    if(isLivePc(x2)){var d0=trkDefault(x2);if(x2._liveKind!=='pcs')PCSTATE_CACHE[key]=d0;pcSyncWrite(x2,d0);}
     refreshTrackers(key);return;
   }
   else return;
@@ -219,8 +224,18 @@ function onRollClick(e){
 function fillPcSelect(){
   var opts='<option value="">— вручную —</option>';
   PCS.forEach(function(x){var k=trkKey(x);TRK_OBJ[k]=x;opts+='<option value="'+k+'">'+esc(x.name)+'</option>';});
+  LIVE_PCS.forEach(function(x){var k=trkKey(x);TRK_OBJ[k]=x;opts+='<option value="'+k+'">'+esc(x.name)+' (свой лист)</option>';});
   PEOPLE.concat(THREATS).filter(function(x){return x.track;}).forEach(function(x){var k=trkKey(x);TRK_OBJ[k]=x;opts+='<option value="'+k+'">'+esc(x.name)+' (РС)</option>';});
   dkPc.innerHTML=opts;
+}
+/* Вызывается из p3h_coterie.js при каждом обновлении LIVE_PCS (onSnapshot) —
+   пересобирает список дока костей, не теряя текущий выбор пользователя. */
+function refreshPcSelectAfterSync(){
+  if(!dkPc) return;
+  var prev=dkPc.value;
+  fillPcSelect();
+  if(prev && TRK_OBJ[prev]) dkPc.value=prev;
+  if(dkPc.value) dkHun.value=trkGet(dkPc.value).hunger;
 }
 function initDock(){
   dock=document.getElementById('dock');dkPc=document.getElementById('dkPc');dkHun=document.getElementById('dkHun');

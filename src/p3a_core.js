@@ -193,6 +193,32 @@ function tableHtml(t){
     (t.head?'<thead><tr>'+t.head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead>':'')+
     '<tbody>'+t.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+md(c)+'</td>';}).join('')+'</tr>';}).join('')+
     '</tbody></table></div>';}
+/* ================= СЛОЙ МАСТЕРА (с v1.42, §1.3.4 в комментарии) =================
+   Любой блок (blocks[]), связь (ties[] — объект {text,gm:true} вместо строки),
+   ребро RELATIONS/BONDS/BOONS с gm:true видны только мастеру/админу и только
+   когда переключатель «Вид» стоит на «Мастер». Игрок не видит ни самого
+   текста, ни следов: gm-части выпадают и из упоминаний, и из поиска
+   (strings() ниже их пропускает). С v1.44 сами тайны в index.html не
+   лежат: игроку сервер их не отдаёт, мастеру их накладывает p3i_gm.js из
+   Firestore gmlayer/main (туман войны, §1.3.4). */
+var GM_VIEW=true;
+try{if(localStorage.getItem('kn_gmview')==='0')GM_VIEW=false;}catch(e){}
+function canGm(){return !!(SESSION&&(SESSION.role==='master'||SESSION.role==='admin'));}
+function gmOn(){return canGm()&&GM_VIEW;}
+function gmOk(o){return !(o&&typeof o==='object'&&o.gm)||gmOn();}
+function gmBadge(){return '<span class="gm-badge">для мастера</span>';}
+function gmToggleHtml(){
+  if(!canGm()) return '';
+  return '<div class="gmtog" role="group" aria-label="Чья версия заметки"><span class="l">Вид</span>'+
+    '<button type="button" data-gmv="0"'+(GM_VIEW?'':' class="on"')+'>Игрок</button>'+
+    '<button type="button" data-gmv="1"'+(GM_VIEW?' class="on"':'')+'>Мастер</button></div>';
+}
+document.addEventListener('click',function(e){
+  var b=e.target&&e.target.closest?e.target.closest('[data-gmv]'):null;if(!b)return;
+  GM_VIEW=b.getAttribute('data-gmv')==='1';
+  try{localStorage.setItem('kn_gmview',GM_VIEW?'1':'0');}catch(_){}
+  gmRerender(); /* p3i_gm.js — сброс поиска и перерисовка без прыжка страницы */
+});
 function blockHtml(b){
   var inner='';
   if(b.text) inner+='<div class="panel">'+md(b.text)+'</div>';
@@ -200,6 +226,7 @@ function blockHtml(b){
   if(b.table) inner+=tableHtml(b.table);
   if(b.cards) inner+='<div class="grid">'+b.cards.map(function(c){
     return '<div class="card">'+(c.tag?'<span class="tag">'+esc(c.tag)+'</span>':'')+'<h4>'+wikiTag(c.name,esc(c.name))+'</h4><div class="eff">'+md(c.text)+'</div></div>';}).join('')+'</div>';
+  if(b.gm) return '<div class="gm-block">'+section(b.t,'для мастера'+(b.note?' · '+b.note:''),inner)+'</div>';
   return section(b.t,b.note||'',inner);
 }
 function playlistHtml(p){
@@ -212,15 +239,17 @@ function playlistHtml(p){
 function jcard(x,eyebrow,strip,extraCls){
   return '<div class="jcard'+(x.dead?' dead':'')+(extraCls?' '+extraCls:'')+'"><div class="jcard-top">'+
     '<div class="eyebrow">'+eyebrow+'</div><h1>'+esc(x.name)+'</h1>'+
-    (x.img?'<div class="portrait"><img src="'+esc(x.img)+'" alt="'+esc(x.name)+'" loading="lazy"></div>':'')+
+    (x.img?'<div class="portrait"><img src="'+esc(x.img)+'" alt="'+esc(x.name)+'" loading="lazy"'+(x.imgPos?' style="object-position:'+esc(x.imgPos)+'"':'')+'></div>':'')+
     (x.short?'<p class="princ">'+inl(x.short)+'</p>':'')+
     '</div>'+stripHtml((x.quick||[]).concat(strip||[]))+'</div>';
 }
 function commonTail(x){
   var out='';
   if(x.concept&&x.concept.length) out+=section('Концепция','',defsHtml(x.concept));
-  (x.blocks||[]).forEach(function(b){out+=blockHtml(b);});
-  if(x.ties&&x.ties.length) out+=section('Связи',x.ties.length,'<div class="panel"><ul>'+x.ties.map(function(t){return '<li>'+md(t)+'</li>';}).join('')+'</ul></div>');
+  (x.blocks||[]).filter(gmOk).forEach(function(b){out+=blockHtml(b);});
+  var ties=(x.ties||[]).filter(gmOk);
+  if(ties.length) out+=section('Связи',ties.length,'<div class="panel"><ul>'+ties.map(function(t){
+    return typeof t==='string'?'<li>'+md(t)+'</li>':'<li class="gm-li">'+md(t.text||'')+' '+gmBadge()+'</li>';}).join('')+'</ul></div>');
   out+=playlistHtml(x.playlist);
   out+=backlinksHtml(x);
   return out;
@@ -230,7 +259,7 @@ function commonTail(x){
 function strings(o,acc){acc=acc||[];
   if(typeof o==='string') acc.push(o);
   else if(Array.isArray(o)) o.forEach(function(v){strings(v,acc);});
-  else if(o&&typeof o==='object') for(var k in o) if(k!=='id'&&k!=='acc'&&k!=='acc2'&&k!=='shape') strings(o[k],acc);
+  else if(o&&typeof o==='object'){ if(o.gm&&!gmOn()) return acc; for(var k in o) if(k!=='id'&&k!=='acc'&&k!=='acc2'&&k!=='shape') strings(o[k],acc);}
   return acc;}
 function allEntries(){
   var out=[];
@@ -404,18 +433,19 @@ function personSub(p){return '<a class="subcard" href="'+personHref(p)+'" style=
   '<div class="ds">'+esc([p.clan,p.sect,p.role].filter(Boolean).join(' · ')||p.short||'')+'</div></a>';}
 function politicsHtml(x){
   var n=x.name,out='';
-  var bonds=BONDS.filter(function(b){return same(b.thrall,n)||same(b.regnant,n);});
-  var boons=BOONS.filter(function(b){return same(b.debtor,n)||same(b.creditor,n);});
-  var rel=RELATIONS.filter(function(r){return same(r.a,n)||same(r.b,n);});
+  var bonds=BONDS.filter(gmOk).filter(function(b){return same(b.thrall,n)||same(b.regnant,n);});
+  var boons=BOONS.filter(gmOk).filter(function(b){return same(b.debtor,n)||same(b.creditor,n);});
+  var rel=RELATIONS.filter(gmOk).filter(function(r){return same(r.a,n)||same(r.b,n);});
+  function gb(o){return o.gm?' '+gmBadge():'';}
   var sire=x.sire, childer=allPeople().filter(function(p){return same(p.sire,n);});
   var rows=[];
   if(sire) rows.push('<li>Сир: '+nameLink(sire)+'</li>');
   if(childer.length) rows.push('<li>Потомки: '+childer.map(function(p){return nameLink(p.name);}).join(', ')+'</li>');
-  bonds.forEach(function(b){rows.push('<li>Кровные узы '+dots(b.level,3)+': '+nameLink(b.thrall)+' → '+nameLink(b.regnant)+(b.note?' — '+inl(b.note):'')+'</li>');});
+  bonds.forEach(function(b){rows.push('<li>Кровные узы '+dots(b.level,3)+': '+nameLink(b.thrall)+' → '+nameLink(b.regnant)+(b.note?' — '+inl(b.note):'')+gb(b)+'</li>');});
   boons.forEach(function(b){var L=BOON_LEVELS[b.level]||['?',''];
-    rows.push('<li>'+L[0]+' долг ('+(BOON_STATUS[b.status]||b.status)+'): '+nameLink(b.debtor)+' должен '+nameLink(b.creditor)+(b.why?' — '+inl(b.why):'')+'</li>');});
+    rows.push('<li>'+L[0]+' долг ('+(BOON_STATUS[b.status]||b.status)+'): '+nameLink(b.debtor)+' должен '+nameLink(b.creditor)+(b.why?' — '+inl(b.why):'')+gb(b)+'</li>');});
   rel.forEach(function(r){var T=REL_TYPES[r.type]||REL_TYPES.other;
-    rows.push('<li><span style="color:'+T[1]+'">'+T[0]+'</span>: '+nameLink(same(r.a,n)?r.b:r.a)+(r.note?' — '+inl(r.note):'')+'</li>');});
+    rows.push('<li><span style="color:'+T[1]+'">'+T[0]+'</span>: '+nameLink(same(r.a,n)?r.b:r.a)+(r.note?' — '+inl(r.note):'')+gb(r)+'</li>');});
   if(x.status) Object.keys(x.status).forEach(function(s){rows.push('<li>Статус ('+esc(s)+'): '+dots(statusNow(n,s,x.status[s]))+'</li>');});
   if(rows.length) out=section('Положение среди Сородичей',rows.length,'<div class="panel"><ul>'+rows.join('')+'</ul></div>');
   return out;
