@@ -47,7 +47,7 @@ body[data-god="boon"]{--acc:#C9A45C;--acc-2:#D0243F;--glow:201,164,92;--bg:#0A07
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;overflow-x:clip}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
-  font-size:16px;line-height:1.62;transition:background-color .45s ease;overflow-x:hidden}
+  font-size:16px;line-height:1.62;transition:background-color .45s ease;overflow-x:clip} /* было hidden: делало body контейнером прокрутки, и position:sticky (шапка, панель правки листа) не липло к окну — v1.47 */
 a{color:inherit}
 h1,h2,h3,h4,h5{font-family:var(--serif);margin:0;line-height:1.05;font-weight:700}
 p{margin:0 0 .85em}
@@ -377,6 +377,11 @@ a.lrow:hover{border-color:var(--c,var(--acc));transform:translateX(4px)}
 @keyframes thr{50%{stroke-opacity:.35}}
 .map .dom.flash{animation:domFlash .5s ease-in-out 3}
 @keyframes domFlash{0%,100%{fill-opacity:.22;stroke-width:2}50%{fill-opacity:.65;stroke-width:5}}
+.map .dom.pt .dot{transition:r .2s}
+.map .dom.pt:hover .dot{r:4.6}
+.map .dom.pt.flash{animation:none}
+.map .dom.pt.flash .dot{animation:ptFlash .5s ease-in-out 3}
+@keyframes ptFlash{50%{r:8}}
 .maptip{position:absolute;pointer-events:none;background:#0E070B;border:1px solid var(--line);border-radius:var(--r);
   padding:8px 11px;font-size:12.5px;max-width:260px;box-shadow:0 14px 30px -12px #000;z-index:3}
 .maptip[hidden]{display:none}
@@ -576,6 +581,23 @@ footer .sp{margin-left:auto}
 #userBadge b{color:var(--ink);font-weight:700}
 #userBadge a{color:var(--ink-dim);text-decoration:underline;cursor:pointer}
 #userBadge a:hover{color:var(--acc-2)}
+.ubtn{display:inline-block;font:700 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;text-decoration:none!important;
+  color:var(--ink)!important;border:1px solid var(--line);border-radius:999px;padding:8px 12px;cursor:pointer;background:rgba(255,255,255,.04)}
+.ubtn:hover{border-color:var(--acc);color:var(--acc)!important}
+.ubtn.gm{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)!important;box-shadow:0 0 0 3px rgba(var(--glow),.22)}
+.ubtn.gm:hover{filter:brightness(1.12);color:var(--acc-ink)!important}
+.ubtn.out{opacity:.8}
+/* на телефоне шапка получает вторую строку: логин и кнопки не обрезаются */
+@media (max-width:760px){
+  .bar{flex-wrap:wrap}
+  .bar{position:static} /* двухстрочная шапка на телефоне липкой была бы слишком высокой */
+  .sheet .sh-bar.editing{top:0}
+  .brand{order:1}
+  #userBadge{order:2;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;white-space:normal;row-gap:6px}
+  .crumbs{order:3;flex:1 1 100%}
+  .srch{order:4;flex:1 1 100%;width:auto}
+  .ubtn-note{display:none}
+}
 .admin-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
 .admin-row:last-child{border-bottom:none}
 .admin-row .who{flex:1 1 160px;min-width:0}
@@ -611,7 +633,13 @@ footer .sp{margin-left:auto}
 .pc-form .err{color:var(--bad);font-size:12.5px;margin-top:12px;min-height:1.2em}
 .pc-form .tsub{font-size:11.5px;color:var(--ink-dim)}
 /* ИНТЕРАКТИВНЫЙ ЧАРНИК (p3j_sheet.js, v1.45) */
-.sheet .sh-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:22px 0 0}
+.sheet .sh-bar{margin:22px 0 0;display:flex;flex-direction:column;gap:6px}
+.sh-edit{width:100%;padding:15px 18px;border-radius:12px;border:2px solid var(--acc);background:var(--acc);color:var(--acc-ink);
+  font:700 15px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;box-shadow:0 8px 26px -10px rgba(var(--glow),.9)}
+.sh-edit:hover{filter:brightness(1.1)}
+.sh-hint{font-size:12px;color:var(--ink-dim)}
+.sh-bar.editing{position:sticky;top:58px;z-index:60;background:var(--bg);padding:10px 0 8px;border-bottom:1px solid var(--acc)}
+.sh-bar.editing .sh-edit{background:transparent;color:var(--acc)}
 .sheet .tag{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc-2);border:1px solid var(--line);border-radius:999px;padding:2px 6px;margin-left:4px;vertical-align:middle}
 .sh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 22px}
 @media(max-width:760px){.sh-grid{grid-template-columns:1fr}}

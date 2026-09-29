@@ -150,8 +150,12 @@ function skillOpts(sel){var o='<option value="">—</option>';SHEET_SKILLS.forEa
 function sheetHtml(x,editable){
   var edit=editable&&!!SHEET_EDIT[x.id],out='';
   out+='<div class="sheet" data-pc="'+esc(x.id)+'">';
-  if(editable) out+='<div class="sh-bar"><button type="button" class="mini'+(edit?' on':'')+'" data-sh="edit">'+(edit?'Готово':'Правка листа')+'</button>'+
-    '<span class="tsub" id="shSaved">'+(edit?'Клик по точкам меняет значение; всё сохраняется само.':'')+'</span></div>';
+  /* сказано рассказчиком (v1.47): кнопку правки листа тяжело заметить —
+     теперь это крупная кнопка на всю ширину; в режиме правки панель липнет
+     к верху экрана, чтобы «Готово» всегда было под рукой */
+  if(editable) out+='<div class="sh-bar'+(edit?' editing':'')+'"><button type="button" class="sh-edit" data-sh="edit">'+
+    (edit?'✓ Готово — закончить правку':'✎ Править лист персонажа')+'</button>'+
+    '<span class="sh-hint" id="shSaved">'+(edit?'Нажимайте на точки, чтобы менять значения; всё сохраняется само.':'Здесь меняются атрибуты, навыки, дисциплины, охота, опыт и заметки.')+'</span></div>';
   out+=section('Бросок','',sheetRollHtml(x));
   out+=section('Атрибуты','',statsGrid(x,SHEET_ATTRS,'a',1,edit));
   out+=section('Навыки','',statsGrid(x,SHEET_SKILLS,'s',0,edit)+

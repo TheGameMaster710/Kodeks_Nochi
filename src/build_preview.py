@@ -8,6 +8,8 @@ s,k=re.subn(r'<script src="https://www\.gstatic\.com/firebasejs/[^"]+"></script>
 assert k==3,k
 for f in glob.glob('images/*.jpg'):
     s=s.replace("'"+f+"'","'data:image/jpeg;base64,"+base64.b64encode(open(f,'rb').read()).decode()+"'")
+for f in glob.glob('images/*.svg'):
+    s=s.replace("'"+f+"'","'data:image/svg+xml;base64,"+base64.b64encode(open(f,'rb').read()).decode()+"'")
 # мастерский слой встраиваем целиком — файл личный, для телефона рассказчика
 import json
 L=json.load(open('gm-layer.json'))

@@ -219,14 +219,17 @@ function showBootstrapForm(cb){
 /* ================= БЕЙДЖ И ВЫХОД ================= */
 function renderUserBadge(){
   var b=document.getElementById('userBadge');if(!b||!SESSION)return;
-  if(SESSION.preview){b.innerHTML='<b>Предпросмотр</b> · без сервера';return;}
-  b.innerHTML='<b>'+esc(SESSION.displayName)+'</b> · '+(ROLE_NAMES[SESSION.role]||SESSION.role)+
-    (SESSION.role==='admin'?' · <a id="badgeAdmin">пользователи</a>':'')+
-    (SESSION.role==='admin'||SESSION.role==='master'?' · <a id="badgeGm">тайны</a>':'')+
-    ' · <a id="badgeOut">выйти</a>';
+  var canG=SESSION.role==='admin'||SESSION.role==='master';
+  /* «Тайны мастера» и «Пользователи» — заметные кнопки, а не подчёркнутый
+     текст (сказано рассказчиком, v1.47: их тяжело было заметить) */
+  var gmBtn=canG?' <a class="ubtn gm" id="badgeGm">🔒 Тайны мастера</a>':'';
+  if(SESSION.preview) b.innerHTML='<b>Предпросмотр</b><span class="ubtn-note"> · без сервера</span>'+gmBtn;
+  else b.innerHTML='<b>'+esc(SESSION.displayName)+'</b><span class="ubtn-note"> · '+(ROLE_NAMES[SESSION.role]||SESSION.role)+'</span>'+gmBtn+
+    (SESSION.role==='admin'?' <a class="ubtn" id="badgeAdmin">Пользователи</a>':'')+
+    ' <a class="ubtn out" id="badgeOut">Выйти</a>';
   var a1=document.getElementById('badgeAdmin');if(a1)a1.addEventListener('click',function(){location.hash='#/admin/users';});
   var a2=document.getElementById('badgeGm');if(a2)a2.addEventListener('click',function(){location.hash='#/master/gm';});
-  document.getElementById('badgeOut').addEventListener('click',doLogout);
+  var a3=document.getElementById('badgeOut');if(a3)a3.addEventListener('click',doLogout);
 }
 function doLogout(){
   if(!fbAuth.currentUser){location.reload();return;}

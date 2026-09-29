@@ -143,14 +143,20 @@ function viewPlaces(){
 function viewDomains(){
   var c=catById('domains');
   var W=CITY_MAP.w||1000,H=CITY_MAP.h||640;
-  var shaped=DOMAINS.filter(function(d){return d.shape;});
+  /* shape — зона (угодья, район); point:'x,y' — одно здание (элизиум,
+     убежище): маленькая точка, чтобы соседние здания не перекрывали карту (v1.48) */
+  var shaped=DOMAINS.filter(function(d){return d.shape||d.point;});
   var svg='<svg viewBox="0 0 '+W+' '+H+'" id="mapsvg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">'+
     '<path d="M40 0H0V40" fill="none" stroke="rgba(224,129,46,.08)"/></pattern></defs>'+
     (CITY_MAP.img?'<image href="'+esc(CITY_MAP.img)+'" x="0" y="0" width="'+W+'" height="'+H+'" preserveAspectRatio="xMidYMid slice" opacity=".55"/>'
       :'<rect width="'+W+'" height="'+H+'" fill="url(#grid)"/>'+
        '<path d="M0 '+(H*.62)+' C'+(W*.25)+' '+(H*.5)+' '+(W*.45)+' '+(H*.8)+' '+(W*.7)+' '+(H*.66)+' S'+W+' '+(H*.5)+' '+W+' '+(H*.55)+'" stroke="rgba(92,134,192,.35)" stroke-width="18" fill="none"/>');
-  shaped.forEach(function(d){var K=DOMAIN_KINDS[d.kind]||['','#888'];
+  shaped.filter(function(d){return d.shape;}).forEach(function(d){var K=DOMAIN_KINDS[d.kind]||['','#888'];
     svg+='<polygon class="dom'+((d.threat||0)>=3?' threat':'')+'" data-id="'+esc(d.id)+'" points="'+esc(d.shape)+'" fill="'+K[1]+'" fill-opacity=".22" stroke="'+K[1]+'" stroke-width="2"/>';});
+  shaped.filter(function(d){return !d.shape&&d.point;}).forEach(function(d){var K=DOMAIN_KINDS[d.kind]||['','#888'];
+    var xy=String(d.point).split(',').map(parseFloat);
+    svg+='<g class="dom pt'+((d.threat||0)>=3?' threat':'')+'" data-id="'+esc(d.id)+'" transform="translate('+xy[0]+' '+xy[1]+')">'+
+      '<circle r="9" fill="transparent"/><circle class="dot" r="3.2" fill="'+K[1]+'" stroke="#07080C" stroke-width="1.2"/></g>';});
   if(!shaped.length) svg+='<text x="'+W/2+'" y="'+H/2+'" text-anchor="middle" fill="rgba(239,230,220,.4)" font-family="Cormorant Garamond,serif" font-size="30">Карта ждёт районов</text>'+
     '<text x="'+W/2+'" y="'+(H/2+30)+'" text-anchor="middle" fill="rgba(239,230,220,.3)" font-family="JetBrains Mono,monospace" font-size="12">районы появятся по мере того, как котерия узнаёт город</text>';
   svg+='</svg>';
@@ -192,6 +198,6 @@ function domainCard(c,x){
     '<span class="k">'+numOf(c.arr,x)+' · '+esc(c.one.toUpperCase())+(x.dead?' · ✝':'')+'</span><h3>'+esc(x.name)+'</h3>'+
     (x.short?'<p class="pr">'+inl(x.short)+'</p>':'')+
     '<div class="foot">'+ch.map(function(v,i){return '<span class="chip'+(i===0?' hot':'')+'">'+esc(v)+'</span>';}).join('')+'</div></a>'+
-    (x.shape?'<button type="button" class="dc-showmap" data-id="'+esc(x.id)+'">Показать на карте</button>':'')+
+    (x.shape||x.point?'<button type="button" class="dc-showmap" data-id="'+esc(x.id)+'">Показать на карте</button>':'')+
     '</div>';
 }
