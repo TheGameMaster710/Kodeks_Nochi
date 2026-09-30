@@ -14,6 +14,9 @@ function viewEntry(c,id){
     if(x.bane) pan+='<div class="panel"><h4>Проклятие</h4>'+md(x.bane)+'</div>';
     if(x.compulsion) pan+='<div class="panel"><h4>Одержимость'+(x.compulsion.name?': '+esc(x.compulsion.name):'')+'</h4>'+md(x.compulsion.text||'')+'</div>';
     if(pan) mid+=section('Кровь клана','',pan);
+    var cc=(typeof CLAN_COURT!=='undefined'?CLAN_COURT:[]).filter(function(g){return g.clan===x.name;});
+    if(cc.length) mid+=section('Иерархия клана',cc.length+' '+plural(cc.length,'ветвь','ветви','ветвей'),cc.map(function(g){
+      return '<div class="sec-head" style="margin:22px 0 12px"><h3>'+esc(g.sect)+'</h3>'+(g.note?'<span class="eyebrow">'+inl(g.note)+'</span>':'')+'</div>'+courtHtml(g);}).join(''));
     var mem=membersOf('clan',x);
     mid+=section('В городе',mem.length,mem.length?'<div class="subgrid">'+mem.map(personSub).join('')+'</div>'
       :emptyBox('Никого не записано','Члены клана, известные котерии, появятся здесь.'));

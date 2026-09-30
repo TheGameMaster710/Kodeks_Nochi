@@ -44,16 +44,27 @@ function statusChart(){
 
 /* ================= ДВОР ================= */
 function courtOf(sect){for(var i=0;i<COURT.length;i++)if(COURT[i].sect===sect)return COURT[i];return null;}
+/* v1.59 — карточка поста: только звание и ссылки на личностей (сказано
+   рассказчиком). Посты одного яруса с одинаковым званием сливаются в одну
+   карточку (лейтенанты, одно поколение). note/text в данных остаются как
+   справка, на карточке не выводятся. holders:[…] — несколько имён сразу. */
 function courtHtml(g){
-  var tiers={};g.seats.forEach(function(s){(tiers[s.tier||9]=tiers[s.tier||9]||[]).push(s);});
-  return '<div class="court">'+Object.keys(tiers).sort(function(a,b){return a-b;}).map(function(t){
-    return '<div class="row">'+tiers[t].map(function(s){
-      return '<div class="seat'+(s.holder?'':' vac')+'"><div class="ti">'+esc(s.title)+'</div><div class="ho">'+(s.holder?nameLink(s.holder):'<span style="opacity:.5">вакантно</span>')+'</div>'+
-        (s.note?'<div class="no">'+inl(s.note)+'</div>':'')+'</div>';}).join('')+'</div>';}).join('')+'</div>';
+  var tiers={},order=[];
+  g.seats.forEach(function(s){var t=s.tier||9;if(!tiers[t]){tiers[t]=[];order.push(t);}
+    var row=tiers[t],m=null;row.forEach(function(q){if(q.title===s.title)m=q;});
+    var names=(s.holders||[]).concat(s.holder?[s.holder]:[]);
+    if(m){names.forEach(function(n){if(m.names.indexOf(n)<0)m.names.push(n);});m.grp=m.grp||!!s.text;}
+    else row.push({title:s.title,names:names,grp:!!s.text});});
+  return '<div class="court">'+order.sort(function(a,b){return a-b;}).map(function(t){
+    return '<div class="row">'+tiers[t].map(function(s){var has=s.names.length;
+      return '<div class="seat'+(has||s.grp?'':' vac')+(s.grp&&!has?' grp':'')+'"><div class="ti">'+esc(s.title)+'</div>'+
+        (has?'<div class="ho">'+s.names.map(nameLink).join('<br>')+'</div>':s.grp?'':'<div class="ho"><span style="opacity:.5">вакантно</span></div>')+'</div>';}).join('')+'</div>';}).join('')+'</div>';
 }
 function viewCourt(t){
-  var tabs=COURT.map(function(g,i){return '<button class="mini'+(i===0?' on':'')+'" data-tab="'+i+'">'+esc(g.sect)+'</button>';}).join('');
-  var panes=COURT.map(function(g,i){return '<div class="cpane" data-pane="'+i+'"'+(i?' hidden':'')+'>'+courtHtml(g)+'</div>';}).join('');
+  var all=COURT.concat(typeof CLAN_COURT!=='undefined'?CLAN_COURT:[]);
+  function tab(g,i){return '<button class="mini'+(i===0?' on':'')+'" data-tab="'+i+'">'+esc(g.clan?g.clan+' · '+g.sect:g.sect)+'</button>';}
+  var tabs=COURT.map(tab).join('')+(all.length>COURT.length?'<span class="tabs-lbl">кланы</span>'+all.slice(COURT.length).map(function(g,j){return tab(g,COURT.length+j);}).join(''):'');
+  var panes=all.map(function(g,i){return '<div class="cpane" data-pane="'+i+'"'+(i?' hidden':'')+'>'+courtHtml(g)+'</div>';}).join('');
   var st=statusSeries(),rows=st.map(function(s){return [s.who?'[['+s.who+']]':'—',s.sect||'—',String(s.base),String(statusNow(s.who,s.sect,s.base))];});
   var inner=section('Иерархия города',COURT.length+' '+plural(COURT.length,'секта','секты','сект'),
       (COURT.length?'<div class="tabs">'+tabs+'</div>'+panes:emptyBox('Двор не описан','Иерархия города появится здесь.')))+
@@ -97,7 +108,13 @@ function graphData(){
     nodes[k]={id:k,name:n,href:hrefOf(n),kind:pc?'pc':pe?'person':'other'};list.push(nodes[k]);}return nodes[k];}
   function edge(a,b,type,note,gm){if(!a||!b)return;edges.push({a:node(a),b:node(b),type:REL_TYPES[type]?type:'other',note:note||'',gm:!!gm});}
   /* gm-рёбра (с v1.42, §1.3.4) — только при виде «Мастер» */
-  RELATIONS.filter(gmOk).forEach(function(r){edge(r.a,r.b,r.type,r.note,r.gm);});
+  /* одна пара и тот же тип — одно ребро (v1.52): тайная часть дописывается
+     к открытой заметке ребра, а не рисуется поверх второй линией */
+  RELATIONS.filter(gmOk).forEach(function(r){
+    if(r.gm){var t=REL_TYPES[r.type]?r.type:'other',host=null;
+      edges.forEach(function(e){if(!host&&!e.gm&&e.type===t&&((e.a===node(r.a)&&e.b===node(r.b))||(e.a===node(r.b)&&e.b===node(r.a))))host=e;});
+      if(host){host.note=(host.note?host.note+' · ':'')+'[для мастера] '+(r.note||'');return;}}
+    edge(r.a,r.b,r.type,r.note,r.gm);});
   BONDS.filter(gmOk).forEach(function(b){edge(b.thrall,b.regnant,'bond','ступень '+b.level+(b.note?' · '+b.note:''));});
   BOONS.filter(gmOk).filter(function(b){return b.status==='open'||!b.status;}).forEach(function(b){edge(b.debtor,b.creditor,'debt',(BOON_LEVELS[b.level]||['долг'])[0]+' долг');});
   allPeople().forEach(function(p){if(p.sire)edge(p.sire,p.name,'sire','');});
@@ -105,6 +122,7 @@ function graphData(){
   return {nodes:list,edges:edges};
 }
 var WEB_OFF={};
+var WEB_DBG=null; /* для тестов: последние узлы/рёбра графа и place() */
 var WEB_VB=null; /* {x,y,w,h} — текущая видимая область графа (масштаб/панорама),
   в координатах симуляции 0..1000 × 0..640; null = сброшена, вид «по размеру».
   Сохраняется между перерисовками (переключение фильтров), чтобы масштаб не
@@ -151,11 +169,40 @@ function drawWeb(G){
     '<button type="button" data-zoom="reset" class="rst" title="Сбросить масштаб" aria-label="Сбросить масштаб">1:1</button></div>';
   box.innerHTML=s+'</svg>'+zoomHtml;
   var svg=box.querySelector('svg'),lines=svg.querySelectorAll('.edge'),gs=svg.querySelectorAll('.node');
-  function place(){edges.forEach(function(e,i){var dx=e.b.x-e.a.x,dy=e.b.y-e.a.y,L=Math.sqrt(dx*dx+dy*dy)||1,
-      off=(e.k-1)*(e.k%2?1:-1)*0+(e.k===1?0:(e.k%2?1:-1)*Math.ceil((e.k-1)/2)*34)*(e.flip?-1:1),
+  /* Раскладка стрелок (v1.52): после того как узлы встали (или при перетаскивании)
+     стрелки проверяют себя. 1) Две стрелки РАЗНЫХ пар, лежащие почти на одной
+     прямой и перекрывающиеся по длине (угол < ~10°, расстояние < 18px, общий
+     отрезок ≥ 24px), разводятся изгибом в противоположные стороны — параллельно
+     одна стрелка не закроет другую. Пересечение под углом допустимо и не
+     трогается. 2) Стрелка, проходящая вплотную к чужому узлу, огибает его.
+     Параллельные связи одной пары разводятся, как и раньше, по номеру k. */
+  function pairKey(e){return e.a.id<e.b.id?e.a.id+'~'+e.b.id:e.b.id+'~'+e.a.id;}
+  function layoutBends(){
+    var off=edges.map(function(e){return e.k===1?0:(e.k%2?1:-1)*Math.ceil((e.k-1)/2)*34*(e.flip?-1:1);}),M=30,EPS=.17;
+    for(var i=0;i<edges.length;i++)for(var j=i+1;j<edges.length;j++){
+      var A=edges[i],B=edges[j];if(pairKey(A)===pairKey(B))continue;
+      var ax=A.b.x-A.a.x,ay=A.b.y-A.a.y,La=Math.sqrt(ax*ax+ay*ay)||1,bx=B.b.x-B.a.x,by=B.b.y-B.a.y,Lb=Math.sqrt(bx*bx+by*by)||1;
+      if(Math.abs(ax*by-ay*bx)/(La*Lb)>EPS)continue;
+      var d1=(ax*(B.a.y-A.a.y)-ay*(B.a.x-A.a.x))/La,d2=(ax*(B.b.y-A.a.y)-ay*(B.b.x-A.a.x))/La;
+      if(Math.abs(d1)>18||Math.abs(d2)>18)continue;
+      var t1=((B.a.x-A.a.x)*ax+(B.a.y-A.a.y)*ay)/La,t2=((B.b.x-A.a.x)*ax+(B.b.y-A.a.y)*ay)/La;
+      if(Math.min(La,Math.max(t1,t2))-Math.max(0,Math.min(t1,t2))<24)continue;
+      var side=(d1+d2)/2,s=Math.abs(side)<1?1:(side>0?1:-1),same_dir=(ax*bx+ay*by)>0?1:-1;
+      off[i]-=M*s;off[j]+=M*s*same_dir;
+    }
+    edges.forEach(function(e,i){
+      var dx=e.b.x-e.a.x,dy=e.b.y-e.a.y,L2=dx*dx+dy*dy||1,L=Math.sqrt(L2);
+      N.forEach(function(n){if(n===e.a||n===e.b)return;
+        var t=((n.x-e.a.x)*dx+(n.y-e.a.y)*dy)/L2;if(t<.04||t>.96)return;
+        var dv=(dx*(n.y-e.a.y)-dy*(n.x-e.a.x))/L;if(Math.abs(dv)<22)off[i]+=(dv>0?-1:1)*34;});
+    });
+    return off.map(function(v){return Math.max(-110,Math.min(110,v));});
+  }
+  function place(){var bend=layoutBends();edges.forEach(function(e,i){var dx=e.b.x-e.a.x,dy=e.b.y-e.a.y,L=Math.sqrt(dx*dx+dy*dy)||1,off=bend[i],
       cx=(e.a.x+e.b.x)/2-dy/L*off,cy=(e.a.y+e.b.y)/2+dx/L*off;
     lines[i].setAttribute('d','M'+e.a.x.toFixed(1)+' '+e.a.y.toFixed(1)+'Q'+cx.toFixed(1)+' '+cy.toFixed(1)+' '+e.b.x.toFixed(1)+' '+e.b.y.toFixed(1));});
     N.forEach(function(n,i){gs[i].setAttribute('transform','translate('+n.x.toFixed(1)+','+n.y.toFixed(1)+')');});}
+  WEB_DBG={N:N,edges:edges,place:place};
   place();
   function pt(ev){var p=svg.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
   /* Масштаб/панорама: viewBox — «камера» над неизменной сценой 1000×640,
@@ -199,7 +246,7 @@ function viewLineage(t){
   var ppl=allPeople();
   function kids(n){return ppl.filter(function(p){return same(p.sire,n);});}
   function row(p){return '<a class="lrow" href="'+personHref(p)+'"><span class="nm">'+(p.dead?'✝ ':'')+esc(p.name)+'</span><span class="ds">'+inl(p.short||'')+'</span>'+
-    '<span class="meta">'+(p.gen?'<span class="chip hot">'+p.gen+'-е пок.</span>':'')+(p.clan?'<span class="chip">'+esc(p.clan)+'</span>':'')+'</span></a>';}
+    '<span class="meta">'+(p.gen?'<span class="chip hot">'+p.gen+'-е пок.</span>':'<span class="chip" style="opacity:.55" title="Поколение не указано">пок. ?</span>')+(p.clan?'<span class="chip">'+esc(p.clan)+'</span>':'')+'</span></a>';}
   function branch(p){var k=kids(p.name);return '<li>'+row(p)+(k.length?'<ul>'+k.map(branch).join('')+'</ul>':'')+'</li>';}
   var roots=ppl.filter(function(p){return !p.sire||!ppl.some(function(q){return same(q.name,p.sire);});});
   var ghostSires={},html='';
@@ -207,10 +254,10 @@ function viewLineage(t){
   var linked=roots.filter(function(p){return !p.sire&&(kids(p.name).length);});
   var loose=roots.filter(function(p){return !p.sire&&!kids(p.name).length;});
   linked.forEach(function(p){html+=branch(p);});
-  Object.keys(ghostSires).forEach(function(s){html+='<li><div class="lrow ghost"><span class="nm">'+esc(s)+'</span><span class="ds">сир без заметки</span></div><ul>'+ghostSires[s].map(branch).join('')+'</ul></li>';});
+  Object.keys(ghostSires).forEach(function(s){var gm=(typeof GHOST_META!=='undefined'&&GHOST_META[s])||{};html+='<li><div class="lrow ghost"><span class="nm">'+esc(s)+'</span><span class="ds">сир без заметки</span><span class="meta">'+(gm.gen?'<span class="chip hot">'+gm.gen+'-е пок.</span>':'<span class="chip" style="opacity:.55">пок. ?</span>')+(gm.clan?'<span class="chip">'+esc(gm.clan)+'</span>':'')+'</span></div><ul>'+ghostSires[s].map(branch).join('')+'</ul></li>';});
   var inner=html?'<ul class="ltree">'+html+'</ul>':emptyBox('Родословных пока нет','Когда станут известны сиры, здесь вырастет древо. Сиры без заметки — пунктиром.');
   if(loose.length) inner+=section('Без известного сира',loose.length,'<div class="subgrid">'+loose.map(personSub).join('')+'</div>');
-  toolShell(t,'Кровь помнит, откуда пришла. Древо собирается из поля sire: у каждого — поколение и клан.',inner);
+  toolShell(t,'Кровь помнит, откуда пришла. Древо собирается из поля sire: у каждого — поколение и клан. «пок. ?» — поколение ещё не вписано (поле gen).',inner);
 }
 
 /* ================= МАСКАРАД ================= */

@@ -243,13 +243,31 @@ function jcard(x,eyebrow,strip,extraCls){
     (x.short?'<p class="princ">'+inl(x.short)+'</p>':'')+
     '</div>'+stripHtml((x.quick||[]).concat(strip||[]))+'</div>';
 }
+/* Одно имя — одна строка связи (v1.52): тайная связь с тем же персонажем, что
+   и открытая, не даёт вторую строку, а дописывается к первой выделенной
+   частью (.gm-inl). Ключ — первая [[ссылка]] строки; тайная строка без
+   открытой пары выводится отдельно, как раньше. */
+function tieKey(t){var s=typeof t==='string'?t:(t&&t.text)||'';var m=s.match(/^\s*\[\[([^\]|]+)/);return m?m[1].trim():null;}
+function tieRows(ties){
+  var rows=[];
+  ties.forEach(function(t){
+    var isGm=typeof t!=='string'&&t.gm,text=typeof t==='string'?t:(t.text||''),k=tieKey(t);
+    if(isGm&&k){
+      for(var i=0;i<rows.length;i++)if(!rows[i].gm&&rows[i].key&&same(rows[i].key,k)){
+        rows[i].parts.push(text.replace(/^\s*\[\[[^\]]+\]\]\s*[—–-]\s*/,''));return;}
+    }
+    rows.push({key:k,gm:!!isGm,text:text,parts:[]});
+  });
+  return rows;
+}
 function commonTail(x){
   var out='';
   if(x.concept&&x.concept.length) out+=section('Концепция','',defsHtml(x.concept));
   (x.blocks||[]).filter(gmOk).forEach(function(b){out+=blockHtml(b);});
-  var ties=(x.ties||[]).filter(gmOk);
-  if(ties.length) out+=section('Связи',ties.length,'<div class="panel"><ul>'+ties.map(function(t){
-    return typeof t==='string'?'<li>'+md(t)+'</li>':'<li class="gm-li">'+md(t.text||'')+' '+gmBadge()+'</li>';}).join('')+'</ul></div>');
+  var tr=tieRows((x.ties||[]).filter(gmOk));
+  if(tr.length) out+=section('Связи',tr.length,'<div class="panel"><ul>'+tr.map(function(r){
+    if(r.gm) return '<li class="gm-li">'+md(r.text)+' '+gmBadge()+'</li>';
+    return '<li>'+md(r.text)+r.parts.map(function(p){return ' <span class="gm-inl">'+gmBadge()+' '+md(p)+'</span>';}).join('')+'</li>';}).join('')+'</ul></div>');
   out+=playlistHtml(x.playlist);
   out+=backlinksHtml(x);
   return out;
@@ -444,8 +462,16 @@ function politicsHtml(x){
   bonds.forEach(function(b){rows.push('<li>Кровные узы '+dots(b.level,3)+': '+nameLink(b.thrall)+' → '+nameLink(b.regnant)+(b.note?' — '+inl(b.note):'')+gb(b)+'</li>');});
   boons.forEach(function(b){var L=BOON_LEVELS[b.level]||['?',''];
     rows.push('<li>'+L[0]+' долг ('+(BOON_STATUS[b.status]||b.status)+'): '+nameLink(b.debtor)+' должен '+nameLink(b.creditor)+(b.why?' — '+inl(b.why):'')+gb(b)+'</li>');});
-  rel.forEach(function(r){var T=REL_TYPES[r.type]||REL_TYPES.other;
-    rows.push('<li><span style="color:'+T[1]+'">'+T[0]+'</span>: '+nameLink(same(r.a,n)?r.b:r.a)+(r.note?' — '+inl(r.note):'')+gb(r)+'</li>');});
+  /* одно имя — одна строка (v1.52): тайная связь с тем же персонажем
+     дописывается к открытой выделенной частью, а не даёт вторую строку */
+  var relRows=[];
+  rel.forEach(function(r){var other=same(r.a,n)?r.b:r.a;
+    if(r.gm)for(var i=0;i<relRows.length;i++)if(!relRows[i].r.gm&&same(relRows[i].other,other)){relRows[i].parts.push(r);return;}
+    relRows.push({r:r,other:other,parts:[]});});
+  relRows.forEach(function(w){var r=w.r,T=REL_TYPES[r.type]||REL_TYPES.other;
+    rows.push('<li><span style="color:'+T[1]+'">'+T[0]+'</span>: '+nameLink(w.other)+(r.note?' — '+inl(r.note):'')+gb(r)+
+      w.parts.map(function(p){var PT=REL_TYPES[p.type]||REL_TYPES.other,same_t=p.type===r.type;
+        return ' <span class="gm-inl">'+gmBadge()+' '+(same_t?'':'<span style="color:'+PT[1]+'">'+PT[0]+'</span>'+(p.note?': ':''))+inl(p.note||'')+'</span>';}).join('')+'</li>');});
   if(x.status) Object.keys(x.status).forEach(function(s){rows.push('<li>Статус ('+esc(s)+'): '+dots(statusNow(n,s,x.status[s]))+'</li>');});
   if(rows.length) out=section('Положение среди Сородичей',rows.length,'<div class="panel"><ul>'+rows.join('')+'</ul></div>');
   return out;
