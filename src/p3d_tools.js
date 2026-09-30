@@ -256,6 +256,7 @@ function viewLineage(t){
   linked.forEach(function(p){html+=branch(p);});
   Object.keys(ghostSires).forEach(function(s){var gm=(typeof GHOST_META!=='undefined'&&GHOST_META[s])||{};html+='<li><div class="lrow ghost"><span class="nm">'+esc(s)+'</span><span class="ds">сир без заметки</span><span class="meta">'+(gm.gen?'<span class="chip hot">'+gm.gen+'-е пок.</span>':'<span class="chip" style="opacity:.55">пок. ?</span>')+(gm.clan?'<span class="chip">'+esc(gm.clan)+'</span>':'')+'</span></div><ul>'+ghostSires[s].map(branch).join('')+'</ul></li>';});
   var inner=html?'<ul class="ltree">'+html+'</ul>':emptyBox('Родословных пока нет','Когда станут известны сиры, здесь вырастет древо. Сиры без заметки — пунктиром.');
+  inner='<div class="panel" style="margin-bottom:22px"><h4>Как считаются поколения</h4>'+md('Поколение — число сиров между вампиром и Каином (сам Каин — нулевое), так что потомок всегда на одно поколение дальше сира. Самое младшее поколение, существующее во всех кланах, — 13-е; всё, что дальше, — тонкокровные, которых считают отдельным кланом.')+'</div>'+inner;
   if(loose.length) inner+=section('Без известного сира',loose.length,'<div class="subgrid">'+loose.map(personSub).join('')+'</div>');
   toolShell(t,'Кровь помнит, откуда пришла. Древо собирается из поля sire: у каждого — поколение и клан. «пок. ?» — поколение ещё не вписано (поле gen).',inner);
 }
