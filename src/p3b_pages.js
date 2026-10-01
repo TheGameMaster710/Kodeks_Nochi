@@ -33,7 +33,8 @@ function viewEntry(c,id){
             '<div class="eff">'+md(p.text||'')+'</div></article>';}).join('')+'</div>';}).join('');
     mid+=section('Силы',(x.powers||[]).length,inner||emptyBox('Сил пока нет','Силы появятся здесь, разложенные по уровням.'));
   }
-  if(c.id==='loresheets'){
+  if(c.id==='loresheets'&&x.year!=null) strip=[['Год',String(x.year)]];
+  if(c.id==='loresheets'&&(x.levels||[]).length){
     mid+=section('Ступени',(x.levels||[]).length,(x.levels||[]).length?'<div class="grid">'+x.levels.map(function(l){
       return '<article class="card"><span class="tag">'+dots(l[0])+'</span><h4>'+esc(l[1])+'</h4><div class="eff">'+md(l[2]||'')+'</div></article>';}).join('')+'</div>'
       :emptyBox('Ступеней пока нет','Ступени лоршита появятся здесь.'));

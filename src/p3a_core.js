@@ -307,7 +307,7 @@ function chipsFor(c,x){
   var ch=[];
   if(c.id==='clans'){(x.disciplines||[]).forEach(function(d){ch.push(d);});}
   else if(c.id==='disciplines'){if(x.kind)ch.push(x.kind);if(x.resonance)ch.push(x.resonance);ch.push((x.powers||[]).length+' сил');}
-  else if(c.id==='loresheets'){ch.push((x.levels||[]).length+' ступеней');}
+  else if(c.id==='loresheets'){if(x.year!=null)ch.push(String(x.year));if((x.levels||[]).length)ch.push(x.levels.length+' ступеней');}
   else if(c.id==='sects'){var m=membersOf('sect',x);ch.push(m.length+' '+plural(m.length,'член','члена','членов'));}
   else if(c.id==='people'){[x.clan,x.sect,x.role,x.gen?x.gen+'-е пок.':''].forEach(function(v){if(v)ch.push(v);});}
   else if(c.id==='threats'){if(x.kind)ch.push(x.kind);}
