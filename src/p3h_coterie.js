@@ -103,7 +103,7 @@ function findLivePc(id){for(var i=0;i<LIVE_PCS.length;i++)if(LIVE_PCS[i].id===id
 function pcMiniList(list){
   if(!list.length) return '<div class="tsub">Пока никого.</div>';
   return '<div class="pc-mini-list">'+list.map(function(x){
-    return '<div class="row"><a href="#/coterie/'+x.id+'">'+esc(x.name)+(x.dead?' ✝':'')+'</a>'+
+    return '<div class="row"><a href="#/coterie/'+x.id+'">'+esc(x.name)+(x.dead?' ☾':'')+'</a>'+
       '<span class="tag">'+esc(x.clan||'—')+'</span></div>';}).join('')+'</div>';
 }
 function coterieLiveHtml(){

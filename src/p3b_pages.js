@@ -88,7 +88,7 @@ function viewPlayers(){
     return '<a class="god-card" href="#/player/'+pl.id+'" style="--c:'+(pl.acc||c.c)+'"><span class="k">'+numOf(PLAYERS,pl)+' · ИГРОК</span>'+
       '<h3>'+esc(pl.name)+'</h3><p class="pr">'+inl(pl.short||'')+'</p><div class="foot">'+
       '<span class="chip hot">'+list.length+' '+plural(list.length,'персонаж','персонажа','персонажей')+'</span>'+
-      list.map(function(x){return '<span class="chip">'+(x.dead?'✝ ':'')+esc(x.name)+'</span>';}).join('')+'</div></a>';}).join('');
+      list.map(function(x){return '<span class="chip">'+(x.dead?'☾ ':'')+esc(x.name)+'</span>';}).join('')+'</div></a>';}).join('');
   var orphans=PCS.filter(function(x){return !findIn(PLAYERS,x.player);});
   var inner=PLAYERS.length||PCS.length?'<div class="gods">'+cards+'</div>'+
     (orphans.length?'<div class="sec-head" style="margin:34px 0 14px"><h3>Без игрока</h3></div><div class="subgrid">'+orphans.map(personSub).join('')+'</div>':'')
@@ -168,7 +168,15 @@ function viewDomains(){
     return '<span class="legend-item"><i style="background:'+K[1]+'"></i>'+K[0]+'<b>'+DOMAINS.filter(function(d){return d.kind===k;}).length+'</b></span>';}).join('')+'</div>';
   var gh=(GHOSTS.domains||[]).filter(function(n){return !LINKS[n];});
   var ghostCards=gh.map(function(n){return ghostCard('ДОМЕН',n,[],'');}).join('');
-  var list=(DOMAINS.length||gh.length)?'<div class="gods" style="margin-top:26px">'+DOMAINS.map(function(x){return domainCard(c,x);}).join('')+ghostCards+'</div>'
+  /* v1.63 — карточки под картой сгруппированы по виду домена (сворачиваемые
+     секции), чтобы на телефоне не шли одним длинным списком. */
+  function dgroup(title,color,n,cards){return '<details class="dgroup" open style="--c:'+color+'"><summary><i></i><span>'+esc(title)+'</span><b>'+n+'</b></summary><div class="gods">'+cards+'</div></details>';}
+  var groups=Object.keys(DOMAIN_KINDS).map(function(k){var arr=DOMAINS.filter(function(d){return d.kind===k;});
+    return arr.length?dgroup(DOMAIN_KINDS[k][0],DOMAIN_KINDS[k][1],arr.length,arr.map(function(x){return domainCard(c,x);}).join('')):'';}).join('');
+  var rest=DOMAINS.filter(function(d){return !DOMAIN_KINDS[d.kind];});
+  if(rest.length) groups+=dgroup('Прочее','#7E7A8A',rest.length,rest.map(function(x){return domainCard(c,x);}).join(''));
+  if(gh.length) groups+=dgroup('Без записи','#7E7A8A',gh.length,ghostCards);
+  var list=(DOMAINS.length||gh.length)?'<div style="margin-top:26px">'+groups+'</div>'
     +(gh.length?'<p class="hint">Пунктирные карточки — упомянуты в заметках, но своей записи ещё нет; на карте не показаны, пока нет координат (shape).</p>':''):'';
   listShell(c,'<div class="map" id="map">'+svg+'<div class="maptip" id="maptip" hidden></div></div>'+legend+
     (shaped.length?'<p class="hint">Названия и подробности — при наведении на область карты, либо кнопкой «Показать на карте» в карточке ниже.</p>':'')+
@@ -199,7 +207,7 @@ function domainCard(c,x){
   var ch=chipsFor(c,x);
   return '<div class="god-card'+(x.dead?' dead':'')+'" style="--c:'+(x.acc||c.c)+'">'+
     '<a class="dc-body" href="#/'+c.route+'/'+x.id+'">'+
-    '<span class="k">'+numOf(c.arr,x)+' · '+esc(c.one.toUpperCase())+(x.dead?' · ✝':'')+'</span><h3>'+esc(x.name)+'</h3>'+
+    '<span class="k">'+numOf(c.arr,x)+' · '+esc(c.one.toUpperCase())+(x.dead?' · ☾ торпор':'')+'</span><h3>'+esc(x.name)+'</h3>'+
     (x.short?'<p class="pr">'+inl(x.short)+'</p>':'')+
     '<div class="foot">'+ch.map(function(v,i){return '<span class="chip'+(i===0?' hot':'')+'">'+esc(v)+'</span>';}).join('')+'</div></a>'+
     (x.shape||x.point?'<button type="button" class="dc-showmap" data-id="'+esc(x.id)+'">Показать на карте</button>':'')+

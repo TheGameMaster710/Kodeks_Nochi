@@ -245,7 +245,7 @@ function drawWeb(G){
 function viewLineage(t){
   var ppl=allPeople();
   function kids(n){return ppl.filter(function(p){return same(p.sire,n);});}
-  function row(p){return '<a class="lrow" href="'+personHref(p)+'"><span class="nm">'+(p.dead?'✝ ':'')+esc(p.name)+'</span><span class="ds">'+inl(p.short||'')+'</span>'+
+  function row(p){return '<a class="lrow" href="'+personHref(p)+'"><span class="nm">'+(p.dead?'☾ ':'')+esc(p.name)+'</span><span class="ds">'+inl(p.short||'')+'</span>'+
     '<span class="meta">'+(p.gen?'<span class="chip hot">'+p.gen+'-е пок.</span>':'<span class="chip" style="opacity:.55" title="Поколение не указано">пок. ?</span>')+(p.clan?'<span class="chip">'+esc(p.clan)+'</span>':'')+'</span></a>';}
   function branch(p){var k=kids(p.name);return '<li>'+row(p)+(k.length?'<ul>'+k.map(branch).join('')+'</ul>':'')+'</li>';}
   var roots=ppl.filter(function(p){return !p.sire||!ppl.some(function(q){return same(q.name,p.sire);});});

@@ -36,6 +36,22 @@ var SHEET_SKILLS=[
    идут в списке первыми */
 var PRED_REF=['Уличная кошка','Мешочник','Кровавая пиявка','Тесак','Консенсуалист','Фермер','Осирис','Песочный человек','Королева сцены','Сирена'];
 var ADV_KINDS={merit:'Достоинство',flaw:'Недостаток',bg:'Фон'};
+/* v1.64 — достоинства/недостатки на листе выбираются из MERITS сайта
+   (сказано рассказчиком), а не вписываются руками. Вид (k) и допустимое
+   число точек берутся из записи: kind → k, dots ('••' или '•–•••••') →
+   диапазон. Старые, вписанные вручную строки сохраняются как «своё». */
+var ADV_KIND_OF={'Достоинство':'merit','Недостаток':'flaw','Предыстория':'bg','Фон':'bg'};
+function advFind(n){n=String(n||'').trim();if(!n)return null;for(var i=0;i<MERITS.length;i++)if(MERITS[i].name===n)return MERITS[i];return null;}
+function advRange(n){var m=advFind(n);if(!m||!m.dots)return [0,5];
+  var p=String(m.dots).split(/[–—-]/).map(function(q){return (q.match(/•/g)||[]).length;}).filter(function(q){return q>0;});
+  if(!p.length)return [0,5];return [Math.min.apply(null,p),Math.max.apply(null,p)];}
+function advOptions(cur){
+  var groups={},order=[];MERITS.forEach(function(m){var g=m.kind||'Прочее';if(!groups[g]){groups[g]=[];order.push(g);}groups[g].push(m);});
+  var h='<option value="">— выбрать —</option>';
+  order.forEach(function(g){h+='<optgroup label="'+esc(g)+'">'+groups[g].map(function(m){
+    return '<option value="'+esc(m.name)+'"'+(m.name===cur?' selected':'')+'>'+esc(m.name)+(m.dots?' ('+esc(m.dots)+')':'')+'</option>';}).join('')+'</optgroup>';});
+  if(cur&&!advFind(cur)) h+='<optgroup label="Своё (нет на сайте)"><option value="'+esc(cur)+'" selected>'+esc(cur)+'</option></optgroup>';
+  return h;}
 
 var SHEET_EDIT={};  /* id → true, пока открыт режим «Правка листа» */
 var SHEET_SEL={};   /* id → {t:['a:str','s:bra','d:0'], mod, dif, surge} — выбранный пул */
@@ -196,14 +212,15 @@ function sheetHtml(x,editable){
   var adv=x.advantages||[],ah;
   if(edit){
     ah='<div class="sh-adv-ed">'+adv.map(function(a,i){
-      return '<div class="sh-arow"><input data-shf="an" data-i="'+i+'" value="'+esc(a[0])+'" placeholder="Название">'+
-        '<select data-shf="ak" data-i="'+i+'">'+Object.keys(ADV_KINDS).map(function(k){return '<option value="'+k+'"'+(a[2]===k?' selected':'')+'>'+ADV_KINDS[k]+'</option>';}).join('')+'</select>'+
-        sDots(x,'v:'+i,+a[1]||0,0,5,true)+'<button type="button" class="mini" data-sh="adel" data-i="'+i+'">✕</button>'+
+      var rg=advRange(a[0]);
+      return '<div class="sh-arow"><select data-shf="an" data-i="'+i+'">'+advOptions(a[0])+'</select>'+
+        '<span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+
+        sDots(x,'v:'+i,+a[1]||0,rg[0],rg[1],true)+'<button type="button" class="mini" data-sh="adel" data-i="'+i+'">✕</button>'+
         '<input data-shf="at" data-i="'+i+'" value="'+esc(a[3]||'')+'" placeholder="Пояснение (по желанию)"></div>';}).join('')+
-      '<button type="button" class="mini" data-sh="aadd">+ Строка</button></div>';
+      (MERITS.length?'<button type="button" class="mini" data-sh="aadd">+ Строка</button>':'<p class="hint">На сайте пока нет ни одного преимущества или недостатка — выбирать не из чего.</p>')+'</div>';
   } else {
     ah=adv.length?'<div class="sh-adv">'+adv.map(function(a){
-      return '<div class="sh-row"><span class="sh-name static">'+esc(a[0]||'—')+' <span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+(a[3]?'<span class="tsub"> — '+esc(a[3])+'</span>':'')+'</span>'+sDots(x,'',+a[1]||0,0,5,false)+'</div>';}).join('')+'</div>'
+      return '<div class="sh-row"><span class="sh-name static">'+(advFind(a[0])?wikiTag(a[0],esc(a[0])):esc(a[0]||'—'))+' <span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+(a[3]?'<span class="tsub"> — '+esc(a[3])+'</span>':'')+'</span>'+sDots(x,'',+a[1]||0,0,5,false)+'</div>';}).join('')+'</div>'
       :emptyBox('Пока пусто','Достоинства, недостатки и фоны появятся здесь.');
   }
   out+=section('Достоинства, недостатки, фоны',adv.length,ah);
@@ -263,7 +280,7 @@ document.addEventListener('click',function(e){
     if(p[0]==='a'){x.attrs=x.attrs||{};cur=sAttr(x,p[1]);x.attrs[p[1]]=Math.max(mn,cur===v?v-1:v);}
     else if(p[0]==='s'){x.skills=x.skills||{};cur=sSkill(x,p[1]);x.skills[p[1]]=Math.max(mn,cur===v?v-1:v);}
     else if(p[0]==='d'){var dd=x.disciplines[+p[1]];cur=+dd[1]||0;dd[1]=cur===v?v-1:v;}
-    else if(p[0]==='v'){var aa=x.advantages[+p[1]];cur=+aa[1]||0;aa[1]=cur===v?v-1:v;}
+    else if(p[0]==='v'){var aa=x.advantages[+p[1]],rg=advRange(aa[0]);cur=+aa[1]||0;aa[1]=Math.max(rg[0],Math.min(rg[1],cur===v?v-1:v));}
     refreshTrackers(key);sheetRedraw(x);sheetQueueSave(x);return;
   }
   if(a==='dadd'){x.disciplines=x.disciplines||[];x.disciplines.push(['',1,'']);sheetRedraw(x);sheetQueueSave(x);return;}
@@ -284,7 +301,9 @@ function sheetField(e){
   if(el.id==='sh_specs') x.specs=el.value;
   else if(f==='dn'){x.disciplines[i][0]=el.value;}
   else if(f==='dp'){x.disciplines[i][2]=el.value;}
-  else if(f==='an'){x.advantages[i][0]=el.value;}
+  else if(f==='an'){var av=x.advantages[i],am=advFind(el.value),ar;av[0]=el.value;
+    if(am){av[2]=ADV_KIND_OF[am.kind]||'merit';ar=advRange(el.value);av[1]=Math.max(ar[0],Math.min(ar[1],+av[1]||ar[0]));}
+    sheetRedraw(x);}
   else if(f==='ak'){x.advantages[i][2]=el.value;}
   else if(f==='at'){x.advantages[i][3]=el.value;}
   else if(f==='pred'||f==='huntA'||f==='huntS'||f==='notes'){x[f==='pred'?'predator':f]=el.value;}

@@ -318,7 +318,7 @@ function chipsFor(c,x){
 function listCard(c,x){
   var ch=chipsFor(c,x);
   return '<a class="god-card'+(x.dead?' dead':'')+'" href="#/'+c.route+'/'+x.id+'" style="--c:'+(x.acc||c.c)+'">'+
-    '<span class="k">'+numOf(c.arr,x)+' · '+esc(c.one.toUpperCase())+(x.dead?' · ✝':'')+'</span><h3>'+esc(x.name)+'</h3>'+
+    '<span class="k">'+numOf(c.arr,x)+' · '+esc(c.one.toUpperCase())+(x.dead?' · ☾ торпор':'')+'</span><h3>'+esc(x.name)+'</h3>'+
     (x.short?'<p class="pr">'+inl(x.short)+'</p>':'')+
     '<div class="foot">'+ch.map(function(v,i){return '<span class="chip'+(i===0?' hot':'')+'">'+esc(v)+'</span>';}).join('')+'</div></a>';
 }
@@ -447,13 +447,16 @@ function membersOf(field,x){var names=[x.name].concat(x.aliases||[]);
   return allPeople().filter(function(p){return names.indexOf(p[field])>-1;});}
 function personHref(p){return PCS.indexOf(p)>-1?'#/pc/'+p.id:'#/person/'+p.id;}
 function personSub(p){return '<a class="subcard" href="'+personHref(p)+'" style="--c:'+(p.acc||'var(--acc)')+'">'+
-  '<span class="k">'+(PCS.indexOf(p)>-1?'персонаж игрока':'личность')+(p.dead?' · ✝':'')+'</span><h4>'+esc(p.name)+'</h4>'+
+  '<span class="k">'+(PCS.indexOf(p)>-1?'персонаж игрока':'личность')+(p.dead?' · ☾ торпор':'')+'</span><h4>'+esc(p.name)+'</h4>'+
   '<div class="ds">'+esc([p.clan,p.sect,p.role].filter(Boolean).join(' · ')||p.short||'')+'</div></a>';}
 function politicsHtml(x){
   var n=x.name,out='';
   var bonds=BONDS.filter(gmOk).filter(function(b){return same(b.thrall,n)||same(b.regnant,n);});
   var boons=BOONS.filter(gmOk).filter(function(b){return same(b.debtor,n)||same(b.creditor,n);});
-  var rel=RELATIONS.filter(gmOk).filter(function(r){return same(r.a,n)||same(r.b,n);});
+  /* v1.73 — связь показывается только «от хозяина страницы»: note — на
+     странице a, noteB — на странице b (нет noteB — на странице b связи нет) */
+  function relNote(r){return same(r.a,n)?(r.note||''):(r.noteB||'');}
+  var rel=RELATIONS.filter(gmOk).filter(function(r){return same(r.a,n)||(same(r.b,n)&&r.noteB);});
   function gb(o){return o.gm?' '+gmBadge():'';}
   var sire=x.sire, childer=allPeople().filter(function(p){return same(p.sire,n);});
   var rows=[];
@@ -469,9 +472,9 @@ function politicsHtml(x){
     if(r.gm)for(var i=0;i<relRows.length;i++)if(!relRows[i].r.gm&&same(relRows[i].other,other)){relRows[i].parts.push(r);return;}
     relRows.push({r:r,other:other,parts:[]});});
   relRows.forEach(function(w){var r=w.r,T=REL_TYPES[r.type]||REL_TYPES.other;
-    rows.push('<li><span style="color:'+T[1]+'">'+T[0]+'</span>: '+nameLink(w.other)+(r.note?' — '+inl(r.note):'')+gb(r)+
+    rows.push('<li><span style="color:'+T[1]+'">'+T[0]+'</span>: '+nameLink(w.other)+(relNote(r)?' — '+inl(relNote(r)):'')+gb(r)+
       w.parts.map(function(p){var PT=REL_TYPES[p.type]||REL_TYPES.other,same_t=p.type===r.type;
-        return ' <span class="gm-inl">'+gmBadge()+' '+(same_t?'':'<span style="color:'+PT[1]+'">'+PT[0]+'</span>'+(p.note?': ':''))+inl(p.note||'')+'</span>';}).join('')+'</li>');});
+        return ' <span class="gm-inl">'+gmBadge()+' '+(same_t?'':'<span style="color:'+PT[1]+'">'+PT[0]+'</span>'+(relNote(p)?': ':''))+inl(relNote(p))+'</span>';}).join('')+'</li>');});
   if(x.status) Object.keys(x.status).forEach(function(s){rows.push('<li>Статус ('+esc(s)+'): '+dots(statusNow(n,s,x.status[s]))+'</li>');});
   if(rows.length) out=section('Положение среди Сородичей',rows.length,'<div class="panel"><ul>'+rows.join('')+'</ul></div>');
   return out;

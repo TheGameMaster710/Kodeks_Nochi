@@ -59,7 +59,7 @@ function trkInner(key){
    '<div class="tbox"><div class="th"><b>Здоровье</b><span class="val">'+(st.hMax-st.hSup-st.hAgg)+'/'+st.hMax+'</span></div><div class="pips">'+boxes(st.hMax,st.hAgg,st.hSup)+'</div>'+
      ctl('<div class="ctl"><button class="mini" data-act="d" data-p="h" data-k="s">+ ╱</button><button class="mini" data-act="d" data-p="h" data-k="a">+ ✕</button>'+
      '<button class="mini" data-act="h" data-p="h" data-k="s">− ╱</button><button class="mini" data-act="h" data-p="h" data-k="a">− ✕</button></div>')+
-     (st.hAgg>=st.hMax?'<div class="warn">Все клетки тяжёлые: торпор (или окончательная смерть).</div>':hFull?'<div class="warn">Ослаблен: −2 к физическим пулам.</div>':'')+'</div>'+
+     (st.hAgg>=st.hMax?'<div class="warn">Все клетки тяжёлые: торпор.</div>':hFull?'<div class="warn">Ослаблен: −2 к физическим пулам.</div>':'')+'</div>'+
    '<div class="tbox"><div class="th"><b>Сила воли</b><span class="val">'+(st.wMax-st.wSup-st.wAgg)+'/'+st.wMax+'</span></div><div class="pips">'+boxes(st.wMax,st.wAgg,st.wSup)+'</div>'+
      ctl('<div class="ctl"><button class="mini" data-act="d" data-p="w" data-k="s">+ ╱</button><button class="mini" data-act="d" data-p="w" data-k="a">+ ✕</button>'+
      '<button class="mini" data-act="h" data-p="w" data-k="s">− ╱</button><button class="mini" data-act="h" data-p="w" data-k="a">− ✕</button></div>')+
