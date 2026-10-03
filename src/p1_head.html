@@ -116,11 +116,17 @@ main{position:relative;z-index:10}
 .srch-res{position:absolute;right:0;top:calc(100% + 8px);width:min(440px,92vw);max-height:70vh;overflow:auto;
   background:#0E070B;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 22px 54px -18px #000;z-index:99}
 .srch-res[hidden]{display:none}
+/* v1.75 — пока открыты подсказки поиска, страница под ними затемняется, а
+   шапка поднимается над содержимым. На телефоне шапка не липкая, и без
+   своего слоя её выпадающий список оказывался ПОД текстом страницы. */
+.bar:has(.srch-res:not([hidden])){position:sticky;z-index:95}
+html:has(.srch-res:not([hidden]))::after{content:'';position:fixed;inset:0;z-index:94;background:rgba(4,2,5,.82);pointer-events:none}
 .srch-res a{display:block;padding:10px 14px;text-decoration:none;border-bottom:1px solid var(--line)}
 .srch-res a:last-child{border-bottom:0}
 .srch-res a:hover,.srch-res a.on{background:rgba(var(--glow),.14)}
 .srch-res .t{font-family:var(--serif);font-size:18px;font-weight:700}
 .srch-res .c{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin-left:8px}
+.srch-res .g{display:inline-block;margin-left:8px;padding:1px 7px;border:1px solid var(--line);border-radius:99px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-dim)}
 .srch-res .s{display:block;font-size:12.5px;color:var(--ink-dim);margin-top:2px}
 .srch-res mark{background:rgba(var(--glow),.35);color:var(--ink);border-radius:2px}
 .srch-res .none{padding:14px;font-size:13px;color:var(--ink-dim)}
@@ -397,11 +403,25 @@ a.lrow:hover{border-color:var(--c,var(--acc));transform:translateX(4px)}
 .web{position:relative;border:1px solid var(--line);border-radius:var(--r);background:rgba(0,0,0,.35);overflow:hidden;touch-action:none}
 .web svg{display:block;width:100%;height:min(70vh,640px);cursor:grab}
 .web svg:active{cursor:grabbing}
+.web.local{touch-action:pan-y}
+.web.local{height:min(60vh,520px)}
+.web .edge.dim{opacity:.16}
+.web.hl .edge.dim.on{opacity:.9}
+.web.local svg{height:100%}
+.web .node.me text{font-size:18px;fill:var(--acc)}
+
 .web .node{cursor:grab}
+.web-key{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 2px 0;font:500 11px/1.4 var(--mono);letter-spacing:.04em;color:var(--mute,#A38F8C)}
+.web-key span{display:inline-flex;align-items:center;gap:7px}
+.web-key i{display:inline-block;width:10px;height:10px;flex:none}
+.web-key .k-dot{border-radius:50%}
+.web-key .k-dia{transform:rotate(45deg);border-radius:2px;width:9px;height:9px}
+.web-key .k-ghost{border-radius:50%;border:1.5px dashed #8A8494;background:transparent}
 .web .node text{font-family:var(--serif);font-size:15px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:#000;stroke-width:3px}
-.web .edge{stroke-opacity:.55}
-.web.hl .node{opacity:.18}.web.hl .edge{stroke-opacity:.06}
-.web.hl .node.on{opacity:1}.web.hl .edge.on{stroke-opacity:.95}
+/* v1.85 — прозрачность линии задаётся через opacity, а не stroke-opacity: так вместе с линией гаснет и наконечник стрелки */
+.web .edge{opacity:.7}
+.web.hl .node{opacity:.18}.web.hl .edge{opacity:.06}
+.web.hl .node.on{opacity:1}.web.hl .edge.on{opacity:.95}
 .zoomctl{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:5px;z-index:2}
 .zoomctl button{width:30px;height:30px;font:700 16px/1 var(--mono);background:rgba(10,8,9,.72);border:1px solid var(--line);
   border-radius:8px;color:var(--ink-dim);cursor:pointer;transition:color .15s,border-color .15s}
@@ -410,6 +430,19 @@ a.lrow:hover{border-color:var(--c,var(--acc));transform:translateX(4px)}
 .filt{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
 .filt .mini i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .filt .mini.off{opacity:.4}
+.filt-l{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);align-self:center;margin:0 2px 0 8px}
+.filt-l:first-child{margin-left:0}
+.webpath select{max-width:44vw}
+.web .ehit{cursor:pointer;pointer-events:stroke}
+.web .edge.sel{opacity:1;stroke-width:4}
+.web.hassel .edge{opacity:.1}.web.hassel .edge.sel{opacity:1}.web.hassel .node{opacity:.28}.web.hassel .node.seln{opacity:1}
+.web.haspath .edge{opacity:.07}.web.haspath .node{opacity:.25}
+.web.haspath .edge.path{opacity:1;stroke-width:4}.web.haspath .node.path{opacity:1}
+.web-info{display:none;margin:10px 0 0;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:var(--r);background:var(--panel);font-size:14px;line-height:1.5}
+.web-info.on{display:block}
+.web-info .wi-l{margin-top:6px;color:var(--ink-dim)}
+.web-info .wi-l i{font-style:normal;color:var(--ink)}
+.web-info .pstep{font-family:var(--mono);font-size:11px;white-space:nowrap}
 
 /* ============ ДВОР ============ */
 .court{display:flex;flex-direction:column;gap:14px;align-items:center}
@@ -601,7 +634,8 @@ footer .sp{margin-left:auto}
 /* на телефоне шапка получает вторую строку: логин и кнопки не обрезаются */
 @media (max-width:760px){
   .bar{flex-wrap:wrap}
-  .bar{position:static} /* двухстрочная шапка на телефоне липкой была бы слишком высокой */
+  .bar{position:relative} /* двухстрочная шапка на телефоне липкой была бы слишком высокой; relative — чтобы работал z-index */
+  .bar:has(.srch-res:not([hidden])){position:relative}
   .sheet .sh-bar.editing{top:0}
   .brand{order:1}
   #userBadge{order:2;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;white-space:normal;row-gap:6px}
@@ -682,6 +716,15 @@ button.sd{cursor:pointer}button.sd:hover{box-shadow:0 0 0 3px rgba(var(--glow),.
 .sh-drow,.sh-arow{display:grid;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--line)}
 .sh-drow{grid-template-columns:1fr auto auto}
 .sh-arow{grid-template-columns:1fr auto auto auto}
+.sh-alock{font-family:var(--serif);font-weight:700;font-size:17px}
+.sh-alock i{font:500 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute,#A38F8C);border:1px dashed var(--line);border-radius:99px;padding:4px 8px;margin-left:6px;white-space:nowrap}
+.sh-adesc{grid-column:1/-1;flex-basis:100%;width:100%;font-size:14px;line-height:1.55;margin-top:6px}
+.sh-adesc .sh-ashort{margin:0 0 6px;color:var(--mute,#A38F8C)}
+.sh-adesc summary{cursor:pointer;font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--acc);padding:6px 0}
+.sh-adesc .sh-alv p{margin:8px 0}
+.sh-adesc .sh-alv.off{opacity:.38}
+.sh-adesc .sh-amore{margin:8px 0 0;font-size:13px}
+.sh-adv .sh-row{flex-wrap:wrap}
 .sh-drow textarea,.sh-arow input[data-shf=at]{grid-column:1/-1}
 @media(max-width:640px){.sh-arow{grid-template-columns:auto 1fr auto}.sh-arow select{grid-column:1/-1}}
 .sh-lab{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:12px 0 4px}

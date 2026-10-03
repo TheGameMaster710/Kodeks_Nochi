@@ -58,6 +58,12 @@ with sync_playwright() as p:
     print('saved hunt/specs/xp/notes:', d.get('huntA'), d.get('huntS'), d.get('specs'), d.get('xpTotal'), d.get('notes'), '|', pg.evaluate("document.getElementById('shSaved').textContent"))
     print('derived health 3+3, wp 3+2:', pg.evaluate("var s=trkGet(trkKey(findLivePc('%s')));[s.hMax,s.wMax]"%pid))
     pg.click('[data-sh="edit"]');pg.wait_for_timeout(100)
+    print('adv desc in view:', 'Легенда той ночи' in pg.inner_text('.sh-adv'), '| dimmed levels:', pg.eval_on_selector_all('.sh-adv .sh-alv.off','e=>e.length'), '| locked saved:', pg.evaluate("findLivePc('%s').advantages[0][4]"%pid))
+    pg.click('[data-sh="edit"]');pg.wait_for_timeout(100)
+    print('locked row: select gone =', pg.eval_on_selector_all('[data-shf="an"]','e=>e.length')==0, '| lock label =', pg.eval_on_selector_all('.sh-alock','e=>e.length'), '| dots editable =', pg.eval_on_selector_all('.sh-arow .sd','e=>e.length'))
+    pg.click('[data-sh="dot"][data-k="v:0"][data-v="2"]');pg.wait_for_timeout(50);print('dots after lock:', pg.evaluate("findLivePc('%s').advantages[0][1]"%pid))
+    pg.click('[data-sh="dot"][data-k="v:0"][data-v="4"]');pg.wait_for_timeout(50)
+    pg.click('[data-sh="edit"]');pg.wait_for_timeout(1000);print('fs lock flag:', json.dumps(pg.evaluate("__pcs['%s'].advantages"%pid),ensure_ascii=False))
     t=T();print('view: powers listed', 'Вторая сила' in t, '| hunt pool', 'Обаяние + Хитрость = 1' in t, '| xp avail 12', 'Доступно' in t, '| clan disc tag', 'КЛАНОВАЯ' in t.upper())
     # бросок
     pg.click('[data-sh="pick"][data-k="a:str"]');pg.click('[data-sh="pick"][data-k="s:bra"]');pg.wait_for_timeout(50)

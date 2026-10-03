@@ -13,7 +13,7 @@ var CATS=[
  {id:'predators',arr:PREDATORS,route:'predator',name:'Типы хищника',one:'тип хищника',theme:'predator',c:'#E0592A',ico:'claw',kind:'cards',
   d:'Как персонажи добывают кровь и что это им даёт.',
   lede:'Способы охоты, доступные в хронике: пул кормления, что получает хищник и чем платит.'},
- {id:'merits',arr:MERITS,route:'merit',name:'Преимущества и Недостатки',one:'запись',theme:'merit',c:'#7FB5A8',ico:'scale',kind:'cards',group:'kind',
+ {id:'merits',arr:MERITS,route:'merit',name:'Преимущества и Недостатки',one:'запись',theme:'merit',c:'#7FB5A8',ico:'scale',kind:'cards',group:'kind',full:true,
   d:'Достоинства, недостатки и предыстории.',
   lede:'Механические преимущества и недостатки, которые реально встречаются у персонажей хроники.'},
  {id:'loresheets',arr:LORESHEETS,route:'lore',name:'Лоршиты',one:'лоршит',theme:'lore',c:'#D8B97A',ico:'book',
@@ -268,6 +268,7 @@ function commonTail(x){
   if(tr.length) out+=section('Связи',tr.length,'<div class="panel"><ul>'+tr.map(function(r){
     if(r.gm) return '<li class="gm-li">'+md(r.text)+' '+gmBadge()+'</li>';
     return '<li>'+md(r.text)+r.parts.map(function(p){return ' <span class="gm-inl">'+gmBadge()+' '+md(p)+'</span>';}).join('')+'</li>';}).join('')+'</ul></div>');
+  if(typeof localWebHtml==='function') out+=localWebHtml(x);
   out+=playlistHtml(x.playlist);
   out+=backlinksHtml(x);
   return out;
@@ -413,10 +414,10 @@ function fullCard(c,x){
   if(c.id==='merits'){par=[['Вид',x.kind],['Точки',x.dots]];}
   par=par.filter(function(p){return p[1]!=null&&p[1]!=='';});
   return '<article class="card" id="c-'+c.route+'-'+x.id+'" style="--c:'+(x.acc||c.c)+'">'+
-    '<span class="tag">'+esc(x.kind||c.one)+(x.lvl?' '+x.lvl:'')+'</span><h4>'+esc(x.name)+'</h4>'+
+    '<span class="tag">'+esc(x.kind||c.one)+(x.lvl?' '+x.lvl:'')+'</span><h4>'+(c.full?'<a href="#/'+c.route+'/'+x.id+'">'+esc(x.name)+'</a>':esc(x.name))+'</h4>'+
     (x.short?'<div class="tsub">'+inl(x.short)+'</div>':'')+
     (par.length?'<dl class="par">'+par.map(function(p){return '<dt>'+esc(p[0])+'</dt><dd>'+inl(String(p[1]))+'</dd>';}).join('')+'</dl>':'')+
-    '<div class="eff">'+md(x.text||'')+'</div></article>';
+    '<div class="eff">'+md(x.text||'')+'</div>'+(c.full?'<p style="margin:12px 0 0"><a class="mini" href="#/'+c.route+'/'+x.id+'">Открыть заметку →</a></p>':'')+'</article>';
 }
 function ghostFullCard(c,name){
   return '<article class="card ghost"><span class="tag">'+esc(c.one)+' · нет</span><h4>'+esc(name)+'</h4>'+

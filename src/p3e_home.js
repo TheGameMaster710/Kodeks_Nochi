@@ -146,30 +146,76 @@ function initSession(){
 }
 
 /* ================= ПОИСК ================= */
+/* v1.76 — поиск по весам (сказано рассказчиком: запись должна идти выше,
+   чем случайное совпадение слова в тексте). Слои, от сильного к слабому:
+     имя (начало 100 / начало слова 90 / внутри 80) → алиасы 75 →
+     теги 70 (ручные tags:[…] записи + авто: клан, секта, роль, вид,
+     держатель) → короткое описание и заголовки блоков 40 → текст 10
+     (+ до 5 за частоту). Заготовки без своей записи идут ниже настоящих.
+   Запрос из нескольких слов: каждое слово должно найтись, очки складываются.
+   Окончания: «Гекаты» находит «Геката» (слово без 1–2 последних букв, ×0.8). */
 var IDX=null;
+function plainText(t){return String(t||'').replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g,'$2').replace(/\[\[([^\]]+)\]\]/g,'$1').replace(/\*\*/g,'');}
 function buildIndex(){
-  IDX=allEntries().map(function(e){return {name:e.name||'',cat:e.cat,href:e.href,text:strings(e.x).join(' · ').replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g,'$2').replace(/\[\[([^\]]+)\]\]/g,'$1').replace(/\*\*/g,'')};});
-  CATS.forEach(function(c){IDX.push({name:c.name,cat:'раздел',href:'#/cat/'+c.id,text:c.d+' '+c.lede});});
-  TOOLS.forEach(function(t){IDX.push({name:t.name,cat:'инструмент',href:'#/tool/'+t.id,text:t.d});});
-  CLAN_REF.forEach(function(r){if(!LINKS[r[0]])IDX.push({name:r[0],cat:'клан · заготовка',href:'#/cat/clans',text:r[1].join(', ')});});
+  IDX=allEntries().map(function(e){var x=e.x||{},tags=(x.tags||[]).slice(),heads=[];
+    [x.clan,x.sect,x.role,x.holder,x.sire,x.predator].forEach(function(v){if(v&&typeof v==='string')tags.push(v);});
+    if(x.kind){tags.push(typeof DOMAIN_KINDS!=='undefined'&&DOMAIN_KINDS[x.kind]?DOMAIN_KINDS[x.kind][0]:x.kind);}
+    if(x.year!=null)tags.push(String(x.year));
+    if(x.dead)tags.push('торпор');
+    if(x.short)heads.push(x.short);
+    (x.blocks||[]).forEach(function(b){if(b&&b.t&&(!b.gm||gmOn()))heads.push(b.t);});
+    return {name:e.name||'',cat:e.cat,href:e.href,real:1,aliases:(x.aliases||[]).concat(x.full?[x.full]:[]),tags:tags,heads:plainText(heads.join(' · ')),text:plainText(strings(x).filter(function(t){return !(x.tags&&x.tags.indexOf(t)>-1)&&!/^(images\/|data:)/.test(t);}).join(' · '))};});
+  function add(o){o.aliases=o.aliases||[];o.tags=o.tags||[];o.heads=o.heads||'';IDX.push(o);}
+  CATS.forEach(function(c){add({name:c.name,cat:'раздел',href:'#/cat/'+c.id,real:1,text:c.d+' '+c.lede});});
+  TOOLS.forEach(function(t){add({name:t.name,cat:'инструмент',href:'#/tool/'+t.id,real:1,text:t.d});});
+  CLAN_REF.forEach(function(r){if(!LINKS[r[0]])add({name:r[0],cat:'клан · заготовка',href:'#/cat/clans',tags:r[1],text:r[1].join(', ')});});
   Object.keys(GHOSTS).forEach(function(id){var c=catById(id);if(!c)return;
-    GHOSTS[id].forEach(function(n){if(!LINKS[n])IDX.push({name:n,cat:c.one+' · заготовка',href:'#/cat/'+id,text:'упомянуто в заметках, своей записи ещё нет'});});});
-  COMPULSIONS.clan.forEach(function(c){IDX.push({name:c[1],cat:'одержимость',href:'#/tool/compulsions',text:c[0]+' · '+c[2]});});
+    GHOSTS[id].forEach(function(n){if(!LINKS[n])add({name:n,cat:c.one+' · заготовка',href:'#/cat/'+id,text:'упомянуто в заметках, своей записи ещё нет'});});});
+  COMPULSIONS.clan.forEach(function(c){add({name:c[1],cat:'одержимость',href:'#/tool/compulsions',real:1,tags:[c[0]],text:c[0]+' · '+c[2]});});
+  IDX.forEach(function(e){e._n=e.name.toLowerCase();e._a=e.aliases.map(function(a){return String(a).toLowerCase();});
+    e._g=e.tags.map(function(a){return String(a).toLowerCase();});e._h=e.heads.toLowerCase();e._t=e.text.toLowerCase();});
 }
-function hl(s,q){var i=s.toLowerCase().indexOf(q);if(i<0)return esc(s);return esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));}
+function wordStart(hay,w){var i=hay.indexOf(w);while(i>-1){if(i===0||/[^a-zа-яё0-9]/i.test(hay.charAt(i-1)))return true;i=hay.indexOf(w,i+1);}return false;}
+function scoreWord(e,w){
+  var s=0,why='';
+  if(e._n.indexOf(w)===0)s=100;else if(wordStart(e._n,w))s=90;else if(e._n.indexOf(w)>-1)s=80;
+  if(!s)for(var i=0;i<e._a.length;i++)if(e._a[i].indexOf(w)>-1){s=75;break;}
+  if(!s)for(var k=0;k<e._g.length;k++)if(e._g[k].indexOf(w)>-1){s=e._g[k]===w?72:70;why=e.tags[k];break;}
+  if(!s&&e._h.indexOf(w)>-1)s=wordStart(e._h,w)?40:35;
+  var ti=e._t.indexOf(w);
+  if(ti>-1){var n=0,p=ti;while(p>-1&&n<5){n++;p=e._t.indexOf(w,p+w.length);}if(!s)s=10;s+=n;}
+  return {s:s,why:why,ti:ti};
+}
+function scoreEntry(e,words){
+  var total=0,why='',ti=-1,hitW='';
+  for(var i=0;i<words.length;i++){var w=words[i],r=scoreWord(e,w),f=1;
+    /* лучший из трёх вариантов: слово как есть и без 1–2 последних букв (×0.8) */
+    [1,2].forEach(function(cut){if(words[i].length<4+cut)return;var w2=words[i].slice(0,-cut),r2=scoreWord(e,w2);
+      if(r2.s*.8>r.s*f){r=r2;f=.8;w=w2;}});
+    if(!r.s)return null;
+    total+=r.s*f;if(r.why&&!why)why=r.why;if(r.ti>-1&&ti<0){ti=r.ti;hitW=w;}}
+  if(!e.real)total*=.6;
+  return {e:e,s:total,why:why,ti:ti,w:hitW};
+}
+function searchHits(v){
+  if(!IDX)buildIndex();
+  var words=v.toLowerCase().split(/\s+/).filter(Boolean);if(!words.length)return [];
+  return IDX.map(function(e){return scoreEntry(e,words);}).filter(Boolean)
+    .sort(function(a,b){return b.s-a.s||a.e.name.length-b.e.name.length;}).slice(0,12);
+}
+function hl(s,q){var i=s.toLowerCase().indexOf(q);if(!q||i<0)return esc(s);return esc(s.slice(0,i))+'<mark>'+esc(s.slice(i,i+q.length))+'</mark>'+esc(s.slice(i+q.length));}
 function initSearch(){
   var q=document.getElementById('q'),res=document.getElementById('qres'),sel=0,hits=[];
   function run(){
-    if(!IDX)buildIndex();var v=q.value.trim().toLowerCase();
+    var v=q.value.trim().toLowerCase();
     if(!v){res.hidden=true;return;}
-    hits=IDX.map(function(e){var n=e.name.toLowerCase(),t=e.text.toLowerCase(),s=0;
-      if(n.indexOf(v)===0)s=3;else if(n.indexOf(v)>-1)s=2;else if(t.indexOf(v)>-1)s=1;return {e:e,s:s,ti:t.indexOf(v)};})
-      .filter(function(h){return h.s;}).sort(function(a,b){return b.s-a.s;}).slice(0,12);
+    hits=searchHits(v);var w0=v.split(/\s+/)[0];
     sel=0;
     res.innerHTML=hits.length?hits.map(function(h,i){var sn='';
       if(h.ti>-1){var a=Math.max(0,h.ti-40);sn=(a?'…':'')+h.e.text.slice(a,h.ti+70)+'…';}
-      return '<a href="'+h.e.href+'" class="'+(i===0?'on':'')+'"><span class="t">'+hl(h.e.name,v)+'</span><span class="c">'+esc(h.e.cat)+'</span>'+
-        (sn?'<span class="s">'+hl(sn,v)+'</span>':'')+'</a>';}).join(''):'<div class="none">Ничего не найдено. Кодекс пока почти пуст — поиск оживёт вместе с заметками.</div>';
+      return '<a href="'+h.e.href+'" class="'+(i===0?'on':'')+'"><span class="t">'+hl(h.e.name,w0)+'</span><span class="c">'+esc(h.e.cat)+'</span>'+
+        (h.why?'<span class="g">'+esc(h.why)+'</span>':'')+
+        (sn?'<span class="s">'+hl(sn,h.w||w0)+'</span>':'')+'</a>';}).join(''):'<div class="none">Ничего не найдено. Кодекс пока почти пуст — поиск оживёт вместе с заметками.</div>';
     res.hidden=false;
   }
   q.addEventListener('input',run);q.addEventListener('focus',run);
@@ -199,7 +245,7 @@ function dispatch(){
   if((m=/^player\/([\w-]+)$/.exec(h))){viewPlayer(m[1]);return 'top';}
   if(h==='master/gm'){if(canGm()){viewGmLayer();return 'top';}viewHome();return 'top';}
   if(h==='admin/users'){if(SESSION&&SESSION.role==='admin'){viewAdminUsers();return 'top';}viewHome();return 'top';}
-  if((m=/^([\w-]+)\/([\w-]+)$/.exec(h))){var cc=catByRoute(m[1]);if(cc){viewEntry(cc,m[2]);return cc.kind==='cards'?'keep':'top';}}
+  if((m=/^([\w-]+)\/([\w-]+)$/.exec(h))){var cc=catByRoute(m[1]);if(cc){viewEntry(cc,m[2]);return cc.kind==='cards'&&!cc.full?'keep':'top';}}
   viewHome();return 'top';
 }
 function route(){var r=dispatch();if(r==='top')window.scrollTo(0,0);activateRolls(app);}

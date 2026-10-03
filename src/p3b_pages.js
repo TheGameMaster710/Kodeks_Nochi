@@ -3,7 +3,7 @@
 function viewEntry(c,id){
   var x=findIn(c.arr,id);
   if(!x){location.hash='#/cat/'+c.id;return;}
-  if(c.kind==='cards'){viewCards(c,id);return;}
+  if(c.kind==='cards'&&!c.full){viewCards(c,id);return;}
   setTheme(c.theme,x.acc);
   crumb([[c.name,'#/cat/'+c.id],[x.name]]);
   var eyebrow='запись '+numOf(c.arr,x)+' · '+esc(c.name.toLowerCase());
@@ -33,6 +33,8 @@ function viewEntry(c,id){
             '<div class="eff">'+md(p.text||'')+'</div></article>';}).join('')+'</div>';}).join('');
     mid+=section('Силы',(x.powers||[]).length,inner||emptyBox('Сил пока нет','Силы появятся здесь, разложенные по уровням.'));
   }
+  if(c.id==='merits'){strip=[['Вид',x.kind],['Точки',x.dots]];
+    if(x.text) mid+=section(/•–|–•/.test(x.dots||'')?'Ступени':'Описание','','<div class="panel">'+md(x.text)+'</div>');}
   if(c.id==='loresheets'&&x.year!=null) strip=[['Год',String(x.year)]];
   if(c.id==='loresheets'&&(x.levels||[]).length){
     mid+=section('Ступени',(x.levels||[]).length,(x.levels||[]).length?'<div class="grid">'+x.levels.map(function(l){

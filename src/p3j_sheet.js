@@ -53,6 +53,15 @@ function advOptions(cur){
   if(cur&&!advFind(cur)) h+='<optgroup label="Своё (нет на сайте)"><option value="'+esc(cur)+'" selected>'+esc(cur)+'</option></optgroup>';
   return h;}
 
+/* v1.83 — описание преимущества прямо в листе. Берётся из заметки MERITS:
+   краткая строка и ступени. Ступени выше набранных точек приглушены. */
+function advDesc(name,dots){var m=advFind(name);if(!m)return '';
+  var paras=String(m.text||'').split(/\n{2,}/).filter(function(p){return p.trim();});
+  var body=paras.map(function(p){var lv=/^\*\*(•+)/.exec(p),n=lv?lv[1].length:0;
+    return '<div class="sh-alv'+(n&&n>dots?' off':'')+'">'+md(p)+'</div>';}).join('');
+  return '<div class="sh-adesc">'+(m.short?'<p class="sh-ashort">'+inl(m.short)+'</p>':'')+
+    (body?'<details><summary>'+(/^\*\*•/.test(paras[0]||'')?'Ступени':'Описание')+'</summary>'+body+
+      '<p class="sh-amore"><a href="#/merit/'+m.id+'">Открыть заметку →</a></p></details>':'')+'</div>';}
 var SHEET_EDIT={};  /* id → true, пока открыт режим «Правка листа» */
 var SHEET_SEL={};   /* id → {t:['a:str','s:bra','d:0'], mod, dif, surge} — выбранный пул */
 var SHEET_TIMER={};
@@ -63,7 +72,7 @@ function pcFromFs(d){
   d.concept=rows(d.concept,'l','t');
   d.convictions=rows(d.convictions,'c','a');
   d.disciplines=(d.disciplines||[]).map(function(r){return Array.isArray(r)?[r[0],+r[1]||0,r[2]||'']:[r.n||'',+r.d||0,r.p||''];});
-  d.advantages=(d.advantages||[]).map(function(r){return Array.isArray(r)?r:[r.n||'',+r.d||0,r.k||'merit',r.t||''];});
+  d.advantages=(d.advantages||[]).map(function(r){return Array.isArray(r)?r:[r.n||'',+r.d||0,r.k||'merit',r.t||'',!!r.l];});
   return d;
 }
 function pcToFs(data){
@@ -71,7 +80,7 @@ function pcToFs(data){
   if(o.concept) o.concept=o.concept.map(function(r){return {l:r[0]||'',t:r[1]||''};});
   if(o.convictions) o.convictions=o.convictions.map(function(r){return {c:r[0]||'',a:r[1]||''};});
   if(o.disciplines) o.disciplines=o.disciplines.map(function(r){return {n:r[0]||'',d:+r[1]||0,p:r[2]||''};});
-  if(o.advantages) o.advantages=o.advantages.map(function(r){return {n:r[0]||'',d:+r[1]||0,k:r[2]||'merit',t:r[3]||''};});
+  if(o.advantages) o.advantages=o.advantages.map(function(r){return {n:r[0]||'',d:+r[1]||0,k:r[2]||'merit',t:r[3]||'',l:!!r[4]};});
   return o;
 }
 
@@ -213,14 +222,18 @@ function sheetHtml(x,editable){
   if(edit){
     ah='<div class="sh-adv-ed">'+adv.map(function(a,i){
       var rg=advRange(a[0]);
-      return '<div class="sh-arow"><select data-shf="an" data-i="'+i+'">'+advOptions(a[0])+'</select>'+
+      /* закреплённое преимущество (a[4]) сменить нельзя — только удалить строку
+         и добавить новую; точки и пояснение остаются редактируемыми */
+      return '<div class="sh-arow">'+(a[4]&&a[0]?'<span class="sh-alock" title="Закреплено. Чтобы заменить, удалите строку и добавьте новую.">'+(advFind(a[0])?wikiTag(a[0],esc(a[0])):esc(a[0]))+' <i>закреплено</i></span>'
+        :'<select data-shf="an" data-i="'+i+'">'+advOptions(a[0])+'</select>')+
         '<span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+
         sDots(x,'v:'+i,+a[1]||0,rg[0],rg[1],true)+'<button type="button" class="mini" data-sh="adel" data-i="'+i+'">✕</button>'+
-        '<input data-shf="at" data-i="'+i+'" value="'+esc(a[3]||'')+'" placeholder="Пояснение (по желанию)"></div>';}).join('')+
+        '<input data-shf="at" data-i="'+i+'" value="'+esc(a[3]||'')+'" placeholder="Пояснение (по желанию)">'+advDesc(a[0],+a[1]||0)+'</div>';}).join('')+
+      (adv.some(function(a){return a[0]&&!a[4];})?'<p class="hint">После нажатия «Готово» выбранные преимущества закрепляются. Заменить закреплённое можно, только удалив строку и добавив новую. Точки менять можно всегда.</p>':'')+
       (MERITS.length?'<button type="button" class="mini" data-sh="aadd">+ Строка</button>':'<p class="hint">На сайте пока нет ни одного преимущества или недостатка — выбирать не из чего.</p>')+'</div>';
   } else {
     ah=adv.length?'<div class="sh-adv">'+adv.map(function(a){
-      return '<div class="sh-row"><span class="sh-name static">'+(advFind(a[0])?wikiTag(a[0],esc(a[0])):esc(a[0]||'—'))+' <span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+(a[3]?'<span class="tsub"> — '+esc(a[3])+'</span>':'')+'</span>'+sDots(x,'',+a[1]||0,0,5,false)+'</div>';}).join('')+'</div>'
+      return '<div class="sh-row"><span class="sh-name static">'+(advFind(a[0])?wikiTag(a[0],esc(a[0])):esc(a[0]||'—'))+' <span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+(a[3]?'<span class="tsub"> — '+esc(a[3])+'</span>':'')+'</span>'+sDots(x,'',+a[1]||0,0,5,false)+advDesc(a[0],+a[1]||0)+'</div>';}).join('')+'</div>'
       :emptyBox('Пока пусто','Достоинства, недостатки и фоны появятся здесь.');
   }
   out+=section('Достоинства, недостатки, фоны',adv.length,ah);
@@ -260,7 +273,11 @@ document.addEventListener('click',function(e){
   var b=e.target.closest?e.target.closest('[data-sh]'):null;if(!b)return;
   var x=sheetPc(b);if(!x)return;
   var a=b.getAttribute('data-sh'),s=sheetSel(x),key=trkKey(x),edit=canEditLivePc(x)&&SHEET_EDIT[x.id];
-  if(a==='edit'){SHEET_EDIT[x.id]=!SHEET_EDIT[x.id];sheetRedraw(x);return;}
+  if(a==='edit'){
+    if(SHEET_EDIT[x.id]&&canEditLivePc(x)){var ch=false,keep=(x.advantages||[]).filter(function(r){return r[0];});
+      if(keep.length!==(x.advantages||[]).length)ch=true;
+      keep.forEach(function(r){if(!r[4]){r[4]=true;ch=true;}});x.advantages=keep;if(ch)sheetQueueSave(x);}
+    SHEET_EDIT[x.id]=!SHEET_EDIT[x.id];sheetRedraw(x);return;}
   if(a==='pick'){var k=b.getAttribute('data-k'),i=s.t.indexOf(k);if(i>-1)s.t.splice(i,1);else s.t.push(k);sheetRedraw(x);return;}
   if(a==='unpick'){s.t.splice(+b.getAttribute('data-i'),1);sheetRedraw(x);return;}
   if(a==='clear'){s.t=[];s.mod=0;s.surge=false;sheetRedraw(x);return;}
@@ -285,7 +302,7 @@ document.addEventListener('click',function(e){
   }
   if(a==='dadd'){x.disciplines=x.disciplines||[];x.disciplines.push(['',1,'']);sheetRedraw(x);sheetQueueSave(x);return;}
   if(a==='ddel'){x.disciplines.splice(+b.getAttribute('data-i'),1);s.t=s.t.filter(function(k){return k.indexOf('d:')!==0;});sheetRedraw(x);sheetQueueSave(x);return;}
-  if(a==='aadd'){x.advantages=x.advantages||[];x.advantages.push(['',1,'merit','']);sheetRedraw(x);sheetQueueSave(x);return;}
+  if(a==='aadd'){x.advantages=x.advantages||[];x.advantages.push(['',1,'merit','',false]);sheetRedraw(x);sheetQueueSave(x);return;}
   if(a==='adel'){x.advantages.splice(+b.getAttribute('data-i'),1);sheetRedraw(x);sheetQueueSave(x);return;}
 });
 function sheetField(e){
@@ -301,7 +318,7 @@ function sheetField(e){
   if(el.id==='sh_specs') x.specs=el.value;
   else if(f==='dn'){x.disciplines[i][0]=el.value;}
   else if(f==='dp'){x.disciplines[i][2]=el.value;}
-  else if(f==='an'){var av=x.advantages[i],am=advFind(el.value),ar;av[0]=el.value;
+  else if(f==='an'){var av=x.advantages[i],am=advFind(el.value),ar;if(av[4])return;av[0]=el.value;
     if(am){av[2]=ADV_KIND_OF[am.kind]||'merit';ar=advRange(el.value);av[1]=Math.max(ar[0],Math.min(ar[1],+av[1]||ar[0]));}
     sheetRedraw(x);}
   else if(f==='ak'){x.advantages[i][2]=el.value;}
