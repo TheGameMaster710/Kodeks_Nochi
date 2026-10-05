@@ -215,19 +215,25 @@ function drawWeb(G,opt){
      показывает середину сцены (вид 1:1), а сама сцена растёт с числом узлов:
      около 24 000 кв. единиц на узел. Граф можно отдалить дальше 1:1 — до
      всей сцены (zoomAt). X0..X1, Y0..Y1 — границы сцены. */
-  var K=Math.min(3,Math.sqrt(Math.max(1,G.nodes.length*24000/(W*H))));
+  var K=Math.min(3.5,Math.sqrt(Math.max(1,G.nodes.length*(opt.local?24000:44000)/(W*H))));
   var X0=W/2-W*K/2,X1=W/2+W*K/2,Y0=H/2-H*K/2,Y1=H/2+H*K/2;
   var edges=opt.local?G.edges.slice():G.edges.filter(function(e){return !WEB_OFF[e.type];});
   var N=G.nodes;N.forEach(function(n,i){var a=i/N.length*Math.PI*2;n.x=W/2+Math.cos(a)*W*.22;n.y=H/2+Math.sin(a)*H*.31;n.vx=0;n.vy=0;});
   var asp=H/W,gx=asp>1?Math.min(4,asp*asp):1,gy=asp>1?1/Math.min(4,asp*asp):1;
-  for(var it=0;it<420;it++){
-    for(var i=0;i<N.length;i++)for(var j=i+1;j<N.length;j++){var a=N[i],b=N[j],dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy+.01,f=9000/d2,dd=Math.sqrt(d2);
+  /* v1.87 — в большом графе узлы расталкиваются сильнее (сказано рассказчиком:
+     со слоем упоминаний было слишком кучно). Отталкивание растёт с числом
+     узлов, притяжение к центру слабеет, а пунктирные связи-упоминания тянут
+     втрое слабее настоящих и держат узлы на большем расстоянии. Малый граф
+     в заметке раскладывается по-прежнему. */
+  var big=opt.local?0:Math.max(0,N.length-14),REP=9000*(1+big/9),GRAV=.004/(1+big/22),LKS=opt.local?.02:.006,LKL=opt.local?1:1.5;
+  for(var it=0;it<(big?620:420);it++){
+    for(var i=0;i<N.length;i++)for(var j=i+1;j<N.length;j++){var a=N[i],b=N[j],dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy+.01,f=REP/d2,dd=Math.sqrt(d2);
       a.vx+=f*dx/dd;a.vy+=f*dy/dd;b.vx-=f*dx/dd;b.vy-=f*dy/dd;}
-    edges.forEach(function(e){var dx=e.b.x-e.a.x,dy=e.b.y-e.a.y,dd=Math.sqrt(dx*dx+dy*dy)+.01,f=(dd-SPR)*.02;
+    edges.forEach(function(e){var dx=e.b.x-e.a.x,dy=e.b.y-e.a.y,dd=Math.sqrt(dx*dx+dy*dy)+.01,lk=e.type==='link',f=(dd-(lk?SPR*LKL:SPR))*(lk?LKS:.02);
       e.a.vx+=f*dx/dd;e.a.vy+=f*dy/dd;e.b.vx-=f*dx/dd;e.b.vy-=f*dy/dd;});
     /* вытянутая сцена: к центру по узкой оси тянет сильнее, по длинной слабее;
        подпись узла не выходит за край сцены */
-    N.forEach(function(n){n.vx+=(W/2-n.x)*.004*gx;n.vy+=(H/2-n.y)*.004*gy;n.x+=n.vx*.5;n.y+=n.vy*.5;n.vx*=.6;n.vy*=.6;
+    N.forEach(function(n){n.vx+=(W/2-n.x)*GRAV*gx;n.vy+=(H/2-n.y)*GRAV*gy;n.x+=n.vx*.5;n.y+=n.vy*.5;n.vx*=.6;n.vy*=.6;
       var hw=Math.min(W/2-4,Math.max(60,String(n.name).length*4.3+8));
       n.x=Math.max(X0+hw,Math.min(X1-hw,n.x));n.y=Math.max(Y0+40,Math.min(Y1-40,n.y));});
     if(opt.center){opt.center.x=W/2;opt.center.y=H/2;opt.center.vx=0;opt.center.vy=0;}
@@ -252,8 +258,18 @@ function drawWeb(G,opt){
   var pathE=opt.path?opt.path.edges:[],pathN=opt.path?opt.path.nodes:[];
   var defs='<defs>'+Object.keys(REL_TYPES).map(function(k){return '<marker id="ar-'+k+'" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="'+REL_TYPES[k][1]+'"/></marker>';}).join('')+'</defs>';
   var dir={bond:1,debt:1,sire:1,serve:1,touch:1};
-  if(!opt.local&&(!WEB_VB||WEB_VB.W!==W||WEB_VB.H!==H)) WEB_VB={x:0,y:0,w:W,h:H,W:W,H:H};
-  var vb=opt.local?{x:0,y:0,w:W,h:H}:WEB_VB;
+  /* v1.88 — вид «1:1» динамический и равен максимуму отдаления (сказано
+     рассказчиком): это рамка вокруг всех узлов с подписями, не меньше окна,
+     в пропорциях окна. Граф открывается в этом виде, «1:1» возвращает к нему,
+     дальше него отдалить нельзя. */
+  var FIT=(function(){var a=1e9,b=-1e9,c=1e9,d=-1e9;N.forEach(function(n){var hw=String(n.name).length*4.3+8;
+      a=Math.min(a,n.x-hw);b=Math.max(b,n.x+hw);c=Math.min(c,n.y-40);d=Math.max(d,n.y+26);});
+    if(!N.length){a=0;b=W;c=0;d=H;}
+    var w=Math.max(W,b-a+40),h=Math.max(H,d-c+40);if(h/w<H/W)h=w*H/W;else w=h*W/H;
+    return {x:(a+b)/2-w/2,y:(c+d)/2-h/2,w:w,h:h};})();
+  var sig=[W,H,FIT.x,FIT.y,FIT.w].map(Math.round).join(',');
+  if(!opt.local&&(!WEB_VB||WEB_VB.sig!==sig)) WEB_VB={x:FIT.x,y:FIT.y,w:FIT.w,h:FIT.h,sig:sig};
+  var vb=opt.local?{x:FIT.x,y:FIT.y,w:FIT.w,h:FIT.h}:WEB_VB;
   var s='<svg viewBox="'+vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+vb.h.toFixed(1)+'">'+defs;
   var pairN={};edges.forEach(function(e){var k=[e.a.id,e.b.id].sort().join('~');e.k=pairN[k]=(pairN[k]||0)+1;e.flip=e.a.id>e.b.id;});
   edges.forEach(function(e,i){s+='<path class="edge'+(e.dim?' dim':'')+(pathE.indexOf(e)>-1?' path':'')+'" fill="none" data-e="'+i+'" stroke="'+REL_TYPES[e.type][1]+'" stroke-width="2.2"'+(dir[e.type]?' marker-end="url(#ar-'+e.type+')"':'')+
@@ -264,7 +280,7 @@ function drawWeb(G,opt){
     '<text y="-18" text-anchor="middle">'+esc(n.name)+'</text></g>';});
   var zoomHtml='<div class="zoomctl"><button type="button" data-zoom="in" title="Приблизить" aria-label="Приблизить">+</button>'+
     '<button type="button" data-zoom="out" title="Отдалить" aria-label="Отдалить">−</button>'+
-    '<button type="button" data-zoom="reset" class="rst" title="Сбросить масштаб" aria-label="Сбросить масштаб">1:1</button></div>';
+    '<button type="button" data-zoom="reset" class="rst" title="Показать весь граф" aria-label="Показать весь граф">1:1</button></div>';
   box.innerHTML=s+'</svg>'+zoomHtml;
   (function(){var key=[],seen={};function add(k,h){if(!seen[k]){seen[k]=1;key.push(h);}}
     var dot=function(c){return '<i class="k-dot" style="background:'+c+'"></i>';},dia=function(c){return '<i class="k-dia" style="background:'+c+'"></i>';};
@@ -327,22 +343,22 @@ function drawWeb(G,opt){
   if(!opt.local)WEB_DBG={N:N,edges:edges,place:place};
   place();
   function pt(ev){var p=svg.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
-  /* Масштаб/панорама: viewBox — «камера» над неизменной сценой 1000×640,
+  /* Масштаб/панорама: viewBox — «камера» над сценой; предел отдаления — рамка FIT,
      позиции узлов и путей не трогает. zoomAt держит точку (px,py) на месте
      под курсором/центром при изменении масштаба (как в картах). */
   function applyVB(){svg.setAttribute('viewBox',vb.x.toFixed(1)+' '+vb.y.toFixed(1)+' '+vb.w.toFixed(1)+' '+vb.h.toFixed(1));}
   var PAD=60;
-  function clampVB(){
-    vb.x=vb.w>=X1-X0?(X0+X1-vb.w)/2:Math.max(X0-PAD,Math.min(X1-vb.w+PAD,vb.x));
-    vb.y=vb.h>=Y1-Y0?(Y0+Y1-vb.h)/2:Math.max(Y0-PAD,Math.min(Y1-vb.h+PAD,vb.y));}
+  function clampVB(){var fx1=FIT.x+FIT.w,fy1=FIT.y+FIT.h;
+    vb.x=vb.w>=FIT.w?FIT.x:Math.max(FIT.x-PAD,Math.min(fx1-vb.w+PAD,vb.x));
+    vb.y=vb.h>=FIT.h?FIT.y:Math.max(FIT.y-PAD,Math.min(fy1-vb.h+PAD,vb.y));}
   function zoomAt(px,py,f){
-    var nw=Math.max(140,Math.min(W*K,vb.w*f)),nh=nw*(H/W);
+    var nw=Math.max(140,Math.min(FIT.w,vb.w*f)),nh=nw*(H/W);
     var nx=px-(px-vb.x)*(nw/vb.w),ny=py-(py-vb.y)*(nh/vb.h);
     vb.w=nw;vb.h=nh;vb.x=nx;vb.y=ny;clampVB();
   }
   [].forEach.call(box.querySelectorAll('[data-zoom]'),function(b){b.addEventListener('click',function(ev){
     ev.preventDefault();var k=b.getAttribute('data-zoom');
-    if(k==='reset'){vb.x=0;vb.y=0;vb.w=W;vb.h=H;}
+    if(k==='reset'){vb.x=FIT.x;vb.y=FIT.y;vb.w=FIT.w;vb.h=FIT.h;}
     else zoomAt(vb.x+vb.w/2,vb.y+vb.h/2,k==='in'?1/1.4:1.4);
     applyVB();});});
   if(!opt.local)svg.addEventListener('wheel',function(ev){ev.preventDefault();var p=pt(ev);zoomAt(p.x,p.y,ev.deltaY<0?1/1.15:1.15);applyVB();},{passive:false});
