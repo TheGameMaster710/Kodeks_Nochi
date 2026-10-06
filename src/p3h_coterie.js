@@ -38,7 +38,7 @@ function startCoterieSync(){
     LIVE_PCS=[pcFromFs({id:'preview-demo',_liveKind:'pcs',owner:SESSION.username,name:'Пример персонажа',
       short:'Лист для проверки с телефона — правки не сохраняются после перезагрузки',clan:'Бруха',gen:12,bp:1,
       attrs:{str:3,dex:2,sta:3,cha:2,man:2,com:2,int:1,wit:3,res:2},skills:{bra:3,ath:2,itm:2,str2:2,ste:1,awa:1,dri:1},
-      disciplines:[{n:'Могущество',d:2,p:''},{n:'Присутствие',d:1,p:''}],advantages:[],huntA:'str',huntS:'bra',xpTotal:0,xpSpent:0,
+      disciplines:[{n:'Могущество',d:2,p:''},{n:'Присутствие',d:1,p:''}],advantages:(typeof MERITS!=='undefined'&&MERITS.length?[{n:MERITS[0].name,d:3,k:'merit',t:'',l:true}]:[]),huntA:'str',huntS:'bra',xpTotal:0,xpSpent:0,
       hunger:1,hMax:6,hSup:0,hAgg:0,wMax:4,wSup:0,wAgg:0,hum:7,stains:0})];
     return;
   }

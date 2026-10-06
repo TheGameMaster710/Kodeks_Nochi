@@ -7,3 +7,5 @@ s=open('kodeks-nochi.html').read()
 open('check.js','w').write(s[s.rindex('<script>')+8:s.rindex('</script>')])"
 node --check check.js && echo SYNTAX_OK
 node make_gm_json.js
+# Проверка текста (RULES.md, «Процесс работы»): утечки тайн и ссылки в никуда останавливают сборку
+python3 check_text.py || { echo 'СБОРКА ОСТАНОВЛЕНА: исправь ошибки check_text'; exit 1; }
