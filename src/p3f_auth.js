@@ -165,9 +165,11 @@ function showRegisterForm(cb){
       gate.classList.add('hidden');renderUserBadge();cb();
     }).catch(function(e){
       go.disabled=false;go.textContent='Зарегистрироваться';
-      err.textContent=(e&&e.__step==='session')
-        ? 'Аккаунт создан, но не получилось сразу войти — обновите страницу и войдите с этим логином и паролем.'
-        : 'Не получилось — возможно, такой логин уже занят. Попробуй другой.';
+      var code=(e&&e.code)?String(e.code).replace(/^firestore\//,''):'';
+      console.error('Регистрация не удалась',e&&e.__step,code,e);
+      if(e&&e.__step==='session') err.textContent='Аккаунт создан, но не получилось сразу войти — обновите страницу и войдите с этим логином и паролем.';
+      else if(code==='permission-denied') err.textContent='Такой логин уже занят. Попробуй другой.';
+      else err.textContent='Не получилось создать аккаунт'+(code?' (код ошибки: '+code+')':'')+'. Попробуй ещё раз или напиши мастеру.';
     });
   }
   go.addEventListener('click',submit);
