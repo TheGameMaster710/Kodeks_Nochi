@@ -470,20 +470,46 @@ a.lrow:hover{border-color:var(--c,var(--acc));transform:translateX(4px)}
 .roll:hover{background:rgba(var(--glow),.30);border-color:var(--acc)}
 .rollres{display:inline-block;margin-left:5px;padding:0 6px;border-radius:var(--r);font-family:var(--mono);font-size:.86em;font-weight:700;
   background:var(--acc);color:var(--acc-ink)}
-.dock{position:fixed;right:16px;bottom:16px;z-index:95;width:min(360px,calc(100vw - 32px));
-  background:color-mix(in srgb,#0E070B 92%,transparent);border:1px solid var(--line);border-radius:var(--r);
-  backdrop-filter:blur(14px);box-shadow:0 22px 54px -22px #000;overflow:hidden}
-.dk-head{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;font-family:var(--mono);font-size:10px;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);border-bottom:1px solid var(--line)}
+/* v2.04 — кости: кнопка внизу по центру, меню всплывает посередине экрана */
+.dk-fab{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:95;padding:11px 26px;border-radius:999px;
+  border:1px solid var(--acc);background:color-mix(in srgb,#0E070B 90%,transparent);color:var(--acc);cursor:pointer;
+  font:700 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;backdrop-filter:blur(14px);box-shadow:0 14px 36px -14px #000}
+.dk-fab:hover{background:var(--acc);color:var(--acc-ink)}
+body.dk-open .dk-fab{display:none}
+.dk-backdrop{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.6);display:none}
+.dock{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:121;width:min(540px,calc(100vw - 24px));
+  max-height:calc(100vh - 24px);overflow:auto;display:none;
+  background:color-mix(in srgb,#0E070B 96%,transparent);border:1px solid var(--line);border-radius:var(--r);
+  backdrop-filter:blur(14px);box-shadow:0 30px 80px -20px #000}
+body.dk-open .dock,body.dk-open .dk-backdrop{display:block}
+.dk-head{display:flex;align-items:center;gap:10px;padding:12px 14px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);border-bottom:1px solid var(--line)}
 .dk-head b{color:var(--acc)}
 .dk-head .sp{margin-left:auto}
-.dk-body{padding:12px}
-.dock.min .dk-body{display:none}
-.dock.min .dk-head{border-bottom:0}
+.dk-x{background:none;border:0;color:var(--ink-dim);font-size:18px;line-height:1;cursor:pointer;padding:2px 4px}
+.dk-x:hover{color:var(--acc)}
+.dk-body{padding:14px}
+.dk-row + .dk-row{margin-top:10px}
+.dk-pcl{flex:1 1 100%}
+.dock .dk-pcl select{max-width:none;width:100%}
+.dock.man .dk-sh{display:none}
+.dock.sh .dk-man{display:none}
+.dk-col{display:flex;flex-direction:column;gap:5px;flex:1 1 150px;min-width:0}
+.dk-lab{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim)}
+.dk-list{display:flex;flex-direction:column;gap:5px}
+.dk-it{display:flex;gap:4px;align-items:center}
+.dock .dk-it select{max-width:none;flex:1;min-width:0}
+.dk-it .dk-x{font-size:14px}
+.dk-add{align-self:flex-start;background:none;border:1px dashed var(--line);border-radius:999px;color:var(--ink-dim);cursor:pointer;
+  font:500 10px/1 var(--mono);letter-spacing:.1em;padding:5px 9px}
+.dk-add:hover{color:var(--acc);border-color:var(--acc)}
+.dk-row.dk-traits{align-items:flex-start}
+.dk-sum{margin-top:10px;font-size:13.5px;color:var(--ink-dim);min-height:1.2em}
+.dk-sum b{color:var(--acc);font-size:16px}
 .dk-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
 .dk-row label{display:flex;flex-direction:column;gap:3px;font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim)}
 .dk-row input{width:62px;text-align:center;padding:5px 4px}
-.dk-row select{max-width:150px;padding:5px 6px;font-size:13px}
+.dk-row select{max-width:170px;padding:5px 6px;font-size:13px}
 .dk-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .dice{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
 .die{width:30px;height:30px;display:grid;place-items:center;font:700 13px/1 var(--mono);border-radius:5px;
@@ -503,12 +529,11 @@ a.lrow:hover{border-color:var(--c,var(--acc));transform:translateX(4px)}
 .verdict.fail h5{color:var(--bad)}
 .verdict.messy{border-color:var(--acc);background:rgba(var(--glow),.14)}.verdict.messy h5{color:var(--acc)}
 .verdict.bestial{border-color:var(--acc);background:#000}.verdict.bestial h5{color:var(--acc)}
-.dk-log{list-style:none;margin:10px 0 0;padding:0;max-height:150px;overflow:auto;border-top:1px solid var(--line)}
+.dk-log{list-style:none;margin:10px 0 0;padding:0;border-top:1px solid var(--line)}
 .dk-log li{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px}
 .dk-log .f{flex:1;min-width:0;font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dk-log .t{font-family:var(--serif);font-weight:700;font-size:17px;color:var(--acc)}
 .dk-log .t.ok{color:var(--ok)}.dk-log .t.no{color:var(--bad)}
-@media (max-width:640px){.dock{right:10px;left:10px;bottom:10px;width:auto}}
 
 /* ============ АКТИВНАЯ СЕССИЯ ============ */
 :root{--sess-w:410px}
@@ -571,7 +596,6 @@ body.sess-open .sess-panel{transform:none}
 @media(min-width:1180px){
   body.sess-open{padding-right:var(--sess-w)}
   body.sess-open .sess-backdrop{display:none}
-  body.sess-open .dock{right:calc(var(--sess-w) + 16px)}
   body.sess-open .fx,body.sess-open .vig,body.sess-open #bgfx{right:var(--sess-w)}
 }
 @media(max-width:640px){.sess-panel{width:100%;max-width:100%}.sess-tab{padding:14px 8px;font-size:10px}}
@@ -713,6 +737,9 @@ button.sd{cursor:pointer}button.sd:hover{box-shadow:0 0 0 3px rgba(var(--glow),.
 .sh-dcard ul{margin:4px 0 4px 26px;padding:0;font-size:13.5px;color:var(--ink-dim)}
 .sheet textarea,.sh-drow select,.sh-arow input,.sh-arow select,.sheet .g3 input,.sheet .g3 select{width:100%}
 .sheet textarea{resize:vertical}
+/* v2.04 — растущие поля: без прокрутки и без верхнего предела */
+textarea.grow{resize:none;overflow:hidden;box-sizing:border-box;display:block;width:100%;line-height:1.45;overflow-wrap:anywhere}
+textarea.grow.one{min-height:0}
 .sh-drow,.sh-arow{display:grid;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--line)}
 .sh-drow{grid-template-columns:1fr auto auto}
 .sh-arow{grid-template-columns:1fr auto auto auto}
@@ -724,8 +751,22 @@ button.sd{cursor:pointer}button.sd:hover{box-shadow:0 0 0 3px rgba(var(--glow),.
 .sh-adesc .sh-alv p{margin:8px 0}
 .sh-adesc .sh-alv.off{opacity:.38}
 .sh-adesc .sh-amore{margin:8px 0 0;font-size:13px}
-.sh-adv .sh-row{flex-wrap:wrap}
-.sh-drow textarea,.sh-arow input[data-shf=at]{grid-column:1/-1}
+.sh-adv{display:flex;flex-direction:column;gap:22px}
+.adv-item{display:flex;flex-direction:column;gap:10px}
+.adv-body{display:flex;flex-direction:column;gap:10px}
+.adv-body.sh-aedit{grid-column:1/-1}
+.adv-body.sh-aedit:empty{display:none}
+/* v2.04 — преимущества на листе: блоки как в заметках, цвет по виду */
+.adv-blk{border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 12px;background:var(--panel)}
+.adv-blk.merit{background:rgba(70,160,100,.13);border-color:rgba(111,207,142,.45)}
+.adv-blk.flaw{background:rgba(190,40,55,.15);border-color:rgba(230,90,100,.5)}
+.adv-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adv-n{font-family:var(--serif);font-weight:700;font-size:17px}
+.adv-h .sdots{margin-left:auto}
+.adv-blk h4{margin:0 0 2px;font-size:15px;color:var(--acc-2)}
+.adv-x{font-size:14.5px;line-height:1.6}.adv-x p{margin:8px 0}
+.adv-note{margin:0;font-size:13px;color:var(--ink-dim)}
+.sh-drow textarea,.sh-arow [data-shf=at]{grid-column:1/-1}
 @media(max-width:640px){.sh-arow{grid-template-columns:auto 1fr auto}.sh-arow select{grid-column:1/-1}}
 .sh-lab{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:12px 0 4px}
 .sheet .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}

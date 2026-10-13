@@ -116,6 +116,24 @@ function hrefOf(n){return n?LINKS[String(n).trim()]||null:null;}
 function same(a,b){if(!a||!b)return false;if(a===b)return true;var ha=hrefOf(a);return !!ha&&ha===hrefOf(b);}
 function dots(n,max){n=+n||0;max=max||5;var s='';for(var i=0;i<max;i++)s+=i<n?'●':'<i>●</i>';return '<span class="dots">'+s+'</span>';}
 
+/* ================= РАСТУЩИЕ ПОЛЯ (v2.04, сказано рассказчиком) =================
+   Текстовые поля листа персонажа не прокручиваются, а растут вниз без
+   верхнего предела. growTa() — однострочное поле (Enter не ставит перенос,
+   текст просто уходит на следующую строку), класс grow на любом textarea —
+   многострочное. Высота подгоняется при вводе и при появлении поля на
+   странице (наблюдатель ниже). */
+function growTa(id,val,ph,attrs){return '<textarea class="grow one" rows="1"'+(id?' id="'+id+'"':'')+(ph?' placeholder="'+esc(ph)+'"':'')+(attrs||'')+'>'+esc(val||'')+'</textarea>';}
+function growFit(el){if(!el||!el.offsetParent)return;el.style.height='auto';el.style.height=(el.scrollHeight+el.offsetHeight-el.clientHeight)+'px';}
+function growAll(root){var l=(root||document).querySelectorAll?(root||document).querySelectorAll('textarea.grow'):[];for(var i=0;i<l.length;i++)growFit(l[i]);}
+document.addEventListener('input',function(e){var t=e.target;if(t&&t.classList&&t.classList.contains('grow')){
+  if(t.classList.contains('one')&&/\n/.test(t.value)){var c=t.selectionStart;t.value=t.value.replace(/\s*\n\s*/g,' ');try{t.setSelectionRange(c,c);}catch(_){}}
+  growFit(t);}});
+document.addEventListener('keydown',function(e){var t=e.target;if(e.key==='Enter'&&t&&t.classList&&t.classList.contains('one'))e.preventDefault();});
+window.addEventListener('resize',function(){growAll();});
+(function(){if(typeof MutationObserver==='undefined')return;var q=false;
+  new MutationObserver(function(){if(q)return;q=true;requestAnimationFrame(function(){q=false;growAll();});})
+    .observe(document.documentElement,{childList:true,subtree:true});})();
+
 /* ================= ХРАНИЛИЩЕ (браузер) ================= */
 var STORE={
   key:function(k){return 'v5codex:'+(CHRONICLE.id||'chronicle')+':'+k;},

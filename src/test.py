@@ -25,7 +25,8 @@ with sync_playwright() as p:
     # interactions
     pg.evaluate("location.hash='#/tool/resonance'"); pg.wait_for_timeout(200); pg.click('#resRoll'); pg.wait_for_timeout(100)
     pg.evaluate("location.hash='#/tool/compulsions'"); pg.wait_for_timeout(200); pg.click('#compRoll')
-    pg.click('#dkHead'); pg.click('#dkRoll'); pg.wait_for_timeout(100); pg.click('#dkWp'); pg.click('#dkRouse')
+    pg.click('#dkFab'); pg.click('#dkRoll'); pg.wait_for_timeout(100); pg.click('#dkWp'); pg.click('#dkRouse')
+    print('dock:',pg.evaluate("document.getElementById('dkLog').innerText")[:300]); pg.click('#dkClose')
     if tag=='seed':
         pg.evaluate("location.hash='#/pc/anna'"); pg.wait_for_timeout(300)
         pg.click('[data-act="stn"][data-v="1"]'); pg.click('[data-act="remorse"]'); pg.click('.pip >> nth=3'); pg.click('[data-act="d"][data-p="h"][data-k="s"]')
@@ -37,6 +38,5 @@ with sync_playwright() as p:
     pg.fill('#q','кла'); pg.wait_for_timeout(200)
     pg.screenshot(path='shots/%s_panel.png'%tag)
     pg.keyboard.press('Escape')
-    print('dock:',pg.evaluate("document.getElementById('dkLog').innerText")[:300])
     print('ERRORS',errs)
     b.close()

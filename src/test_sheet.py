@@ -58,7 +58,7 @@ with sync_playwright() as p:
     print('saved hunt/specs/xp/notes:', d.get('huntA'), d.get('huntS'), d.get('specs'), d.get('xpTotal'), d.get('notes'), '|', pg.evaluate("document.getElementById('shSaved').textContent"))
     print('derived health 3+3, wp 3+2:', pg.evaluate("var s=trkGet(trkKey(findLivePc('%s')));[s.hMax,s.wMax]"%pid))
     pg.click('[data-sh="edit"]');pg.wait_for_timeout(100)
-    print('adv desc in view:', 'Легенда той ночи' in pg.inner_text('.sh-adv'), '| dimmed levels:', pg.eval_on_selector_all('.sh-adv .sh-alv.off','e=>e.length'), '| locked saved:', pg.evaluate("findLivePc('%s').advantages[0][4]"%pid))
+    print('adv desc in view:', 'Легенда той ночи' in pg.inner_text('.sh-adv'), '| level blocks (4 of 5):', pg.eval_on_selector_all('.sh-adv .adv-blk.merit','e=>e.length'), '| locked saved:', pg.evaluate("findLivePc('%s').advantages[0][4]"%pid))
     pg.click('[data-sh="edit"]');pg.wait_for_timeout(100)
     print('locked row: select gone =', pg.eval_on_selector_all('[data-shf="an"]','e=>e.length')==0, '| lock label =', pg.eval_on_selector_all('.sh-alock','e=>e.length'), '| dots editable =', pg.eval_on_selector_all('.sh-arow .sd','e=>e.length'))
     pg.click('[data-sh="dot"][data-k="v:0"][data-v="2"]');pg.wait_for_timeout(50);print('dots after lock:', pg.evaluate("findLivePc('%s').advantages[0][1]"%pid))
@@ -70,11 +70,12 @@ with sync_playwright() as p:
     print('pool text:', pg.evaluate("document.querySelector('.sh-total').innerText"))
     pg.evaluate("var x=findLivePc('%s');var st=trkGet(trkKey(x));st.hunger=3;trkSet(trkKey(x),st);"%pid);pg.wait_for_timeout(100)
     pg.click('[data-sh="roll"]');pg.wait_for_timeout(100)
-    print('dice rolled:', pg.evaluate("LAST.dice.length"), 'hunger dice:', pg.evaluate("LAST.dice.filter(function(d){return d.h}).length"), '| dock pc:', pg.evaluate("dkPc.value"), '| log:', pg.evaluate("LOG[0].l"))
+    print('dice rolled:', pg.evaluate("LAST.dice.length"), 'hunger dice:', pg.evaluate("LAST.dice.filter(function(d){return d.h}).length"), '| dock pc:', pg.evaluate("dkPc.value"), '| log:', pg.evaluate("LOG[0].l"), '| modal open:', pg.evaluate("document.body.classList.contains('dk-open')"))
+    pg.click('#dkClose');pg.wait_for_timeout(50);print('closed & reset:', pg.evaluate("[document.body.classList.contains('dk-open'),LOG.length,dkPc.value]"))
     # ослабление: здоровье полное → −2 к физическому
     pg.evaluate("var x=findLivePc('%s');var st=trkGet(trkKey(x));st.hSup=st.hMax;trkSet(trkKey(x),st);"%pid);pg.wait_for_timeout(100);pg.evaluate("location.hash='#/cat/players';");pg.wait_for_timeout(50);pg.evaluate("location.hash='#/coterie/%s'"%pid);pg.wait_for_timeout(150)
     print('impaired pool:', pg.evaluate("document.querySelector('.sh-total').innerText"))
-    pg.click('[data-sh="hunt"]');pg.wait_for_timeout(50);print('hunt roll:', pg.evaluate("LOG[0].l"))
+    pg.click('[data-sh="hunt"]');pg.wait_for_timeout(50);print('hunt roll:', pg.evaluate("LOG[0].l"));pg.keyboard.press('Escape');pg.wait_for_timeout(50)
     # анкета не затирает дисциплины
     pg.click('#pcEditBtn');pg.wait_for_timeout(100);pg.fill('#pcf_short','обновлено');pg.click('[data-pcf="save"]');pg.wait_for_timeout(300)
     print('after form save disc kept:', json.dumps(pg.evaluate("__pcs['%s'].disciplines"%pid),ensure_ascii=False)[:60], '| short:', pg.evaluate("__pcs['%s'].short"%pid))

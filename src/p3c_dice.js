@@ -117,13 +117,63 @@ function miniPips(key){var st=trkGet(key),s='';
 
 /* ================= КОСТИ V5 ================= */
 function d(n){return 1+Math.floor(Math.random()*n);}
-var LOG=[],LAST=null,dock,dkPc,dkHun,dkPool,dkDif,dkOut,dkLog,dkWp;
-function pushLog(label,detailText,total,cls){
-  LOG.unshift({l:label,d:detailText,t:total,c:cls||''});if(LOG.length>40)LOG.pop();
-  dkLog.innerHTML=LOG.slice(0,20).map(function(e){return '<li><span class="f">'+esc(e.l)+' · '+esc(e.d)+'</span><span class="t '+e.c+'">'+esc(String(e.t))+'</span></li>';}).join('');
-  document.getElementById('dkLast').textContent=label+' → '+total;
+/* v2.04 (сказано рассказчиком): кости — виджет посередине экрана. Кнопка
+   «Кости» внизу по центру открывает меню; при закрытии всё в нём
+   сбрасывается. История живёт до закрытия: не больше DK_MAX бросков, и если
+   меню выше экрана, старые записи удаляются — прокрутки внутри нет. */
+var LOG=[],LAST=null,dock,dkPc,dkHun,dkPool,dkDif,dkOut,dkLog,dkWp,dkMod,dkSum,DK_MAX=4;
+/* выбранные черты для броска по листу: ключи атрибутов, навыков и номера дисциплин */
+var DKT={a:[''],s:[''],d:[]};
+function dkLogHtml(){dkLog.innerHTML=LOG.map(function(e){return '<li><span class="f">'+esc(e.l)+' · '+esc(e.d)+'</span><span class="t '+e.c+'">'+esc(String(e.t))+'</span></li>';}).join('');}
+function dkFit(){ /* старые записи уходят, пока меню не влезет в экран */
+  if(!dock||!document.body.classList.contains('dk-open'))return;
+  while(LOG.length>1&&dock.scrollHeight>dock.clientHeight+1){LOG.pop();dkLogHtml();}
 }
-function openDock(){dock.classList.remove('min');document.getElementById('dkHint').textContent='свернуть';}
+function pushLog(label,detailText,total,cls){
+  LOG.unshift({l:label,d:detailText,t:total,c:cls||''});if(LOG.length>DK_MAX)LOG.length=DK_MAX;
+  dkLogHtml();dkFit();
+}
+function dkIsSheet(key){var x=key?TRK_OBJ[key]:null;return !!(x&&x._liveKind==='pcs');}
+function dkTraits(){var t=[];
+  DKT.a.forEach(function(k){if(k)t.push('a:'+k);});DKT.s.forEach(function(k){if(k)t.push('s:'+k);});
+  DKT.d.forEach(function(k){if(k!=='')t.push('d:'+k);});return t;}
+function dkSheetPool(){ /* пул по листу: атрибуты + навыки + дисциплины (+модификатор), со штрафами ослабления как на листе */
+  var key=dkPc.value,x=TRK_OBJ[key],t=dkTraits();if(!x||!t.length)return null;
+  var keep=SHEET_SEL[x.id];SHEET_SEL[x.id]={t:t,mod:+dkMod.value||0,dif:0,surge:false};
+  var P=sheetPool(x);if(keep)SHEET_SEL[x.id]=keep;else delete SHEET_SEL[x.id];
+  P.label=x.name+' · '+P.parts.map(function(q){return q[0];}).join(' + ');return P;
+}
+function dkDiscOpts(x,sel){var o='<option value="">—</option>';(x&&x.disciplines||[]).forEach(function(d,i){
+  if(d[0])o+='<option value="'+i+'"'+(String(i)===String(sel)?' selected':'')+'>'+esc(d[0])+' ('+(+d[1]||0)+')</option>';});return o;}
+function dkTraitsHtml(){ /* списки выбора; у второй и следующих строк есть ✕ */
+  var x=TRK_OBJ[dkPc.value];
+  function list(kind,arr,opts){return arr.map(function(v,i){return '<div class="dk-it"><select data-dkt="'+kind+'" data-i="'+i+'">'+opts(v)+'</select>'+
+    (i>0||kind==='d'?'<button class="dk-x" type="button" data-dkdel="'+kind+'" data-i="'+i+'" aria-label="Убрать">✕</button>':'')+'</div>';}).join('');}
+  document.getElementById('dkAttrs').innerHTML=list('a',DKT.a,function(v){return attrOpts(v);});
+  document.getElementById('dkSkills').innerHTML=list('s',DKT.s,function(v){return skillOpts(v).replace('<option value="">—</option>','<option value="">— без навыка —</option>');});
+  document.getElementById('dkDiscs').innerHTML=list('d',DKT.d,function(v){return dkDiscOpts(x,v);});
+  document.getElementById('dkDiscCol').style.display=x&&(x.disciplines||[]).some(function(d){return d[0];})?'':'none';
+}
+function dkSetTraits(t){ /* t — ключи как на листе: ['a:str','s:bra','d:0'] */
+  DKT={a:[],s:[],d:[]};(t||[]).forEach(function(k){var p=k.split(':');if(DKT[p[0]])DKT[p[0]].push(p[1]);});
+  if(!DKT.a.length)DKT.a=[''];if(!DKT.s.length)DKT.s=[''];
+}
+/* бросок с листа: выбранное на листе подставляется в меню (вызывается из p3j_sheet.js) */
+function dkFromSheet(key,t,mod,dif){fillPcSelect();dkPc.value=key;dkHun.value=trkGet(key).hunger;dkSetTraits(t);dkMod.value=+mod||0;dkDif.value=+dif||0;dkTraitsHtml();}
+function dkMode(){
+  var sh=dkIsSheet(dkPc.value);dock.classList.toggle('sh',sh);dock.classList.toggle('man',!sh);
+  if(!sh){dkSum.innerHTML='';document.getElementById('dkRoll').disabled=false;return;}
+  var P=dkSheetPool();
+  dkSum.innerHTML=P?'<b>Пул '+P.total+'</b> = '+P.parts.map(function(q){return esc(q[0])+' '+q[1];}).join(' + ')+
+    (P.mod?(P.mod>0?' + ':' − ')+Math.abs(P.mod):'')+(P.pen?' − '+P.pen+' ('+esc(P.why.join(', '))+')':''):'Выберите атрибут и навык.';
+  document.getElementById('dkRoll').disabled=!P||P.total<1;
+}
+function openDock(){if(!dock)return;document.body.classList.add('dk-open');dkMode();dkFit();}
+function dkReset(){
+  LOG=[];LAST=null;dkLog.innerHTML='';dkOut.innerHTML='';dkWp.disabled=true;
+  dkPc.value='';dkPool.value=5;dkHun.value=1;dkDif.value=0;dkMod.value=0;dkSetTraits([]);dkTraitsHtml();dkMode();
+}
+function closeDock(){document.body.classList.remove('dk-open');dkReset();}
 function evalPool(r){
   var succ=0,tens=0,hTen=false,hOne=false;
   r.dice.forEach(function(x){if(x.v>=6)succ++;if(x.v===10){tens++;if(x.h)hTen=true;}if(x.h&&x.v===1)hOne=true;});
@@ -182,6 +232,7 @@ function rouseFor(key,twice){
   if(st&&!ok){st.hunger+=1;trkSet(key,st);}
   pushLog('Пробуждение'+(twice?' с перебросом':'')+(x?' · '+x.name:''),'['+a+(b!=null?' / '+b:'')+']',ok?'Голод тот же':'+1 Голод',ok?'ok':'no');
   if(!x&&!ok){dkHun.value=Math.min(5,(+dkHun.value||0)+1);}
+  if(x&&dkPc.value===key)dkHun.value=trkGet(key).hunger;
   openDock();
 }
 
@@ -236,26 +287,32 @@ function refreshPcSelectAfterSync(){
   fillPcSelect();
   if(prev && TRK_OBJ[prev]) dkPc.value=prev;
   if(dkPc.value) dkHun.value=trkGet(dkPc.value).hunger;
+  if(dock){dkTraitsHtml();dkMode();}
 }
 function initDock(){
   dock=document.getElementById('dock');dkPc=document.getElementById('dkPc');dkHun=document.getElementById('dkHun');
   dkPool=document.getElementById('dkPool');dkDif=document.getElementById('dkDif');dkOut=document.getElementById('dkOut');
   dkLog=document.getElementById('dkLog');dkWp=document.getElementById('dkWp');
-  fillPcSelect();
-  var last=STORE.get('dock',null);if(last){dkPool.value=last.p||5;dkDif.value=last.d||0;if(last.k&&TRK_OBJ[last.k])dkPc.value=last.k;}
-  if(dkPc.value) dkHun.value=trkGet(dkPc.value).hunger;
-  function save(){STORE.set('dock',{p:dkPool.value,d:dkDif.value,k:dkPc.value});}
-  [dkPool,dkDif].forEach(function(i){i.addEventListener('change',save);});
-  dkPc.addEventListener('change',function(){if(dkPc.value)dkHun.value=trkGet(dkPc.value).hunger;save();});
-  dkHun.addEventListener('change',function(){var k=dkPc.value;if(k){var st=trkGet(k);st.hunger=+dkHun.value;trkSet(k,st);}});
-  document.getElementById('dkHead').addEventListener('click',function(){dock.classList.toggle('min');
-    document.getElementById('dkHint').textContent=dock.classList.contains('min')?'развернуть':'свернуть';});
-  document.getElementById('dkRoll').addEventListener('click',function(){rollPool(dkPool.value,dkHun.value,dkDif.value,dkPc.value?TRK_OBJ[dkPc.value].name+' · пул '+dkPool.value:null);});
+  dkMod=document.getElementById('dkMod');dkSum=document.getElementById('dkSum');
+  fillPcSelect();dkTraitsHtml();dkMode();
+  dkPc.addEventListener('change',function(){if(dkPc.value)dkHun.value=trkGet(dkPc.value).hunger;dkSetTraits([]);dkTraitsHtml();dkMode();dkFit();});
+  dkMod.addEventListener('input',dkMode);
+  dock.addEventListener('change',function(e){var el=e.target;if(!el.dataset||!el.dataset.dkt)return;DKT[el.dataset.dkt][+el.dataset.i]=el.value;dkMode();});
+  dock.addEventListener('click',function(e){var b=e.target.closest('[data-dkadd],[data-dkdel]');if(!b)return;
+    if(b.dataset.dkadd)DKT[b.dataset.dkadd].push('');else DKT[b.dataset.dkdel].splice(+b.dataset.i,1);
+    dkTraitsHtml();dkMode();dkFit();});
+  dkHun.addEventListener('change',function(){var k=dkPc.value;if(k){var st=trkGet(k);st.hunger=Math.max(0,Math.min(5,+dkHun.value||0));trkSet(k,st);}dkMode();});
+  document.getElementById('dkFab').addEventListener('click',openDock);
+  document.getElementById('dkClose').addEventListener('click',closeDock);
+  document.getElementById('dkBack').addEventListener('click',closeDock);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.body.classList.contains('dk-open'))closeDock();});
+  window.addEventListener('resize',dkFit);
+  document.getElementById('dkRoll').addEventListener('click',function(){
+    if(dkIsSheet(dkPc.value)){var P=dkSheetPool();if(!P||P.total<1)return;rollPool(P.total,trkGet(dkPc.value).hunger,dkDif.value,P.label);return;}
+    rollPool(dkPool.value,dkHun.value,dkDif.value,dkPc.value?TRK_OBJ[dkPc.value].name+' · пул '+dkPool.value:null);});
   document.getElementById('dkRouse').addEventListener('click',function(){rouseFor(dkPc.value||null,false);});
   document.getElementById('dkRouse2').addEventListener('click',function(){rouseFor(dkPc.value||null,true);});
   dkWp.addEventListener('click',wpReroll);
-  document.getElementById('dkClear').addEventListener('click',function(){LOG=[];LAST=null;dkLog.innerHTML='';dkOut.innerHTML='';dkWp.disabled=true;
-    document.getElementById('dkLast').textContent='пул · голод · сложность';});
   document.addEventListener('click',onRollClick);
   document.addEventListener('click',onTrk);
 }

@@ -178,17 +178,17 @@ function pcOptDots(sel){var s='';for(var i=1;i<=5;i++)s+='<option'+(i===sel?' se
 function pcFormHtml(x){
   x=x||{};var tr=x.track||{};
   var concept=x.concept||[],conv=x.convictions||[];
-  function rowConcept(i){var c=concept[i]||[];return '<div class="rep-row"><input id="pcf_cL'+i+'" placeholder="Например: Возраст" value="'+esc(c[0]||'')+'"><input id="pcf_cT'+i+'" placeholder="Текст" value="'+esc(c[1]||'')+'"></div>';}
-  function rowConv(i){var c=conv[i]||[];return '<div class="rep-row"><input id="pcf_bB'+i+'" placeholder="Убеждение" value="'+esc(c[0]||'')+'"><input id="pcf_bA'+i+'" placeholder="Якорь (имя)" value="'+esc(c[1]||'')+'"></div>';}
+  function rowConcept(i){var c=concept[i]||[];return '<div class="rep-row">'+growTa('pcf_cL'+i,c[0],'Например: Возраст')+growTa('pcf_cT'+i,c[1],'Текст')+'</div>';}
+  function rowConv(i){var c=conv[i]||[];return '<div class="rep-row">'+growTa('pcf_bB'+i,c[0],'Убеждение')+growTa('pcf_bA'+i,c[1],'Якорь (имя)')+'</div>';}
   return '<div class="pc-form">'+
-    '<label>Имя персонажа *</label><input id="pcf_name" value="'+esc(x.name||'')+'">'+
-    '<label>Краткое описание</label><input id="pcf_short" value="'+esc(x.short||'')+'">'+
+    '<label>Имя персонажа *</label>'+growTa('pcf_name',x.name)+
+    '<label>Краткое описание</label>'+growTa('pcf_short',x.short)+
     '<div class="g2"><div><label>Клан</label><select id="pcf_clan">'+optList(allClanNames(),x.clan)+'</select></div>'+
     '<div><label>Секта</label><select id="pcf_sect">'+optList(allSectNames(),x.sect)+'</select></div></div>'+
     '<div class="g4"><div><label>Поколение</label><input id="pcf_gen" type="number" min="4" max="16" value="'+(x.gen!=null?x.gen:'')+'"></div>'+
     '<div><label>Мощь крови</label><input id="pcf_bp" type="number" min="0" max="10" value="'+(x.bp!=null?x.bp:0)+'"></div>'+
     '<div><label>Тип хищника</label><select id="pcf_pred">'+optList(allPredNames(),x.predator)+'</select></div>'+
-    '<div><label>Сир</label><input id="pcf_sire" value="'+esc(x.sire||'')+'"></div></div>'+
+    '<div><label>Сир</label>'+growTa('pcf_sire',x.sire)+'</div></div>'+
     '<div class="g4"><div><label>Человечность</label><input id="pcf_hum" type="number" min="0" max="10" value="'+(tr.humanity!=null?tr.humanity:7)+'"></div>'+
     '<div><label>Голод (стартовый)</label><input id="pcf_hun" type="number" min="0" max="5" value="'+(tr.hunger!=null?tr.hunger:1)+'"></div>'+
     '<div class="tsub" style="grid-column:span 2;align-self:end">Здоровье и сила воли считаются сами из атрибутов на листе (Выносливость + 3, Самообладание + Решимость).</div></div>'+

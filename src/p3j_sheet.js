@@ -53,15 +53,42 @@ function advOptions(cur){
   if(cur&&!advFind(cur)) h+='<optgroup label="Своё (нет на сайте)"><option value="'+esc(cur)+'" selected>'+esc(cur)+'</option></optgroup>';
   return h;}
 
-/* v1.83 — описание преимущества прямо в листе. Берётся из заметки MERITS:
-   краткая строка и ступени. Ступени выше набранных точек приглушены. */
-function advDesc(name,dots){var m=advFind(name);if(!m)return '';
-  var paras=String(m.text||'').split(/\n{2,}/).filter(function(p){return p.trim();});
-  var body=paras.map(function(p){var lv=/^\*\*(•+)/.exec(p),n=lv?lv[1].length:0;
-    return '<div class="sh-alv'+(n&&n>dots?' off':'')+'">'+md(p)+'</div>';}).join('');
-  return '<div class="sh-adesc">'+(m.short?'<p class="sh-ashort">'+inl(m.short)+'</p>':'')+
-    (body?'<details><summary>'+(/^\*\*•/.test(paras[0]||'')?'Ступени':'Описание')+'</summary>'+body+
-      '<p class="sh-amore"><a href="#/merit/'+m.id+'">Открыть заметку →</a></p></details>':'')+'</div>';}
+/* v2.04 (сказано рассказчиком) — на листе преимущество показывается
+   текстовыми блоками, как в заметках, и только с действующими эффектами.
+   Ступени накопительные (steps:'stack') — по блоку на каждую набранную
+   ступень подряд; заменяющие (steps:'replace') — один блок текущей ступени.
+   Если steps нет, вид берётся из строки «Ступени» концепции заметки
+   («накапливаются» / «заменяет»), иначе считается накопительным.
+   Фон: достоинство — зелёный, недостаток — красный, фон — обычный. */
+function advSteps(m){if(m.steps)return m.steps;var r='';(m.concept||[]).forEach(function(c){if(/^Ступени/i.test(c[0]))r=c[1];});
+  return /замен/i.test(r)?'replace':'stack';}
+/* Точки меняются только в режиме «Правка листа» (сказано рассказчиком:
+   иначе возможны случайные изменения). В просмотре — название и точки один
+   раз, под ними блоки ступеней; в правке те же блоки идут под строкой выбора. */
+function advBlocks(a){
+  var name=a[0]||'',dots=+a[1]||0,k=a[2]||'merit',m=advFind(name),rg=advRange(name);
+  var head='<div class="adv-h"><span class="adv-n">'+(m?wikiTag(name,esc(name)):esc(name||'—'))+'</span>'+
+    '<span class="tag">'+(ADV_KINDS[k]||'')+'</span>'+sDots(null,'',dots,0,Math.max(5,rg[1]),false)+'</div>'+(a[3]?'<p class="adv-note">'+esc(a[3])+'</p>':'');
+  return '<div class="adv-item">'+head+'<div class="adv-body">'+advBody(a,false)+'</div></div>';
+}
+function advBody(a,edit){
+  var name=a[0]||'',dots=+a[1]||0,k=a[2]||'merit',m=advFind(name),cls='adv-blk '+(k==='flaw'?'flaw':k==='bg'?'bg':'merit');
+  if(edit&&!name) return '';
+  var body;
+  if(!m) body=(a[3]||edit)?'':'<div class="'+cls+'"><p class="adv-note">Своё преимущество, на сайте его описания нет.</p></div>';
+  else{
+    var lv=[];String(m.text||'').split(/\n{2,}/).forEach(function(p){var r=/^\*\*(•+)\s*([^*]*?)\.?\*\*\s*([\s\S]*)$/.exec(p.trim());
+      if(r)lv.push({n:r[1].length,t:r[2].trim(),x:r[3].trim()});});
+    if(!lv.length) body='<div class="'+cls+'"><div class="adv-x">'+md(m.text||m.short||'')+'</div></div>';
+    else{
+      var act=lv.filter(function(l){return l.n<=dots;});
+      if(advSteps(m)==='replace'&&act.length) act=[act[act.length-1]];
+      body=act.length?act.map(function(l){return '<div class="'+cls+'"><h4>'+new Array(l.n+1).join('•')+' '+inl(l.t)+'</h4><div class="adv-x">'+md(l.x)+'</div></div>';}).join('')
+        :'<div class="'+cls+'"><p class="adv-note">Ни одна ступень пока не набрана.</p></div>';
+    }
+  }
+  return body;
+}
 var SHEET_EDIT={};  /* id → true, пока открыт режим «Правка листа» */
 var SHEET_SEL={};   /* id → {t:['a:str','s:bra','d:0'], mod, dif, surge} — выбранный пул */
 var SHEET_TIMER={};
@@ -184,7 +211,7 @@ function sheetHtml(x,editable){
   out+=section('Бросок','',sheetRollHtml(x));
   out+=section('Атрибуты','',statsGrid(x,SHEET_ATTRS,'a',1,edit));
   out+=section('Навыки','',statsGrid(x,SHEET_SKILLS,'s',0,edit)+
-    (edit?'<label class="sh-lab">Специализации</label><textarea id="sh_specs" rows="2" placeholder="Например: Драка (ножи), Оккультизм (Тремер)">'+esc(x.specs||'')+'</textarea>'
+    (edit?'<label class="sh-lab">Специализации</label><textarea class="grow" id="sh_specs" rows="2" placeholder="Например: Драка (ножи), Оккультизм (Тремер)">'+esc(x.specs||'')+'</textarea>'
          :(x.specs?'<div class="panel" style="margin-top:12px"><b>Специализации:</b> '+esc(x.specs)+'</div>':'')));
   /* дисциплины */
   var disc=x.disciplines||[],cd=clanDiscs(x),dh;
@@ -192,7 +219,7 @@ function sheetHtml(x,editable){
     dh='<div class="sh-disc-ed">'+disc.map(function(d,i){
       return '<div class="sh-drow"><select data-shf="dn" data-i="'+i+'">'+optList(allDiscNames(),d[0])+'</select>'+
         sDots(x,'d:'+i,+d[1]||0,0,5,true)+'<button type="button" class="mini" data-sh="ddel" data-i="'+i+'" title="Убрать">✕</button>'+
-        '<textarea data-shf="dp" data-i="'+i+'" rows="2" placeholder="Силы — по одной на строку">'+esc(d[2]||'')+'</textarea></div>';}).join('')+
+        '<textarea class="grow" data-shf="dp" data-i="'+i+'" rows="2" placeholder="Силы — по одной на строку">'+esc(d[2]||'')+'</textarea></div>';}).join('')+
       '<button type="button" class="mini" data-sh="dadd">+ Дисциплина</button></div>';
   } else {
     dh=disc.length?'<div class="sh-disc">'+disc.map(function(d,i){
@@ -228,12 +255,11 @@ function sheetHtml(x,editable){
         :'<select data-shf="an" data-i="'+i+'">'+advOptions(a[0])+'</select>')+
         '<span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+
         sDots(x,'v:'+i,+a[1]||0,rg[0],rg[1],true)+'<button type="button" class="mini" data-sh="adel" data-i="'+i+'">✕</button>'+
-        '<input data-shf="at" data-i="'+i+'" value="'+esc(a[3]||'')+'" placeholder="Пояснение (по желанию)">'+advDesc(a[0],+a[1]||0)+'</div>';}).join('')+
+        growTa('',a[3],'Пояснение (по желанию)',' data-shf="at" data-i="'+i+'"')+'<div class="adv-body sh-aedit">'+advBody(a,true)+'</div></div>';}).join('')+
       (adv.some(function(a){return a[0]&&!a[4];})?'<p class="hint">После нажатия «Готово» выбранные преимущества закрепляются. Заменить закреплённое можно, только удалив строку и добавив новую. Точки менять можно всегда.</p>':'')+
       (MERITS.length?'<button type="button" class="mini" data-sh="aadd">+ Строка</button>':'<p class="hint">На сайте пока нет ни одного преимущества или недостатка — выбирать не из чего.</p>')+'</div>';
   } else {
-    ah=adv.length?'<div class="sh-adv">'+adv.map(function(a){
-      return '<div class="sh-row"><span class="sh-name static">'+(advFind(a[0])?wikiTag(a[0],esc(a[0])):esc(a[0]||'—'))+' <span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+(a[3]?'<span class="tsub"> — '+esc(a[3])+'</span>':'')+'</span>'+sDots(x,'',+a[1]||0,0,5,false)+advDesc(a[0],+a[1]||0)+'</div>';}).join('')+'</div>'
+    ah=adv.length?'<div class="sh-adv">'+adv.map(advBlocks).join('')+'</div>'
       :emptyBox('Пока пусто','Достоинства, недостатки и фоны появятся здесь.');
   }
   out+=section('Достоинства, недостатки, фоны',adv.length,ah);
@@ -244,7 +270,7 @@ function sheetHtml(x,editable){
     '<div><label class="sh-lab">Потрачено</label><input type="number" min="0" data-shf="xpSpent" value="'+xs+'"></div>'+
     '<div><label class="sh-lab">Доп. здоровье / сила воли</label><div class="g2"><input type="number" data-shf="hBonus" value="'+(+x.hBonus||0)+'" title="К здоровью (Выносливость + 3)"><input type="number" data-shf="wBonus" value="'+(+x.wBonus||0)+'" title="К силе воли (Самообладание + Решимость)"></div></div></div>'
     :'<div class="defs"><div class="def"><span class="l">Всего</span><div class="v">'+xt+'</div></div><div class="def"><span class="l">Потрачено</span><div class="v">'+xs+'</div></div><div class="def"><span class="l">Доступно</span><div class="v"><b>'+(xt-xs)+'</b></div></div></div>');
-  out+=section('Заметки','',edit?'<textarea data-shf="notes" rows="5" placeholder="Внешность, история, что угодно">'+esc(x.notes||'')+'</textarea>'
+  out+=section('Заметки','',edit?'<textarea class="grow" data-shf="notes" rows="5" placeholder="Внешность, история, что угодно">'+esc(x.notes||'')+'</textarea>'
     :(x.notes?'<div class="panel">'+md(x.notes)+'</div>':emptyBox('Заметок нет','')));
   return out+'</div>';
 }
@@ -285,7 +311,7 @@ document.addEventListener('click',function(e){
     var P,label;
     if(a==='hunt'){P={total:sAttr(x,x.huntA)+sSkill(x,x.huntS),hunger:trkGet(key).hunger};label=x.name+' · охота ('+traitName('a:'+x.huntA)+' + '+traitName('s:'+x.huntS)+')';}
     else{P=sheetPool(x);label=x.name+' · '+(P.parts.map(function(p){return p[0];}).join(' + ')||'пул');}
-    if(dkPc){fillPcSelect();dkPc.value=key;}
+    if(dkPc){if(a==='hunt')dkFromSheet(key,['a:'+x.huntA,'s:'+x.huntS],0,0);else dkFromSheet(key,s.t,s.mod,s.dif);}
     if(a==='roll'&&s.surge&&P.surge){rouseFor(key,false);P.hunger=trkGet(key).hunger;}
     rollPool(P.total,P.hunger,a==='roll'?(+s.dif||0):0,label);
     return;
@@ -310,7 +336,7 @@ function sheetField(e){
   var w=el.closest('.sheet');if(!w)return;
   var x=findLivePc(w.getAttribute('data-pc'));if(!x)return;
   var s=sheetSel(x);
-  if(el.id==='shMod'){s.mod=+el.value||0;if(e.type==='change')sheetRedraw(x);return;}
+  if(el.id==='shMod'){s.mod=+el.value||0;if(e.type==='change')setTimeout(function(){sheetRedraw(x);},0);return;} /* отложено: перерисовка во время change ломала DOM при потере фокуса */
   if(el.id==='shDif'){s.dif=+el.value||0;return;}
   if(el.id==='shSurge'){s.surge=el.checked;sheetRedraw(x);return;}
   if(!canEditLivePc(x)||!SHEET_EDIT[x.id])return;
