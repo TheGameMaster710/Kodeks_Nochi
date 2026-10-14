@@ -257,7 +257,7 @@ function playlistHtml(p){
 function jcard(x,eyebrow,strip,extraCls){
   return '<div class="jcard'+(x.dead?' dead':'')+(extraCls?' '+extraCls:'')+'"><div class="jcard-top">'+
     '<div class="eyebrow">'+eyebrow+'</div><h1>'+esc(x.name)+'</h1>'+
-    (x.img?'<div class="portrait"><img src="'+esc(x.img)+'" alt="'+esc(x.name)+'" loading="lazy"'+(x.imgPos?' style="object-position:'+esc(x.imgPos)+'"':'')+'></div>':'')+
+    (x.img?'<div class="portrait"><img src="'+esc(x.img)+'" alt="'+esc(x.name)+'" loading="lazy" onerror="this.parentNode.remove()"'+(x.imgPos?' style="object-position:'+esc(x.imgPos)+'"':'')+'></div>':'')+
     (x.short?'<p class="princ">'+inl(x.short)+'</p>':'')+
     '</div>'+stripHtml((x.quick||[]).concat(strip||[]))+'</div>';
 }
