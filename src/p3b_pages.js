@@ -59,7 +59,7 @@ function viewEntry(c,id){
       anc.map(function(a){return '<a href="#/place/'+a.id+'">'+esc(a.name)+'</a><span class="sep">›</span>';}).join('')+
       '<span class="cur">'+esc(x.name)+'</span></div>';
     var dm=x.domain?findIn(DOMAINS,x.domain):null;
-    if(dm) strip=[['Домен','<a class="wiki" href="#/domain/'+dm.id+'">'+esc(dm.name)+'</a>',1]];
+    if(dm&&!dm.see) strip=[['Домен','<a class="wiki" href="#/domain/'+dm.id+'">'+esc(dm.name)+'</a>',1]];
     var kids=PLACES.filter(function(k){return k.parent===x.id;}),gh=x.ghosts||[];
     if(kids.length||gh.length) mid+=section('Вложенные локации',kids.length+gh.length,'<div class="subgrid">'+
       kids.map(function(k){return '<a class="subcard" href="#/place/'+k.id+'" style="--c:'+(k.acc||c.c)+'"><span class="k">подзона</span><h4>'+esc(k.name)+'</h4><div class="ds">'+inl(k.short||'')+'</div></a>';}).join('')+
@@ -208,7 +208,7 @@ function viewDomains(){
 function domainCard(c,x){
   var ch=chipsFor(c,x);
   return '<div class="god-card'+(x.dead?' dead':'')+'" style="--c:'+(x.acc||c.c)+'">'+
-    '<a class="dc-body" href="#/'+c.route+'/'+x.id+'">'+
+    '<a class="dc-body" href="#/'+(x.see||c.route+'/'+x.id)+'">'+
     '<span class="k">'+numOf(c.arr,x)+' · '+esc(c.one.toUpperCase())+(x.dead?' · ☾ торпор':'')+'</span><h3>'+esc(x.name)+'</h3>'+
     (x.short?'<p class="pr">'+inl(x.short)+'</p>':'')+
     '<div class="foot">'+ch.map(function(v,i){return '<span class="chip'+(i===0?' hot':'')+'">'+esc(v)+'</span>';}).join('')+'</div></a>'+

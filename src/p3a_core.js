@@ -300,7 +300,7 @@ function strings(o,acc){acc=acc||[];
   return acc;}
 function allEntries(){
   var out=[];
-  CATS.forEach(function(c){c.arr.forEach(function(x){out.push({x:x,href:'#/'+c.route+'/'+x.id,cat:c.one,name:x.name});});});
+  CATS.forEach(function(c){c.arr.forEach(function(x){if(x.see)return;out.push({x:x,href:'#/'+c.route+'/'+x.id,cat:c.one,name:x.name});});});
   PCS.forEach(function(x){out.push({x:x,href:'#/pc/'+x.id,cat:'персонаж',name:x.name});});
   SESSIONS.forEach(function(s){out.push({x:s,href:'#/cons',cat:'журнал',name:'Сессия '+s.n});});
   CHRON.forEach(function(c,i){out.push({x:c,href:'#/tool/chron',cat:c.kind==='memoriam'?'мемориам':'хроника',name:c.title||c.when||('Ночь '+(i+1))});});

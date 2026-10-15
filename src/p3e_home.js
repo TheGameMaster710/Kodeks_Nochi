@@ -245,7 +245,10 @@ function dispatch(){
   if((m=/^player\/([\w-]+)$/.exec(h))){viewPlayer(m[1]);return 'top';}
   if(h==='master/gm'){if(canGm()){viewGmLayer();return 'top';}viewHome();return 'top';}
   if(h==='admin/users'){if(SESSION&&SESSION.role==='admin'){viewAdminUsers();return 'top';}viewHome();return 'top';}
-  if((m=/^([\w-]+)\/([\w-]+)$/.exec(h))){var cc=catByRoute(m[1]);if(cc){viewEntry(cc,m[2]);return cc.kind==='cards'&&!cc.full?'keep':'top';}}
+  if((m=/^([\w-]+)\/([\w-]+)$/.exec(h))){var cc=catByRoute(m[1]);
+    /* запись-ссылка (поле see): точка на карте ведёт на полную заметку */
+    var sx=cc?findIn(cc.arr,m[2]):null;if(sx&&sx.see){location.replace('#/'+sx.see);return 'keep';}
+    if(cc){viewEntry(cc,m[2]);return cc.kind==='cards'&&!cc.full?'keep':'top';}}
   viewHome();return 'top';
 }
 function route(){var r=dispatch();if(r==='top')window.scrollTo(0,0);activateRolls(app);}
