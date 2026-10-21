@@ -10,7 +10,7 @@ var CATS=[
  {id:'rituals',arr:RITUALS,route:'ritual',name:'Ритуалы и формулы',one:'ритуал',theme:'ritual',c:'#D4AF37',ico:'star',kind:'cards',group:'kind',
   d:'Ритуалы Магии крови, церемонии Забвения и алхимия тонкокровных.',
   lede:'Всё, что требует времени, ингредиентов и крови. Записи сгруппированы по типу и уровню.'},
- {id:'predators',arr:PREDATORS,route:'predator',name:'Типы хищника',one:'тип хищника',theme:'predator',c:'#E0592A',ico:'claw',kind:'cards',
+ {id:'predators',arr:PREDATORS,route:'predator',name:'Типы хищника',one:'тип хищника',theme:'predator',c:'#E0592A',ico:'claw',kind:'cards',full:true,
   d:'Как персонажи добывают кровь и что это им даёт.',
   lede:'Способы охоты, доступные в хронике: пул кормления, что получает хищник и чем платит.'},
  {id:'merits',arr:MERITS,route:'merit',name:'Преимущества и Недостатки',one:'запись',theme:'merit',c:'#7FB5A8',ico:'scale',kind:'cards',group:'kind',full:true,

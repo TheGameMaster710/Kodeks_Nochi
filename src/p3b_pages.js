@@ -33,6 +33,7 @@ function viewEntry(c,id){
             '<div class="eff">'+md(p.text||'')+'</div></article>';}).join('')+'</div>';}).join('');
     mid+=section('Силы',(x.powers||[]).length,inner||emptyBox('Сил пока нет','Силы появятся здесь, разложенные по уровням.'));
   }
+  if(c.id==='predators'){strip=[['Пул охоты',x.pool],['Даёт',(x.gains||[]).join(' · ')]];}
   if(c.id==='merits'){strip=[['Вид',x.kind],['Точки',x.dots]];
     if(x.text) mid+=section(/•–|–•/.test(x.dots||'')?'Ступени':'Описание','','<div class="panel">'+md(x.text)+'</div>');}
   if(c.id==='loresheets'&&x.year!=null) strip=[['Год',String(x.year)]];
