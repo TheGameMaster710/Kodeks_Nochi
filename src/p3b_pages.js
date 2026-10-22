@@ -1,5 +1,4 @@
 
-/* ================= СТРАНИЦА ЗАПИСИ (общая) ================= */
 function viewEntry(c,id){
   var x=findIn(c.arr,id);
   if(!x){location.hash='#/cat/'+c.id;return;}
@@ -16,7 +15,7 @@ function viewEntry(c,id){
     if(pan) mid+=section('Кровь клана','',pan);
     var cc=(typeof CLAN_COURT!=='undefined'?CLAN_COURT:[]).filter(function(g){return g.clan===x.name;});
     if(cc.length) mid+=section('Иерархия клана',cc.length+' '+plural(cc.length,'ветвь','ветви','ветвей'),cc.map(function(g){
-      return '<div class="sec-head" style="margin:22px 0 12px"><h3>'+esc(g.sect)+'</h3>'+(g.note?'<span class="eyebrow">'+inl(g.note)+'</span>':'')+'</div>'+courtHtml(g);}).join(''));
+      return '<div class="u-m22-0-12 sec-head"><h3>'+esc(g.sect)+'</h3>'+(g.note?'<span class="eyebrow">'+inl(g.note)+'</span>':'')+'</div>'+courtHtml(g);}).join(''));
     var mem=membersOf('clan',x);
     mid+=section('В городе',mem.length,mem.length?'<div class="subgrid">'+mem.map(personSub).join('')+'</div>'
       :emptyBox('Никого не записано','Члены клана, известные котерии, появятся здесь.'));
@@ -25,7 +24,7 @@ function viewEntry(c,id){
     strip=[['Тип',x.kind],['Резонанс',x.resonance],['Угроза Маскараду',x.threat]];
     var lv={};(x.powers||[]).forEach(function(p){(lv[p.lvl]=lv[p.lvl]||[]).push(p);});
     var inner=Object.keys(lv).sort().map(function(l){
-      return '<div class="sec-head" style="margin:30px 0 12px"><h3>Уровень '+l+'</h3><span class="eyebrow">'+dots(+l)+'</span></div>'+
+      return '<div class="u-m30-0-12 sec-head"><h3>Уровень '+l+'</h3><span class="eyebrow">'+dots(+l)+'</span></div>'+
         '<div class="grid">'+lv[l].map(function(p){
           var par=[['Цена',p.cost],['Пул',p.pool],['Длительность',p.dur],['Амальгама',p.amalgam]].filter(function(q){return q[1];});
           return '<article class="card"><span class="tag">ур. '+p.lvl+'</span><h4>'+esc(p.name)+'</h4>'+
@@ -44,7 +43,7 @@ function viewEntry(c,id){
   }
   if(c.id==='sects'){
     var cm=membersOf('sect',x),seats=courtOf(x.name);
-    if(seats) mid+=section('Посты при Дворе','',courtHtml(seats));
+    if(seats) mid+=section(seats.head||'Посты при Дворе','',courtHtml(seats));
     mid+=section('Члены',cm.length,cm.length?'<div class="subgrid">'+cm.map(personSub).join('')+'</div>'
       :emptyBox('Никого не записано','Известные члены секты появятся здесь.'));
   }
@@ -56,11 +55,12 @@ function viewEntry(c,id){
   }
   if(c.id==='places'){
     var anc=[],p=x;while(p.parent){p=findIn(PLACES,p.parent);if(!p)break;anc.unshift(p);}
-    top+='<div class="chain"><span class="l">вложенность</span><a href="#/cat/places">Локации</a><span class="sep">›</span>'+
+    if(anc.length) top+='<div class="chain"><span class="l">вложенность</span><a href="#/cat/places">Локации</a><span class="sep">›</span>'+
       anc.map(function(a){return '<a href="#/place/'+a.id+'">'+esc(a.name)+'</a><span class="sep">›</span>';}).join('')+
       '<span class="cur">'+esc(x.name)+'</span></div>';
-    var dm=x.domain?findIn(DOMAINS,x.domain):null;
-    if(dm&&!dm.see) strip=[['Домен','<a class="wiki" href="#/domain/'+dm.id+'">'+esc(dm.name)+'</a>',1]];
+    var dm=x.domain?findIn(DOMAINS,x.domain):null,PK=x.kind?DOMAIN_KINDS[x.kind]:null;
+    strip=[['Тип',PK?'<span style="color:'+PK[1]+'">'+PK[0]+'</span>':'',1],['Владелец',x.holder?nameLink(x.holder):'',1],
+      ['Домен',dm?'<a class="wiki" href="#/domain/'+dm.id+'">'+esc(dm.name)+'</a>':'',1],['Район',x.area?esc(x.area):'',1]];
     var kids=PLACES.filter(function(k){return k.parent===x.id;}),gh=x.ghosts||[];
     if(kids.length||gh.length) mid+=section('Вложенные локации',kids.length+gh.length,'<div class="subgrid">'+
       kids.map(function(k){return '<a class="subcard" href="#/place/'+k.id+'" style="--c:'+(k.acc||c.c)+'"><span class="k">подзона</span><h4>'+esc(k.name)+'</h4><div class="ds">'+inl(k.short||'')+'</div></a>';}).join('')+
@@ -70,20 +70,22 @@ function viewEntry(c,id){
     var K=DOMAIN_KINDS[x.kind]||['—','#888'];
     strip=[['Тип','<span style="color:'+K[1]+'">'+K[0]+'</span>',1],['Держатель',x.holder?nameLink(x.holder):'',1],
       ['Угроза Маскараду',x.threat!=null?dots(x.threat):'',1]];
-    var inPl=PLACES.filter(function(p){return p.domain===x.id;});
-    if(inPl.length) mid+=section('Локации домена',inPl.length,'<div class="subgrid">'+inPl.map(function(k){
-      return '<a class="subcard" href="#/place/'+k.id+'"><span class="k">локация</span><h4>'+esc(k.name)+'</h4><div class="ds">'+inl(k.short||'')+'</div></a>';}).join('')+'</div>');
+    var outer=x.domain?findIn(DOMAINS,x.domain):null;
+    strip.push(['Внутри домена',outer?'<a class="wiki" href="#/domain/'+outer.id+'">'+esc(outer.name)+'</a>':'',1],['Район',x.area?esc(x.area):'',1]);
+    var inPl=PLACES.filter(function(p){return p.domain===x.id;}),inDm=DOMAINS.filter(function(d){return d.domain===x.id;});
+    if(inPl.length||inDm.length) mid+=section('Что внутри домена',inPl.length+inDm.length,'<div class="subgrid">'+inPl.map(function(k){
+      return '<a class="subcard" href="#/place/'+k.id+'"><span class="k">локация</span><h4>'+esc(k.name)+'</h4><div class="ds">'+inl(k.short||'')+'</div></a>';}).join('')+
+      inDm.map(function(k){return '<a class="subcard" href="#/domain/'+k.id+'"><span class="k">домен</span><h4>'+esc(k.name)+'</h4><div class="ds">'+inl(k.short||'')+'</div></a>';}).join('')+'</div>');
   }
   if(c.id==='threats'){
     strip=[['Вид',x.kind]].concat(x.stat||[]);
     if(x.track) top+=section('Трекеры','сохраняются в браузере',trackerHtml(x));
   }
   app.innerHTML='<div class="wrap rise"><a class="back" href="#/cat/'+c.id+'">← '+esc(c.name.toLowerCase())+'</a>'+gmToggleHtml()+
-    (c.id==='places'?top:'')+jcard(x,eyebrow,strip)+(c.id!=='places'?top:'')+mid+commonTail(x)+'<div style="height:30px"></div></div>';
+    (c.id==='places'?top:'')+jcard(x,eyebrow,strip,'',/^(people|threats)$/.test(c.id)?numOf(c.arr,x):null)+(c.id!=='places'?top:'')+mid+commonTail(x)+'<div class="u-h30"></div></div>';
   wireTrackers(app);
 }
 
-/* ================= КОТЕРИЯ ================= */
 function pcsOf(pid){return PCS.filter(function(x){return x.player===pid;});}
 function viewPlayers(){
   var c=catById('players');setTheme('player');
@@ -94,7 +96,7 @@ function viewPlayers(){
       list.map(function(x){return '<span class="chip">'+(x.dead?'☾ ':'')+esc(x.name)+'</span>';}).join('')+'</div></a>';}).join('');
   var orphans=PCS.filter(function(x){return !findIn(PLAYERS,x.player);});
   var inner=PLAYERS.length||PCS.length?'<div class="gods">'+cards+'</div>'+
-    (orphans.length?'<div class="sec-head" style="margin:34px 0 14px"><h3>Без игрока</h3></div><div class="subgrid">'+orphans.map(personSub).join('')+'</div>':'')
+    (orphans.length?'<div class="u-m34-0-14 sec-head"><h3>Без игрока</h3></div><div class="subgrid">'+orphans.map(personSub).join('')+'</div>':'')
     :emptyBox('Котерия ещё не собрана','Здесь появятся игроки и их персонажи — у каждого персонажа будет страница с трекерами.');
   inner+=coterieLiveHtml();
   listShell(c,inner,PLAYERS.length);
@@ -125,34 +127,40 @@ function viewPC(id){
   if(x.convictions&&x.convictions.length) out+=section('Убеждения и Якоря',x.convictions.length,tableHtml({head:['Убеждение','Якорь'],
     rows:x.convictions.map(function(v){return [v[0],v[1]?'[['+v[1]+']]':'—'];})}));
   out+=politicsHtml(x)+commonTail(x);
-  app.innerHTML=out+'<div style="height:30px"></div></div>';
+  app.innerHTML=out+'<div class="u-h30"></div></div>';
   wireTrackers(app);
   startPcSyncIfLive(x);
 }
 
-/* ================= ЛОКАЦИИ: ДЕРЕВО ================= */
 function viewPlaces(){
-  var c=catById('places');
-  function row(p){return '<a class="lrow" href="#/place/'+p.id+'" style="--c:'+(p.acc||c.c)+'"><span class="nm">'+esc(p.name)+'</span>'+
-    '<span class="ds">'+inl(p.short||'')+'</span><span class="meta"><span class="chip hot">'+
-    (PLACES.filter(function(k){return k.parent===p.id;}).length+(p.ghosts||[]).length)+' подзон</span></span></a>';}
-  function branch(p){var kids=PLACES.filter(function(k){return k.parent===p.id;}),gh=p.ghosts||[];
-    return '<li>'+row(p)+(kids.length||gh.length?'<ul>'+kids.map(branch).join('')+gh.map(function(g){
-      return '<li><div class="lrow ghost"><span class="nm">'+esc(g)+'</span><span class="ds">заметки нет</span></div></li>';}).join('')+'</ul>':'')+'</li>';}
-  var roots=PLACES.filter(function(x){return !x.parent||!findIn(PLACES,x.parent);});
+  var c=catById('places'),dc=catById('domains');
+  function kindChip(x){return x.kind&&DOMAIN_KINDS[x.kind]?'<span class="chip hot">'+esc(DOMAIN_KINDS[x.kind][0])+'</span>':'';}
+  function placeRow(p){return '<li><a class="lrow" href="#/place/'+p.id+'" style="--c:'+(p.acc||c.c)+'"><span class="nm">'+esc(p.name)+'</span>'+
+    '<span class="ds">'+inl(p.short||'')+'</span><span class="meta">'+kindChip(p)+'</span></a></li>';}
+  function domRow(d){
+    var inner=PLACES.filter(function(p){return p.domain===d.id;}).map(placeRow).join('')+DOMAINS.filter(function(x){return x.domain===d.id;}).map(domRow).join('');
+    return '<li><a class="lrow dom" href="#/domain/'+d.id+'" style="--c:'+dc.c+'"><span class="nm">'+esc(d.name)+'</span>'+
+      '<span class="ds">'+inl(d.short||'')+'</span><span class="meta"><span class="chip">домен</span>'+kindChip(d)+'</span></a>'+(inner?'<ul>'+inner+'</ul>':'')+'</li>';}
+  var areas=(CITY_MAP.areas||[]).slice();
+  PLACES.concat(DOMAINS).forEach(function(x){if(x.area&&areas.indexOf(x.area)<0)areas.push(x.area);});
+  var tree=areas.map(function(a){
+    var pl=PLACES.filter(function(p){return p.area===a&&!(p.domain&&findIn(DOMAINS,p.domain));}),
+      dm=DOMAINS.filter(function(d){return d.area===a&&!(d.domain&&findIn(DOMAINS,d.domain));});
+    var n=PLACES.filter(function(p){return p.area===a;}).length,nd=DOMAINS.filter(function(d){return d.area===a;}).length;
+    return '<li><div class="lrow area"><span class="nm">'+esc(a)+'</span><span class="ds">'+(n||nd?'':'Здесь пока ничего не отмечено')+'</span><span class="meta">'+
+      (n?'<span class="chip">'+n+' '+plural(n,'локация','локации','локаций')+'</span>':'')+(nd?'<span class="chip">'+nd+' '+plural(nd,'домен','домена','доменов')+'</span>':'')+'</span></div>'+
+      (pl.length||dm.length?'<ul>'+pl.map(placeRow).join('')+dm.map(domRow).join('')+'</ul>':'')+'</li>';}).join('');
+  var loose=PLACES.filter(function(p){return !p.area;});
   var topGh=(GHOSTS.places||[]).filter(function(g){return !LINKS[g];});
-  var topGhRows=topGh.map(function(g){return '<li><div class="lrow ghost"><span class="nm">'+esc(g)+'</span><span class="ds">заметки нет</span></div></li>';}).join('');
-  listShell(c,(roots.length||topGh.length)?'<ul class="ltree">'+roots.map(branch).join('')+topGhRows+'</ul><p class="hint">Пунктиром — зоны и места без собственной заметки.</p>'
-    :emptyBox('Локаций пока нет','Здесь вырастет дерево мест хроники: от района до отдельной комнаты.'));
+  var rest=loose.map(placeRow).join('')+topGh.map(function(g){return '<li><div class="lrow ghost"><span class="nm">'+esc(g)+'</span><span class="ds">заметки нет</span></div></li>';}).join('');
+  listShell(c,(PLACES.length||topGh.length)?'<ul class="ltree">'+tree+(rest?'<li><div class="lrow area"><span class="nm">Район не указан</span></div><ul>'+rest+'</ul></li>':'')+'</ul>'+
+    '<p class="hint">Районы — как на карте города. Внутри района сначала здания вне чьих-либо доменов, потом домены, а в доменах — здания, которые стоят на их территории. Домены открываются своими страницами.</p>'
+    :emptyBox('Локаций пока нет','Здесь появятся здания хроники: клубы, убежища, места сбора.'));
 }
-
-/* ================= ДОМЕНЫ: КАРТА ================= */
 function viewDomains(){
   var c=catById('domains');
   var W=CITY_MAP.w||1000,H=CITY_MAP.h||640;
-  /* shape — зона (угодья, район); point:'x,y' — одно здание (элизиум,
-     убежище): маленькая точка, чтобы соседние здания не перекрывали карту (v1.48) */
-  var shaped=DOMAINS.filter(function(d){return d.shape||d.point;});
+  var shaped=DOMAINS.filter(function(d){return d.shape||d.point;}),pins=PLACES.filter(function(p){return p.point;});
   var svg='<svg viewBox="0 0 '+W+' '+H+'" id="mapsvg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">'+
     '<path d="M40 0H0V40" fill="none" stroke="rgba(224,129,46,.08)"/></pattern></defs>'+
     (CITY_MAP.img?'<image href="'+esc(CITY_MAP.img)+'" x="0" y="0" width="'+W+'" height="'+H+'" preserveAspectRatio="xMidYMid slice" opacity=".55"/>'
@@ -164,34 +172,38 @@ function viewDomains(){
     var xy=String(d.point).split(',').map(parseFloat);
     svg+='<g class="dom pt'+((d.threat||0)>=3?' threat':'')+'" data-id="'+esc(d.id)+'" transform="translate('+xy[0]+' '+xy[1]+')">'+
       '<circle r="9" fill="transparent"/><circle class="dot" r="3.2" fill="'+K[1]+'" stroke="#07080C" stroke-width="1.2"/></g>';});
-  if(!shaped.length) svg+='<text x="'+W/2+'" y="'+H/2+'" text-anchor="middle" fill="rgba(239,230,220,.4)" font-family="Cormorant Garamond,serif" font-size="30">Карта ждёт районов</text>'+
+  pins.forEach(function(p){var K=DOMAIN_KINDS[p.kind]||['','#888'],xy=String(p.point).split(',').map(parseFloat);
+    svg+='<g class="dom pt place" data-place="'+esc(p.id)+'" transform="translate('+xy[0]+' '+xy[1]+')">'+
+      '<circle r="9" fill="transparent"/><rect class="dot" x="-3.4" y="-3.4" width="6.8" height="6.8" fill="'+K[1]+'" stroke="#07080C" stroke-width="1.2"/></g>';});
+  if(!shaped.length&&!pins.length) svg+='<text x="'+W/2+'" y="'+H/2+'" text-anchor="middle" fill="rgba(239,230,220,.4)" font-family="Cormorant Garamond,serif" font-size="30">Карта ждёт районов</text>'+
     '<text x="'+W/2+'" y="'+(H/2+30)+'" text-anchor="middle" fill="rgba(239,230,220,.3)" font-family="JetBrains Mono,monospace" font-size="12">районы появятся по мере того, как котерия узнаёт город</text>';
   svg+='</svg>';
   var legend='<div class="legend">'+Object.keys(DOMAIN_KINDS).map(function(k){var K=DOMAIN_KINDS[k];
-    return '<span class="legend-item"><i style="background:'+K[1]+'"></i>'+K[0]+'<b>'+DOMAINS.filter(function(d){return d.kind===k;}).length+'</b></span>';}).join('')+'</div>';
+    var n=DOMAINS.concat(pins).filter(function(d){return d.kind===k;}).length;
+    return n?'<span class="legend-item"><i style="background:'+K[1]+'"></i>'+K[0]+'<b>'+n+'</b></span>':'';}).join('')+
+    (pins.length?'<span class="legend-item">● зона домена · ■ здание-локация</span>':'')+'</div>';
   var gh=(GHOSTS.domains||[]).filter(function(n){return !LINKS[n];});
   var ghostCards=gh.map(function(n){return ghostCard('ДОМЕН',n,[],'');}).join('');
-  /* v1.63 — карточки под картой сгруппированы по виду домена (сворачиваемые
-     секции), чтобы на телефоне не шли одним длинным списком. */
   function dgroup(title,color,n,cards){return '<details class="dgroup" open style="--c:'+color+'"><summary><i></i><span>'+esc(title)+'</span><b>'+n+'</b></summary><div class="gods">'+cards+'</div></details>';}
   var groups=Object.keys(DOMAIN_KINDS).map(function(k){var arr=DOMAINS.filter(function(d){return d.kind===k;});
     return arr.length?dgroup(DOMAIN_KINDS[k][0],DOMAIN_KINDS[k][1],arr.length,arr.map(function(x){return domainCard(c,x);}).join('')):'';}).join('');
   var rest=DOMAINS.filter(function(d){return !DOMAIN_KINDS[d.kind];});
   if(rest.length) groups+=dgroup('Прочее','#7E7A8A',rest.length,rest.map(function(x){return domainCard(c,x);}).join(''));
   if(gh.length) groups+=dgroup('Без записи','#7E7A8A',gh.length,ghostCards);
-  var list=(DOMAINS.length||gh.length)?'<div style="margin-top:26px">'+groups+'</div>'
-    +(gh.length?'<p class="hint">Пунктирные карточки — упомянуты в заметках, но своей записи ещё нет; на карте не показаны, пока нет координат (shape).</p>':''):'';
+  var list=(DOMAINS.length||gh.length)?'<div class="u-mt26">'+groups+'</div>'
+    +(gh.length?'<p class="hint">Пунктирные карточки — упомянуты в заметках, но своей записи ещё нет; на карте их пока нет.</p>':''):'';
   listShell(c,'<div class="map" id="map">'+svg+'<div class="maptip" id="maptip" hidden></div></div>'+legend+
-    (shaped.length?'<p class="hint">Названия и подробности — при наведении на область карты, либо кнопкой «Показать на карте» в карточке ниже.</p>':'')+
+    (shaped.length||pins.length?'<p class="hint">Названия и подробности — при наведении на область или точку карты, либо кнопкой «Показать на карте» в карточке ниже. Квадраты — здания из раздела «Локации».</p>':'')+
     (CITY_MAP.note?'<div class="note"><b>Карта</b>'+md(CITY_MAP.note)+'</div>':'')+list);
   var map=document.getElementById('map'),tip=document.getElementById('maptip');
+  function domOf(pg){return pg.hasAttribute('data-place')?findIn(PLACES,pg.getAttribute('data-place')):findIn(DOMAINS,pg.getAttribute('data-id'));}
   map.addEventListener('mousemove',function(e){var pg=e.target.closest('.dom');if(!pg){tip.hidden=true;return;}
-    var d=findIn(DOMAINS,pg.getAttribute('data-id')),K=DOMAIN_KINDS[d.kind]||['—'];
+    var d=domOf(pg),K=DOMAIN_KINDS[d.kind]||['—'];
     tip.innerHTML='<b>'+esc(d.name)+'</b>'+K[0]+(d.holder?' · '+esc(d.holder):'')+(d.threat!=null?'<br>угроза '+d.threat+' / 5':'');
     var r=map.getBoundingClientRect();tip.hidden=false;
     tip.style.left=Math.min(e.clientX-r.left+14,r.width-270)+'px';tip.style.top=(e.clientY-r.top+14)+'px';});
   map.addEventListener('mouseleave',function(){tip.hidden=true;});
-  map.addEventListener('click',function(e){var pg=e.target.closest('.dom');if(pg)location.hash='#/domain/'+pg.getAttribute('data-id');});
+  map.addEventListener('click',function(e){var pg=e.target.closest('.dom');if(pg)location.hash=pg.hasAttribute('data-place')?'#/place/'+pg.getAttribute('data-place'):'#/domain/'+pg.getAttribute('data-id');});
   app.querySelectorAll('.dc-showmap').forEach(function(btn){
     btn.addEventListener('click',function(e){
       e.preventDefault();e.stopPropagation();
@@ -209,7 +221,7 @@ function viewDomains(){
 function domainCard(c,x){
   var ch=chipsFor(c,x);
   return '<div class="god-card'+(x.dead?' dead':'')+'" style="--c:'+(x.acc||c.c)+'">'+
-    '<a class="dc-body" href="#/'+(x.see||c.route+'/'+x.id)+'">'+
+    '<a class="dc-body" href="#/'+c.route+'/'+x.id+'">'+
     '<span class="k">'+numOf(c.arr,x)+' · '+esc(c.one.toUpperCase())+(x.dead?' · ☾ торпор':'')+'</span><h3>'+esc(x.name)+'</h3>'+
     (x.short?'<p class="pr">'+inl(x.short)+'</p>':'')+
     '<div class="foot">'+ch.map(function(v,i){return '<span class="chip'+(i===0?' hot':'')+'">'+esc(v)+'</span>';}).join('')+'</div></a>'+

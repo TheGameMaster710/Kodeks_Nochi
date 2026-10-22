@@ -4,7 +4,7 @@
 
 ОШИБКИ (сборка останавливается, код возврата 1):
   1. Утечка тайны: фраза из gm_secrets.txt найдена в открытом файле
-     (kodeks-nochi.html, RULES.md, CHANGELOG.md).
+     (index.html, data.js, style.css, RULES.md, CHANGELOG.md).
   2. Ссылка [[...]] ведёт в никуда: нет ни записи, ни заготовки, ни
      справочника с таким именем.
 
@@ -27,10 +27,10 @@ def rd(name):
     p = os.path.join(HERE, name)
     return open(p, encoding='utf-8').read() if os.path.exists(p) else ''
 
-data = rd('p2_data.html')
+data = rd('data.js')
 gm = rd('p2_gm.js')
 gm = gm[gm.index('var GM_LAYER'):] if 'var GM_LAYER' in gm else gm
-public_files = {n: rd(n) for n in ('kodeks-nochi.html', 'RULES.md', 'CHANGELOG.md')}
+public_files = {n: rd(n) for n in ('index.html', 'data.js', 'style.css', 'RULES.md', 'CHANGELOG.md')}
 a, b = data.index('var CLANS=['), data.index('var CITY_MAP=')
 notes = data[a:b]
 
@@ -107,6 +107,40 @@ for src_name, src in (('p2_data', notes), ('p2_gm', gm)):
             bad = sorted(k for k, v in c.items() if v >= 3 and k not in STOP)
             if bad:
                 warns.append('ПОВТОР (%s/%s): %s — «%s…»' % (src_name, entry_of(m.start(), src), ', '.join(bad), plain(para)[:70]))
+
+# ---------- 4б. близкий повтор (сказано рассказчиком 22.10.2026) ----------
+# Одно слово не повторяется в пределах одного-двух соседних предложений.
+# Не считаются: жирные метки, ссылка-метка в начале строки связей, ссылки в скобках,
+# названия в «ёлочках», термины механики и имена из NEAR_OK.
+NEAR_STOP = STOP | set('тольк либо этот эти этим того тому тоже всех всего весь всем даже ними своё свой своег своем такой такие такая такое один одна одно одни одного есть быть будет него неё сама само сами самы самог где тот той там тут здесь потом пока ещё уже лишь очень почти себе себя собой чего чему кого кому каждый каждо каждая этому этими всеми всё все вся всю'.split())
+NEAR_OK = {'стату', 'голод', 'пяти', 'дэвид', 'сигар'}
+def near_stems(s):
+    out = []
+    for w in re.findall(r"[А-Яа-яЁё]{4,}", s):
+        k = w.lower()[:5] if len(w) > 5 else w.lower()
+        if k not in NEAR_STOP and k not in NEAR_OK:
+            out.append(k)
+    return out
+for src_name, src in (('p2_data', notes), ('p2_gm', gm)):
+    for m in STR.finditer(src):
+        t = m.group(1)
+        if len(t) < 40:
+            continue
+        for para in t.split('\\n\\n'):
+            q = re.sub(r"\*\*[^*]+\*\*", "", para)
+            q = re.sub(r"^(\[\[[^\]]+\]\](,| и)? ?)+ — ", "", q)
+            q = re.sub(r"\s*\(\[\[[^\]]+\]\]\)", "", q)
+            q = re.sub(r"«[^»]*»", "", q)
+            sents = [x for x in re.split(r"(?<=[.!?…])\s+", plain(q)) if x]
+            seen = set()
+            for i in range(len(sents)):
+                c = {}
+                for k in near_stems(' '.join(sents[i:i + 2])):
+                    c[k] = c.get(k, 0) + 1
+                bad = sorted(k for k, v in c.items() if v >= 2 and k not in seen)
+                if bad:
+                    seen |= set(bad)
+                    warns.append('БЛИЗКО (%s/%s): %s — «%s…»' % (src_name, entry_of(m.start(), src), ', '.join(bad), ' '.join(sents[i:i + 2])[:70]))
 
 # ---------- 5. запрещённые слова ----------
 BANNED = [(r'днева[тл]', 'слова «дневать» нет: «проводить день»'),

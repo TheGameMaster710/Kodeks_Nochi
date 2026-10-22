@@ -1,5 +1,4 @@
 
-/* ================= ТРЕКЕРЫ ПЕРСОНАЖЕЙ ================= */
 var TRK_OBJ={};
 function trkKey(x){return (x._liveKind==='pcs'?'lpc:':PCS.indexOf(x)>-1?'pc:':PEOPLE.indexOf(x)>-1?'person:':'threat:')+x.id;}
 function trkDefault(x){var t=x.track||{};
@@ -8,7 +7,6 @@ function trkDefault(x){var t=x.track||{};
 function trkGet(key){var x=TRK_OBJ[key];if(!x)return null;
   var d=trkDefault(x);
   if(x._liveKind==='pcs'){
-    /* самостоятельный чарник — снимок Firestore лежит прямо в x (см. p3h_coterie.js) */
     ['hunger','hMax','hSup','hAgg','wMax','wSup','wAgg','hum','stains'].forEach(function(k){if(x[k]!=null)d[k]=x[k];});
   } else if(isLivePc(x)){
     var live=PCSTATE_CACHE[key];
@@ -18,15 +16,15 @@ function trkGet(key){var x=TRK_OBJ[key];if(!x)return null;
     if(s) for(var k2 in d) if(s[k2]!=null) d[k2]=s[k2];
   }
   d.hMax=(x.track&&x.track.healthMax)||d.hMax;d.wMax=(x.track&&x.track.wpMax)||d.wMax;
-  if(x._liveKind==='pcs'&&x.attrs){var dv=pcDerived(x);d.hMax=dv.hMax;d.wMax=dv.wMax;} /* интерактивный чарник: из атрибутов, p3j_sheet.js */
+  if(x._liveKind==='pcs'&&x.attrs){var dv=pcDerived(x);d.hMax=dv.hMax;d.wMax=dv.wMax;}
   return d;}
 function trkSet(key,st){
   var x=TRK_OBJ[key];
-  if(isLivePc(x)&&!canEditLivePc(x)){refreshTrackers(key);return;} /* нет прав на этот живой лист — откатываем показ к последнему известному состоянию */
+  if(isLivePc(x)&&!canEditLivePc(x)){refreshTrackers(key);return;}
   st.hunger=Math.max(0,Math.min(5,st.hunger));st.hum=Math.max(0,Math.min(10,st.hum));st.stains=Math.max(0,Math.min(10,st.stains));
   ['h','w'].forEach(function(p){var mx=st[p+'Max'];st[p+'Agg']=Math.max(0,Math.min(mx,st[p+'Agg']));st[p+'Sup']=Math.max(0,Math.min(mx-st[p+'Agg'],st[p+'Sup']));});
-  STORE.set('trk:'+key,st); /* локальная копия всегда — офлайн-страховка, а для NPC/угроз это и есть единственное хранилище */
-  if(x&&x._liveKind==='pcs') for(var sk in st) x[sk]=st[sk]; /* свой лист: сразу в объект — бросок видит новый Голод до ответа сервера, а предпросмотр без сервера вообще только так и работает */
+  STORE.set('trk:'+key,st);
+  if(x&&x._liveKind==='pcs') for(var sk in st) x[sk]=st[sk];
   if(isLivePc(x)){if(x._liveKind!=='pcs')PCSTATE_CACHE[key]=st;pcSyncWrite(x,st);}
   refreshTrackers(key);}
 function damage(st,p,kind,sign){
@@ -37,7 +35,7 @@ function damage(st,p,kind,sign){
   else{if(free>0)st[p+'Agg']++;else if(st[p+'Sup']>0){st[p+'Sup']--;st[p+'Agg']++;}}
 }
 function boxes(max,agg,sup){var s='';for(var i=0;i<max;i++){
-  var c=i<agg?'a':i<agg+sup?'s':'';s+='<span class="box '+c+'" style="display:inline-grid;place-items:center;cursor:default">'+(c==='a'?'✕':c==='s'?'╱':'')+'</span>';}return s;}
+  var c=i<agg?'a':i<agg+sup?'s':'';s+='<span class="u-igrid u-pi-c u-cur-def box '+c+'">'+(c==='a'?'✕':c==='s'?'╱':'')+'</span>';}return s;}
 function trkInner(key){
   var x=TRK_OBJ[key],live=isLivePc(x);
   if(live&&x._liveKind!=='pcs'&&!(key in PCSTATE_CACHE)) return '<div class="trk"><div class="tsync load">Загрузка живого листа…</div></div>';
@@ -47,9 +45,9 @@ function trkInner(key){
   var hFull=st.hSup+st.hAgg>=st.hMax,wFull=st.wSup+st.wAgg>=st.wMax;
   var pips='';for(var i=1;i<=5;i++){var on=i<=st.hunger;
     pips+=editable?('<button class="pip'+(on?' on':'')+'" type="button" data-act="hun" data-v="'+i+'" title="Голод '+i+'"></button>')
-                  :('<span class="pip'+(on?' on':'')+'" style="cursor:default" title="Голод '+i+'"></span>');}
+                  :('<span class="u-cur-def pip'+(on?' on':'')+'" title="Голод '+i+'"></span>');}
   var hum='';for(var j=0;j<10;j++){var filled=j<st.hum,stn=j>=10-st.stains;
-    hum+='<span class="box'+(filled?' h':'')+(stn?' st':'')+'" style="display:inline-grid;place-items:center;cursor:default">'+(stn?'╱':'')+'</span>';}
+    hum+='<span class="u-igrid u-pi-c u-cur-def box'+(filled?' h':'')+(stn?' st':'')+'">'+(stn?'╱':'')+'</span>';}
   var remorseDice=Math.max(1,10-st.hum-st.stains);
   var sync=live?('<div class="tsync">● живой лист'+(editable?' — правки видят все за столом':' игрока @'+esc(x.owner)+' — только просмотр')+'</div>'):'';
   return sync+'<div class="trk">'+
@@ -70,7 +68,7 @@ function trkInner(key){
      '<button class="mini pri" data-act="remorse" title="Кубов: '+remorseDice+'">Раскаяние ('+remorseDice+'к)</button></div>')+
      (st.stains>10-st.hum?'<div class="warn">Скверна залезла на Человечность: персонаж ослаблен, деградация.</div>':'')+
      '<div class="tsub">Проверка раскаяния — в конце сессии, если есть Скверна.</div></div>'+
-   '</div>'+ctl('<div class="ctl" style="margin-top:8px"><button class="mini" data-act="reset" title="Вернуть стартовые значения персонажа">Сброс к стартовым</button></div>');
+   '</div>'+ctl('<div class="u-mt8 ctl"><button class="mini" data-act="reset" title="Вернуть стартовые значения персонажа">Сброс к стартовым</button></div>');
 }
 function trackerHtml(x){var key=trkKey(x);TRK_OBJ[key]=x;return '<div class="trkwrap" data-trk="'+key+'">'+trkInner(key)+'</div>';}
 function refreshTrackers(key){
@@ -110,22 +108,16 @@ function onTrk(e){
   else return;
   trkSet(key,st);
 }
-function wireTrackers(){}  /* делегирование висит на document — см. initDock() */
+function wireTrackers(){}
 function miniPips(key){var st=trkGet(key),s='';
   for(var i=1;i<=5;i++) s+='<button class="pip'+(i<=st.hunger?' on':'')+'" type="button" data-act="hun" data-v="'+i+'"></button>';
   return '<div class="pips">'+s+'</div>';}
 
-/* ================= КОСТИ V5 ================= */
 function d(n){return 1+Math.floor(Math.random()*n);}
-/* v2.04 (сказано рассказчиком): кости — виджет посередине экрана. Кнопка
-   «Кости» внизу по центру открывает меню; при закрытии всё в нём
-   сбрасывается. История живёт до закрытия: не больше DK_MAX бросков, и если
-   меню выше экрана, старые записи удаляются — прокрутки внутри нет. */
 var LOG=[],LAST=null,dock,dkPc,dkHun,dkPool,dkDif,dkOut,dkLog,dkWp,dkMod,dkSum,DK_MAX=4;
-/* выбранные черты для броска по листу: ключи атрибутов, навыков и номера дисциплин */
 var DKT={a:[''],s:[''],d:[]};
 function dkLogHtml(){dkLog.innerHTML=LOG.map(function(e){return '<li><span class="f">'+esc(e.l)+' · '+esc(e.d)+'</span><span class="t '+e.c+'">'+esc(String(e.t))+'</span></li>';}).join('');}
-function dkFit(){ /* старые записи уходят, пока меню не влезет в экран */
+function dkFit(){
   if(!dock||!document.body.classList.contains('dk-open'))return;
   while(LOG.length>1&&dock.scrollHeight>dock.clientHeight+1){LOG.pop();dkLogHtml();}
 }
@@ -137,7 +129,7 @@ function dkIsSheet(key){var x=key?TRK_OBJ[key]:null;return !!(x&&x._liveKind==='
 function dkTraits(){var t=[];
   DKT.a.forEach(function(k){if(k)t.push('a:'+k);});DKT.s.forEach(function(k){if(k)t.push('s:'+k);});
   DKT.d.forEach(function(k){if(k!=='')t.push('d:'+k);});return t;}
-function dkSheetPool(){ /* пул по листу: атрибуты + навыки + дисциплины (+модификатор), со штрафами ослабления как на листе */
+function dkSheetPool(){
   var key=dkPc.value,x=TRK_OBJ[key],t=dkTraits();if(!x||!t.length)return null;
   var keep=SHEET_SEL[x.id];SHEET_SEL[x.id]={t:t,mod:+dkMod.value||0,dif:0,surge:false};
   var P=sheetPool(x);if(keep)SHEET_SEL[x.id]=keep;else delete SHEET_SEL[x.id];
@@ -145,7 +137,7 @@ function dkSheetPool(){ /* пул по листу: атрибуты + навык
 }
 function dkDiscOpts(x,sel){var o='<option value="">—</option>';(x&&x.disciplines||[]).forEach(function(d,i){
   if(d[0])o+='<option value="'+i+'"'+(String(i)===String(sel)?' selected':'')+'>'+esc(d[0])+' ('+(+d[1]||0)+')</option>';});return o;}
-function dkTraitsHtml(){ /* списки выбора; у второй и следующих строк есть ✕ */
+function dkTraitsHtml(){
   var x=TRK_OBJ[dkPc.value];
   function list(kind,arr,opts){return arr.map(function(v,i){return '<div class="dk-it"><select data-dkt="'+kind+'" data-i="'+i+'">'+opts(v)+'</select>'+
     (i>0||kind==='d'?'<button class="dk-x" type="button" data-dkdel="'+kind+'" data-i="'+i+'" aria-label="Убрать">✕</button>':'')+'</div>';}).join('');}
@@ -154,11 +146,10 @@ function dkTraitsHtml(){ /* списки выбора; у второй и сле
   document.getElementById('dkDiscs').innerHTML=list('d',DKT.d,function(v){return dkDiscOpts(x,v);});
   document.getElementById('dkDiscCol').style.display=x&&(x.disciplines||[]).some(function(d){return d[0];})?'':'none';
 }
-function dkSetTraits(t){ /* t — ключи как на листе: ['a:str','s:bra','d:0'] */
+function dkSetTraits(t){
   DKT={a:[],s:[],d:[]};(t||[]).forEach(function(k){var p=k.split(':');if(DKT[p[0]])DKT[p[0]].push(p[1]);});
   if(!DKT.a.length)DKT.a=[''];if(!DKT.s.length)DKT.s=[''];
 }
-/* бросок с листа: выбранное на листе подставляется в меню (вызывается из p3j_sheet.js) */
 function dkFromSheet(key,t,mod,dif){fillPcSelect();dkPc.value=key;dkHun.value=trkGet(key).hunger;dkSetTraits(t);dkMod.value=+mod||0;dkDif.value=+dif||0;dkTraitsHtml();}
 function dkMode(){
   var sh=dkIsSheet(dkPc.value);dock.classList.toggle('sh',sh);dock.classList.toggle('man',!sh);
@@ -236,7 +227,6 @@ function rouseFor(key,twice){
   openDock();
 }
 
-/* текстовые формулы → кнопки: «пул 6», «пул 6 / сл. 3», «проверка пробуждения», «2к10+1» */
 var ROLL_RE=/(пул\s+(\d{1,2})(?:\s*[\/,;]\s*сл\.?\s*(\d{1,2}))?)|(проверк[аеуи]\s+пробуждения)|((\d{0,2})[кК](\d{1,3})(?:\s*([+−–-])\s*(\d{1,3}))?)/gi;
 function activateRolls(root){
   var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),skip={BUTTON:1,SCRIPT:1,STYLE:1,A:1,TEXTAREA:1,INPUT:1,SELECT:1,OPTION:1},targets=[],node;
@@ -279,8 +269,6 @@ function fillPcSelect(){
   PEOPLE.concat(THREATS).filter(function(x){return x.track;}).forEach(function(x){var k=trkKey(x);TRK_OBJ[k]=x;opts+='<option value="'+k+'">'+esc(x.name)+' (РС)</option>';});
   dkPc.innerHTML=opts;
 }
-/* Вызывается из p3h_coterie.js при каждом обновлении LIVE_PCS (onSnapshot) —
-   пересобирает список дока костей, не теряя текущий выбор пользователя. */
 function refreshPcSelectAfterSync(){
   if(!dkPc) return;
   var prev=dkPc.value;

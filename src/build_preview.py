@@ -15,6 +15,6 @@ import json
 L=json.load(open('gm-layer.json'))
 assert s.count('var GM_LAYER_EMBED=null;')==1
 s=s.replace('var GM_LAYER_EMBED=null;','var GM_LAYER_EMBED='+json.dumps(L,ensure_ascii=False)+';')
-v=re.search(r'Шаблон (v[0-9.]+)',s).group(1)
+v=re.search(r'<meta name="version" content="(v[0-9.]+)">',s).group(1)
 out='/mnt/user-data/outputs/kodeks-nochi-'+v+'.html'
 open(out,'w').write(s); print(out)

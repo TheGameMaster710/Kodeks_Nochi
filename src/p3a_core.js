@@ -1,5 +1,4 @@
 
-/* ================= СПИСОК РАЗДЕЛОВ ================= */
 var CATS=[
  {id:'clans',arr:CLANS,route:'clan',name:'Кланы',one:'клан',theme:'clan',c:'#C8102E',ico:'fang',
   d:'Кровные линии: дисциплины, проклятия, одержимости и кто из них в городе.',
@@ -29,8 +28,8 @@ var CATS=[
   d:'Сородичи, гули и смертные, у которых есть имя.',
   lede:'Персонажи рассказчика: старейшины, соперники, гули, Якоря и все, с кем котерия имеет дело лично.'},
  {id:'places',arr:PLACES,route:'place',name:'Локации',one:'локация',theme:'place',c:'#E0812E',ico:'tower',kind:'tree',
-  d:'Убежища, Элизиумы, клубы и их вложенные зоны.',
-  lede:'Места хроники, вложенные друг в друга: от района до отдельной комнаты. На каждой странице — цепочка родителей и список подзон.'},
+  d:'Здания города: клубы, убежища, места сбора.',
+  lede:'Отдельные здания с адресом: Элизиум, убежища, бары, конторы. У каждого — владелец, домен, в котором оно стоит, и точка на карте.'},
  {id:'domains',arr:DOMAINS,route:'domain',name:'Домены',one:'домен',theme:'map',c:'#E08A3C',ico:'map',kind:'map',
   d:'Карта города: чьи районы, где охотятся, где опасно.',
   lede:'Территории Сородичей на карте города. Цвет — тип территории, пульсирующий контур — высокая угроза Маскараду.'},
@@ -75,7 +74,6 @@ var ICONS={
 };
 function icon(k,cls){return '<svg class="'+(cls||'ico')+'" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">'+(ICONS[k]||'')+'</svg>';}
 
-/* ================= УТИЛИТЫ ================= */
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function pad(n){return (n<10?'0':'')+n;}
 function catById(id){for(var i=0;i<CATS.length;i++)if(CATS[i].id===id)return CATS[i];return null;}
@@ -89,7 +87,6 @@ function R(a,b){return a+Math.random()*(b-a);}
 function plural(n,a,b,c){var m=n%10,h=n%100;if(m===1&&h!==11)return a;if(m>=2&&m<=4&&(h<12||h>14))return b;return c;}
 function allPeople(){return PCS.concat(PEOPLE);}
 
-/* ================= ВИКИ-ССЫЛКИ ================= */
 var LINKS={};
 function regLink(name,href){if(name&&!LINKS[name])LINKS[name]=href;}
 CATS.forEach(function(c){c.arr.forEach(function(x){
@@ -116,12 +113,6 @@ function hrefOf(n){return n?LINKS[String(n).trim()]||null:null;}
 function same(a,b){if(!a||!b)return false;if(a===b)return true;var ha=hrefOf(a);return !!ha&&ha===hrefOf(b);}
 function dots(n,max){n=+n||0;max=max||5;var s='';for(var i=0;i<max;i++)s+=i<n?'●':'<i>●</i>';return '<span class="dots">'+s+'</span>';}
 
-/* ================= РАСТУЩИЕ ПОЛЯ (v2.04, сказано рассказчиком) =================
-   Текстовые поля листа персонажа не прокручиваются, а растут вниз без
-   верхнего предела. growTa() — однострочное поле (Enter не ставит перенос,
-   текст просто уходит на следующую строку), класс grow на любом textarea —
-   многострочное. Высота подгоняется при вводе и при появлении поля на
-   странице (наблюдатель ниже). */
 function growTa(id,val,ph,attrs){return '<textarea class="grow one" rows="1"'+(id?' id="'+id+'"':'')+(ph?' placeholder="'+esc(ph)+'"':'')+(attrs||'')+'>'+esc(val||'')+'</textarea>';}
 function growFit(el){if(!el||!el.offsetParent)return;el.style.height='auto';el.style.height=(el.scrollHeight+el.offsetHeight-el.clientHeight)+'px';}
 function growAll(root){var l=(root||document).querySelectorAll?(root||document).querySelectorAll('textarea.grow'):[];for(var i=0;i<l.length;i++)growFit(l[i]);}
@@ -134,7 +125,6 @@ window.addEventListener('resize',function(){growAll();});
   new MutationObserver(function(){if(q)return;q=true;requestAnimationFrame(function(){q=false;growAll();});})
     .observe(document.documentElement,{childList:true,subtree:true});})();
 
-/* ================= ХРАНИЛИЩЕ (браузер) ================= */
 var STORE={
   key:function(k){return 'v5codex:'+(CHRONICLE.id||'chronicle')+':'+k;},
   get:function(k,def){try{var v=localStorage.getItem(this.key(k));return v==null?def:JSON.parse(v);}catch(e){return def;}},
@@ -142,7 +132,6 @@ var STORE={
   del:function(k){try{localStorage.removeItem(this.key(k));}catch(e){}}
 };
 
-/* ================= ФОНЫ ================= */
 var bgfx=document.getElementById('bgfx');
 function ash(n,color){var s='<div class="ash" style="position:absolute;inset:0;color:'+color+'">';
   for(var i=0;i<n;i++){var z=R(1,2.6);s+='<i style="left:'+R(0,100).toFixed(1)+'%;top:0;width:'+z.toFixed(1)+'px;height:'+z.toFixed(1)+
@@ -174,7 +163,7 @@ function rootsSvg(){var s='<svg class="roots" viewBox="0 0 1000 500" preserveAsp
 function mist(){return '<div class="mist"></div>';}
 function candles(){var s='<div class="candles">';for(var i=0;i<5;i++)s+='<div class="flame" style="left:'+(i*22-5)+'%;animation-delay:-'+R(0,3).toFixed(1)+'s"></div>';return s+'</div>';}
 var BG={
- home:function(){return mist()+drips('rgba(120,8,24,.55)')+ash(40,'#C9A45C')+'<div style="position:absolute;inset:0;opacity:.35">'+skyline('#050306')+'</div>';},
+ home:function(){return mist()+drips('rgba(120,8,24,.55)')+ash(40,'#C9A45C')+'<div class="u-abs u-inset0 u-o35">'+skyline('#050306')+'</div>';},
  blood:function(){return mist()+drips('rgba(140,10,30,.6)')+ash(30,'#E0142F');},
  rosette:function(){return mist()+ROSETTE+candles()+ash(26,'#D4AF37');},
  city:function(){return mist()+'<div class="sodium"></div><div class="rain"></div>'+skyline('#030305');},
@@ -196,7 +185,6 @@ var crumbs=document.getElementById('crumbs'),app=document.getElementById('app');
 function crumb(parts){crumbs.innerHTML='<a href="#/">титул</a>'+parts.map(function(p){
   return ' / '+(p[1]?'<a href="'+p[1]+'">'+esc(String(p[0]).toLowerCase())+'</a>':esc(String(p[0]).toLowerCase()));}).join('');}
 
-/* ================= ОБЩИЕ БЛОКИ СТРАНИЦ ================= */
 function emptyBox(title,text){return '<div class="empty"><b>'+esc(title)+'</b><span>'+text+'</span></div>';}
 function secHead(t,eb,lvl){return '<div class="sec-head"><'+(lvl||'h2')+'>'+esc(t)+'</'+(lvl||'h2')+'>'+(eb!=null&&eb!==''?'<span class="eyebrow">'+esc(eb)+'</span>':'')+'</div>';}
 function section(t,eb,inner){return '<section class="sec tight">'+secHead(t,eb)+inner+'</section>';}
@@ -211,14 +199,6 @@ function tableHtml(t){
     (t.head?'<thead><tr>'+t.head.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead>':'')+
     '<tbody>'+t.rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+md(c)+'</td>';}).join('')+'</tr>';}).join('')+
     '</tbody></table></div>';}
-/* ================= СЛОЙ МАСТЕРА (с v1.42, §1.3.4 в комментарии) =================
-   Любой блок (blocks[]), связь (ties[] — объект {text,gm:true} вместо строки),
-   ребро RELATIONS/BONDS/BOONS с gm:true видны только мастеру/админу и только
-   когда переключатель «Вид» стоит на «Мастер». Игрок не видит ни самого
-   текста, ни следов: gm-части выпадают и из упоминаний, и из поиска
-   (strings() ниже их пропускает). С v1.44 сами тайны в index.html не
-   лежат: игроку сервер их не отдаёт, мастеру их накладывает p3i_gm.js из
-   Firestore gmlayer/main (туман войны, §1.3.4). */
 var GM_VIEW=true;
 try{if(localStorage.getItem('kn_gmview')==='0')GM_VIEW=false;}catch(e){}
 function canGm(){return !!(SESSION&&(SESSION.role==='master'||SESSION.role==='admin'));}
@@ -235,7 +215,7 @@ document.addEventListener('click',function(e){
   var b=e.target&&e.target.closest?e.target.closest('[data-gmv]'):null;if(!b)return;
   GM_VIEW=b.getAttribute('data-gmv')==='1';
   try{localStorage.setItem('kn_gmview',GM_VIEW?'1':'0');}catch(_){}
-  gmRerender(); /* p3i_gm.js — сброс поиска и перерисовка без прыжка страницы */
+  gmRerender();
 });
 function blockHtml(b){
   var inner='';
@@ -254,17 +234,14 @@ function playlistHtml(p){
       :'<span class="pl '+cls+'"><i>'+lab+'</i>'+inl(v)+'</span>';}
   return '<div class="plist"><span class="l">Плейлист</span>'+one(p.calm,'calm','мирный')+one(p.fight,'fight','боевой')+'</div>';
 }
-function jcard(x,eyebrow,strip,extraCls){
-  return '<div class="jcard'+(x.dead?' dead':'')+(extraCls?' '+extraCls:'')+'"><div class="jcard-top">'+
+function jcard(x,eyebrow,strip,extraCls,caseNo){
+  return '<div class="jcard'+(x.dead?' dead':'')+(extraCls?' '+extraCls:'')+'"><div class="jcard-top"><div class="jcard-id">'+
     '<div class="eyebrow">'+eyebrow+'</div><h1>'+esc(x.name)+'</h1>'+
-    (x.img?'<div class="portrait"><img src="'+esc(x.img)+'" alt="'+esc(x.name)+'" loading="lazy" onerror="this.parentNode.remove()"'+(x.imgPos?' style="object-position:'+esc(x.imgPos)+'"':'')+'></div>':'')+
+    (caseNo?'<div class="case-no">Дело № '+String(caseNo).padStart(3,'0')+'</div>':'')+
+    (x.img?'<div class="portrait"><img src="'+esc(x.img)+'" alt="'+esc(x.name)+'" loading="lazy" onerror="this.parentNode.remove()"'+(x.imgPos?' style="object-position:'+esc(x.imgPos)+'"':'')+'></div>':'')+'</div>'+
     (x.short?'<p class="princ">'+inl(x.short)+'</p>':'')+
     '</div>'+stripHtml((x.quick||[]).concat(strip||[]))+'</div>';
 }
-/* Одно имя — одна строка связи (v1.52): тайная связь с тем же персонажем, что
-   и открытая, не даёт вторую строку, а дописывается к первой выделенной
-   частью (.gm-inl). Ключ — первая [[ссылка]] строки; тайная строка без
-   открытой пары выводится отдельно, как раньше. */
 function tieKey(t){var s=typeof t==='string'?t:(t&&t.text)||'';var m=s.match(/^\s*\[\[([^\]|]+)/);return m?m[1].trim():null;}
 function tieRows(ties){
   var rows=[];
@@ -292,7 +269,6 @@ function commonTail(x){
   return out;
 }
 
-/* ================= УПОМИНАНИЯ (обратные ссылки) ================= */
 function strings(o,acc){acc=acc||[];
   if(typeof o==='string') acc.push(o);
   else if(Array.isArray(o)) o.forEach(function(v){strings(v,acc);});
@@ -300,7 +276,7 @@ function strings(o,acc){acc=acc||[];
   return acc;}
 function allEntries(){
   var out=[];
-  CATS.forEach(function(c){c.arr.forEach(function(x){if(x.see)return;out.push({x:x,href:'#/'+c.route+'/'+x.id,cat:c.one,name:x.name});});});
+  CATS.forEach(function(c){c.arr.forEach(function(x){out.push({x:x,href:'#/'+c.route+'/'+x.id,cat:c.one,name:x.name});});});
   PCS.forEach(function(x){out.push({x:x,href:'#/pc/'+x.id,cat:'персонаж',name:x.name});});
   SESSIONS.forEach(function(s){out.push({x:s,href:'#/cons',cat:'журнал',name:'Сессия '+s.n});});
   CHRON.forEach(function(c,i){out.push({x:c,href:'#/tool/chron',cat:c.kind==='memoriam'?'мемориам':'хроника',name:c.title||c.when||('Ночь '+(i+1))});});
@@ -321,7 +297,6 @@ function backlinksHtml(x){
     return '<a class="chip hot" href="'+e.href+'">'+esc(e.cat)+' · '+esc(e.name)+'</a>';}).join(' ')+'</div>');
 }
 
-/* ================= КАРТОЧКИ СПИСКОВ ================= */
 function chipsFor(c,x){
   var ch=[];
   if(c.id==='clans'){(x.disciplines||[]).forEach(function(d){ch.push(d);});}
@@ -346,8 +321,6 @@ function ghostCard(label,name,chips,note){
     (note?'<p class="pr">'+esc(note)+'</p>':'')+
     '<div class="foot">'+(chips||[]).map(function(v){return '<span class="chip">'+esc(v)+'</span>';}).join('')+'</div></div>';
 }
-/* число активных заготовок-призраков раздела: CLAN_REF/DISC_REF для кланов
-   и дисциплин (справочник книги), GHOSTS[c.id] для всех остальных разделов */
 function ghostCount(c){
   if(c.id==='clans') return CLAN_REF.filter(function(r){return !LINKS[r[0]];}).length;
   if(c.id==='disciplines') return DISC_REF.filter(function(r){return !LINKS[r[0]];}).length;
@@ -356,9 +329,9 @@ function ghostCount(c){
 function listShell(c,inner,count){
   crumb([[c.name]]);
   app.innerHTML='<section class="sec"><div class="wrap rise"><a class="back" href="#/">← к титулу</a>'+
-    '<div class="sec-head" style="margin-top:22px"><h2>'+esc(c.name)+'</h2><span class="eyebrow">'+
+    '<div class="u-mt22 sec-head"><h2>'+esc(c.name)+'</h2><span class="eyebrow">'+
     (count==null?c.arr.length:count)+' '+plural(count==null?c.arr.length:count,'запись','записи','записей')+'</span></div>'+
-    '<p class="lede" style="margin:0 0 30px">'+esc(c.lede)+'</p>'+inner+'</div></section>';
+    '<p class="u-m0-0-30 lede">'+esc(c.lede)+'</p>'+inner+'</div></section>';
 }
 
 function viewList(c){
@@ -382,12 +355,6 @@ function viewList(c){
   listShell(c,inner);
 }
 
-/* Личности — клан теперь полноценная категория раздела, а не просто ключ
-   сортировки: список делится на подразделы с заголовком и счётчиком, по
-   одному на клан (алфавит, ru), плюс «Без клана» в конце для записей без
-   поля clan. Заготовки-призраки (GHOSTS.people) клана не имеют — своей
-   записи ещё нет, поэтому они идут отдельным подразделом в самом конце,
-   а не внутри клановых групп. */
 function viewPeople(c){
   var groups={},order=[];
   c.arr.forEach(function(x){var g=x.clan||'Без клана';
@@ -397,22 +364,16 @@ function viewPeople(c){
   var gh=(GHOSTS.people||[]).filter(function(n){return !LINKS[n];});
   var sections=order.map(function(g){
     var list=groups[g].slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'','ru');});
-    return '<div class="sec-head" style="margin:34px 0 14px"><h3>'+esc(g)+'</h3><span class="eyebrow">'+list.length+' '+plural(list.length,'запись','записи','записей')+'</span></div>'+
+    return '<div class="u-m34-0-14 sec-head"><h3>'+esc(g)+'</h3><span class="eyebrow">'+list.length+' '+plural(list.length,'запись','записи','записей')+'</span></div>'+
       '<div class="gods">'+list.map(function(x){return listCard(c,x);}).join('')+'</div>';});
   var inner=sections.join('');
-  if(gh.length) inner+='<div class="sec-head" style="margin:34px 0 14px"><h3>Клан неизвестен</h3><span class="eyebrow">'+gh.length+' '+plural(gh.length,'заготовка','заготовки','заготовок')+'</span></div>'+
+  if(gh.length) inner+='<div class="u-m34-0-14 sec-head"><h3>Клан неизвестен</h3><span class="eyebrow">'+gh.length+' '+plural(gh.length,'заготовка','заготовки','заготовок')+'</span></div>'+
     '<div class="gods">'+gh.map(function(n){return ghostCard('ЛИЧНОСТЬ',n,[],'');}).join('')+'</div>';
   if(!order.length&&!gh.length) inner=emptyBox('Записей пока нет','Раздел ждёт первых заметок хроники.');
   else if(gh.length) inner+='<p class="hint">Пунктирные карточки — упомянуты в заметках, но своей записи ещё нет (клан пока неизвестен). Как только появится запись с тем же именем, заготовка исчезнет.</p>';
   listShell(c,inner);
 }
 
-/* Лоршиты — события истории города: карточки идут в хронологическом
-   порядке (по году), а не как обычно (сперва настоящие записи, потом
-   заготовки). Год настоящей записи — LORESHEETS[].year; год заготовки —
-   справочник LORE_YEARS в p2_data.html (не хранится в самой GHOSTS,
-   чтобы не усложнять общий формат заготовок остальных разделов). Запись
-   или заготовка без известного года уходит в конец списка. */
 function viewLoresheets(c){
   var gh=(GHOSTS.loresheets||[]).filter(function(n){return !LINKS[n];});
   var items=c.arr.map(function(x){return {y:x.year,html:listCard(c,x)};})
@@ -424,7 +385,6 @@ function viewLoresheets(c){
   listShell(c,inner);
 }
 
-/* компактные разделы: все записи — полные карточки на одной странице */
 function fullCard(c,x){
   var par=[];
   if(c.id==='rituals'){par=[['Тип',x.kind],['Уровень',x.lvl],['Цена',x.cost],['Пул',x.pool],['Ингредиенты',x.ingredients]];}
@@ -435,7 +395,7 @@ function fullCard(c,x){
     '<span class="tag">'+esc(x.kind||c.one)+(x.lvl?' '+x.lvl:'')+'</span><h4>'+(c.full?'<a href="#/'+c.route+'/'+x.id+'">'+esc(x.name)+'</a>':esc(x.name))+'</h4>'+
     (x.short?'<div class="tsub">'+inl(x.short)+'</div>':'')+
     (par.length?'<dl class="par">'+par.map(function(p){return '<dt>'+esc(p[0])+'</dt><dd>'+inl(String(p[1]))+'</dd>';}).join('')+'</dl>':'')+
-    '<div class="eff">'+md(x.text||'')+'</div>'+(c.full?'<p style="margin:12px 0 0"><a class="mini" href="#/'+c.route+'/'+x.id+'">Открыть заметку →</a></p>':'')+'</article>';
+    '<div class="eff">'+md(x.text||'')+'</div>'+(c.full?'<p class="u-m12-0-0"><a class="mini" href="#/'+c.route+'/'+x.id+'">Открыть заметку →</a></p>':'')+'</article>';
 }
 function ghostFullCard(c,name){
   return '<article class="card ghost"><span class="tag">'+esc(c.one)+' · нет</span><h4>'+esc(name)+'</h4>'+
@@ -451,7 +411,7 @@ function viewCards(c,focusId){
     c.arr.forEach(function(x){var g=c.group?(x[c.group]||'Прочее'):'';if(!groups[g]){groups[g]=[];order.push(g);}groups[g].push(x);});
     inner=order.map(function(g){
       var list=groups[g].slice().sort(function(a,b){return (a.lvl||0)-(b.lvl||0);});
-      return (g?'<div class="sec-head" style="margin:34px 0 14px"><h3>'+esc(g)+'</h3><span class="eyebrow">'+list.length+'</span></div>':'')+
+      return (g?'<div class="u-m34-0-14 sec-head"><h3>'+esc(g)+'</h3><span class="eyebrow">'+list.length+'</span></div>':'')+
         '<div class="grid">'+list.map(function(x){return fullCard(c,x);}).join('')+'</div>';}).join('');
     if(gh.length){inner+='<div class="grid">'+gh.map(function(n){return ghostFullCard(c,n);}).join('')+'</div>'+
       '<p class="hint">Пунктирные карточки — упомянуты в заметках, но своей записи ещё нет.</p>';}
@@ -461,7 +421,6 @@ function viewCards(c,focusId){
     if(el) requestAnimationFrame(function(){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('flash');});}
 }
 
-/* ================= ЧЛЕНСТВО И ПОЛИТИКА ================= */
 function membersOf(field,x){var names=[x.name].concat(x.aliases||[]);
   return allPeople().filter(function(p){return names.indexOf(p[field])>-1;});}
 function personHref(p){return PCS.indexOf(p)>-1?'#/pc/'+p.id:'#/person/'+p.id;}
@@ -472,8 +431,6 @@ function politicsHtml(x){
   var n=x.name,out='';
   var bonds=BONDS.filter(gmOk).filter(function(b){return same(b.thrall,n)||same(b.regnant,n);});
   var boons=BOONS.filter(gmOk).filter(function(b){return same(b.debtor,n)||same(b.creditor,n);});
-  /* v1.73 — связь показывается только «от хозяина страницы»: note — на
-     странице a, noteB — на странице b (нет noteB — на странице b связи нет) */
   function relNote(r){return same(r.a,n)?(r.note||''):(r.noteB||'');}
   var rel=RELATIONS.filter(gmOk).filter(function(r){return same(r.a,n)||(same(r.b,n)&&r.noteB);});
   function gb(o){return o.gm?' '+gmBadge():'';}
@@ -484,8 +441,6 @@ function politicsHtml(x){
   bonds.forEach(function(b){rows.push('<li>Кровные узы '+dots(b.level,3)+': '+nameLink(b.thrall)+' → '+nameLink(b.regnant)+(b.note?' — '+inl(b.note):'')+gb(b)+'</li>');});
   boons.forEach(function(b){var L=BOON_LEVELS[b.level]||['?',''];
     rows.push('<li>'+L[0]+' долг ('+(BOON_STATUS[b.status]||b.status)+'): '+nameLink(b.debtor)+' должен '+nameLink(b.creditor)+(b.why?' — '+inl(b.why):'')+gb(b)+'</li>');});
-  /* одно имя — одна строка (v1.52): тайная связь с тем же персонажем
-     дописывается к открытой выделенной частью, а не даёт вторую строку */
   var relRows=[];
   rel.forEach(function(r){var other=same(r.a,n)?r.b:r.a;
     if(r.gm)for(var i=0;i<relRows.length;i++)if(!relRows[i].r.gm&&same(relRows[i].other,other)){relRows[i].parts.push(r);return;}

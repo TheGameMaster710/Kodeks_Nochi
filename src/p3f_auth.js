@@ -1,9 +1,4 @@
 
-/* ================= FIREBASE: КОНФИГ И ВХОД (с v1.31) =================
-   Своя система логинов на Firestore (без Firebase Auth email/password —
-   см. §1.3 в комментарии в начале файла). Анонимная авторизация Firebase
-   используется только как «якорь сессии» (request.auth.uid для правил),
-   сама проверка логин/пароль — через безопасные правила Firestore. */
 var FIREBASE_CONFIG={
   apiKey:"AIzaSyB0jmd1yvFoyyMZx1vraB8JT1muorJU9bo",
   authDomain:"kodeks-nochi.firebaseapp.com",
@@ -12,23 +7,15 @@ var FIREBASE_CONFIG={
   messagingSenderId:"738762033182",
   appId:"1:738762033182:web:13f71cb8c86fceabb9c60f"
 };
-/* SDK грузится тремя <script src> в <head> (p1_head.html) — если сеть подвела
-   (офлайн, блокировщик, недоступен CDN), typeof firebase может быть 'undefined';
-   тогда просто не инициализируем — bootAuth() ниже покажет понятную ошибку
-   вместо падения всего скрипта на ReferenceError. */
-/* ПРЕДПРОСМОТР ДЛЯ ТЕЛЕФОНА (с v1.42, §1.3.4): build_preview.py подменяет
-   false на true в копии для скачивания — тогда Firebase не трогаем вовсе,
-   вход пропускается, сессия локальная с ролью мастера (виден переключатель
-   «Вид: Игрок / Мастер»). В самом index.html для сайта здесь всегда false. */
 var KODEKS_PREVIEW=false;
-var fbApp=null,fbAuth=null,fbDb=null;
+var fbAuth=null,fbDb=null;
 if(!KODEKS_PREVIEW&&typeof firebase!=='undefined'){
-  fbApp=firebase.initializeApp(FIREBASE_CONFIG);
+  firebase.initializeApp(FIREBASE_CONFIG);
   fbAuth=firebase.auth();
   fbDb=firebase.firestore();
 }
 
-var SESSION=null; /* {uid, username, role, displayName} после успешного входа */
+var SESSION=null;
 var ROLE_NAMES={admin:'админ',master:'мастер',player:'игрок'};
 
 function sha256Hex(text){
@@ -38,12 +25,7 @@ function sha256Hex(text){
   });
 }
 
-/* ================= ВХОД: ЗАПУСК ================= */
 function bootAuth(cb){
-  /* Обход входа для автотестов (test.py задаёт window.name ДО загрузки страницы) —
-     Firebase недоступен из песочницы агента. Никаких реальных прав это не даёт:
-     SESSION поддельная только на клиенте, любое чтение/запись в Firestore всё равно
-     упрётся в правила безопасности без настоящей сессии — см. §1.3 в комментарии. */
   if(window.name==='KODEKS_TEST_BYPASS'){SESSION={uid:'test',username:'test',role:'admin',displayName:'Тест'};cb();return;}
   if(KODEKS_PREVIEW){SESSION={uid:'preview',username:'preview',role:'master',displayName:'Предпросмотр',preview:true};renderUserBadge();cb();return;}
   var gate=document.getElementById('authGate');
@@ -76,7 +58,6 @@ function bootAuth(cb){
   });
 }
 
-/* ================= ВХОД: ФОРМА ЛОГИНА ================= */
 function showLoginForm(cb,note){
   var gate=document.getElementById('authGate');
   gate.innerHTML='<div class="auth-card">'+
@@ -114,23 +95,6 @@ function showLoginForm(cb,note){
   user.focus();
 }
 
-/* ================= ВХОД: САМОСТОЯТЕЛЬНАЯ РЕГИСТРАЦИЯ ИГРОКА (с v1.38) =================
-   Сказано рассказчиком явно (v1.38): новых игроков больше не заводит админ руками
-   через #/admin/users — они сами создают себе логин/пароль прямо на экране входа.
-   Открыто полностью (спрошено явно) — без кода-приглашения, любой человек со
-   ссылкой на сайт может завести себе аккаунт-игрока.
-   Роль всегда 'player' — 'master'/'admin' по-прежнему заводит только сам админ
-   (см. viewAdminUsers ниже), самостоятельная форма роль не спрашивает и в
-   Firestore шлёт её жёстко зашитой, а не берёт с формы — правило create в
-   firestore.rules отдельно перепроверяет, что это 'player', так что подделать
-   роль через devtools не выйдет.
-   «Логин не занят» не проверяется отдельным чтением заранее — правило read
-   не пускает ещё не вошедшего читать чужой users/{u} (см. firestore.rules), а
-   значит и не узнать заранее. Вместо этого сама попытка create — это и есть
-   проверка: если документ с таким id уже существует, Firestore трактует
-   запись как update (не create) независимо от того, что вызвал клиент, а
-   правило update требует isAdmin() — значит попытка с занятым логином сама
-   получит permission-denied, ровно нужное поведение, без гонки состояний. */
 function showRegisterForm(cb){
   var gate=document.getElementById('authGate');
   gate.innerHTML='<div class="auth-card">'+
@@ -178,7 +142,6 @@ function showRegisterForm(cb){
   user.focus();
 }
 
-/* ================= ВХОД: ПЕРВЫЙ ЗАПУСК (СОЗДАНИЕ ПЕРВОГО АДМИНА) ================= */
 function showBootstrapForm(cb){
   var gate=document.getElementById('authGate');
   gate.innerHTML='<div class="auth-card">'+
@@ -198,12 +161,6 @@ function showBootstrapForm(cb){
     go.disabled=true;go.textContent='Создание…';
     sha256Hex(p).then(function(hash){
       var uid=fbAuth.currentUser.uid;
-      /* Не batch(): правила Firestore проверяют каждую запись batch по снимку
-         базы ДО всего пакета, поэтому sessions/{uid} не увидел бы только что
-         созданный в том же batch users/{u} (см. v1.34 в комментарии). Пишем
-         последовательно — users сначала, meta/bootstrap последним, чтобы
-         каждая следующая проверка правил видела уже сохранённый результат
-         предыдущей записи. */
       return fbDb.collection('users').doc(u).set({passwordHash:hash,role:'admin',displayName:u,createdAt:firebase.firestore.FieldValue.serverTimestamp()})
         .then(function(){return fbDb.collection('sessions').doc(uid).set({username:u,passwordHash:hash,createdAt:firebase.firestore.FieldValue.serverTimestamp()});})
         .then(function(){return fbDb.collection('meta').doc('bootstrap').set({done:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});});
@@ -218,12 +175,9 @@ function showBootstrapForm(cb){
   user.focus();
 }
 
-/* ================= БЕЙДЖ И ВЫХОД ================= */
 function renderUserBadge(){
   var b=document.getElementById('userBadge');if(!b||!SESSION)return;
   var canG=SESSION.role==='admin'||SESSION.role==='master';
-  /* «Тайны мастера» и «Пользователи» — заметные кнопки, а не подчёркнутый
-     текст (сказано рассказчиком, v1.47: их тяжело было заметить) */
   var gmBtn=canG?' <a class="ubtn gm" id="badgeGm">🔒 Тайны мастера</a>':'';
   if(SESSION.preview) b.innerHTML='<b>Предпросмотр</b><span class="ubtn-note"> · без сервера</span>'+gmBtn;
   else b.innerHTML='<b>'+esc(SESSION.displayName)+'</b><span class="ubtn-note"> · '+(ROLE_NAMES[SESSION.role]||SESSION.role)+'</span>'+gmBtn+
@@ -240,19 +194,18 @@ function doLogout(){
   });
 }
 
-/* ================= АДМИН: ПОЛЬЗОВАТЕЛИ (#/admin/users) ================= */
 function viewAdminUsers(){
   setTheme('court');crumb([['Пользователи']]);
   app.innerHTML='<section class="sec"><div class="wrap rise"><a class="back" href="#/">← к титулу</a>'+
-    '<div class="sec-head" style="margin-top:22px"><h2>Пользователи</h2><span class="eyebrow">только для админа</span></div>'+
-    '<p class="lede" style="margin:0 0 20px">Роли и пароли учётных записей сайта. Пароль игрока не хранится в открытом виде — '+
+    '<div class="u-mt22 sec-head"><h2>Пользователи</h2><span class="eyebrow">только для админа</span></div>'+
+    '<p class="u-m0-0-20 lede">Роли и пароли учётных записей сайта. Пароль игрока не хранится в открытом виде — '+
     'при необходимости его можно только сбросить (задать новый), не посмотреть старый. Игроки с v1.38 заводят себе аккаунт '+
     'сами через форму на экране входа — сюда попадают, только если нужно поменять роль, сбросить пароль или удалить запись. '+
     'Роль admin/master по-прежнему заводится только здесь.</p>'+
     '<div id="adminUserList" class="empty"><b>Загрузка…</b></div>'+
     '<div class="addrow admin-new">'+
-      '<div><label>Новый логин</label><input id="newUser" type="text" autocapitalize="off" autocorrect="off" style="width:150px"></div>'+
-      '<div><label>Пароль</label><input id="newPass" type="text" style="width:150px"></div>'+
+      '<div><label>Новый логин</label><input id="newUser" type="text" autocapitalize="off" autocorrect="off" class="u-w150"></div>'+
+      '<div><label>Пароль</label><input id="newPass" type="text" class="u-w150"></div>'+
       '<div><label>Роль</label><select id="newRole"><option value="player">Игрок</option><option value="master">Мастер</option><option value="admin">Админ</option></select></div>'+
       '<button class="mini pri" type="button" id="newGo">Создать</button>'+
     '</div><div class="err" id="adminErr"></div>'+

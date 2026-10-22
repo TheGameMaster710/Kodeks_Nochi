@@ -1,5 +1,4 @@
 
-/* ================= ЖУРНАЛ ПОСЛЕДСТВИЙ ================= */
 function fxChips(it){
   var s='';
   if(it.status){var dl=+it.status.delta||0;s+='<span class="fxchip '+(dl>=0?'up':'down')+'">'+(dl>0?'+':'')+dl+' Статус · '+esc(it.status.who)+(it.status.sect?' ('+esc(it.status.sect)+')':'')+'</span>';}
@@ -15,7 +14,6 @@ function journalHtml(){
       s.items.map(function(x){return typeof x==='string'?'<li>'+md(x)+'</li>':'<li>'+md(x.t)+fxChips(x)+'</li>';}).join('')+'</ul></article>';}).join('')+'</div>';
 }
 
-/* ================= ТИТУЛ ================= */
 function viewHome(anchor){
   setTheme(null);crumbs.innerHTML='/ титул';
   var C=CHRONICLE,v=masqNow(),L=masqLevel(v);
@@ -28,7 +26,7 @@ function viewHome(anchor){
   function fact(num,title,val,txt){return '<div class="fact"><div class="num">'+num+'</div><h3>'+(val?esc(val):'<span class="blank">'+title+'</span>')+'</h3><p>'+txt+'</p></div>';}
   var world=(C.premise.length||C.history.length)?
       (C.premise.length?defsHtml(C.premise):'')+
-      (C.history.length?'<div class="sec-head" style="margin:40px 0 20px"><h3>Исторический фундамент</h3></div><ul class="tl">'+C.history.map(function(h){return '<li><b>'+esc(h[0])+'</b>'+md(h[1])+'</li>';}).join('')+'</ul>':'')
+      (C.history.length?'<div class="u-m40-0-20 sec-head"><h3>Исторический фундамент</h3></div><ul class="tl">'+C.history.map(function(h){return '<li><b>'+esc(h[0])+'</b>'+md(h[1])+'</li>';}).join('')+'</ul>':'')
     :emptyBox('Заглавная заметка пуста','Образ города, расклад сил и история ночей появятся здесь.');
   app.innerHTML=
   '<section class="hero"><div class="wrap rise">'+
@@ -44,20 +42,19 @@ function viewHome(anchor){
     fact('03 / ВЛАСТЬ','власть не указана',C.power,'Кто держит город по праву крови.')+
     '<a class="fact" href="#/tool/masq" style="text-decoration:none;--c:'+L[3]+'"><div class="num">04 / МАСКАРАД</div><h3 style="color:'+L[3]+'">'+esc(L[1])+' · '+v+'</h3>'+masqGauge(v,true)+'</a>'+
   '</div>'+
-  '<section class="sec" id="world" style="padding-bottom:0"><div class="wrap">'+secHead(C.city||'Город','заглавная заметка')+world+'</div></section>'+
+  '<section class="u-pb0 sec" id="world"><div class="wrap">'+secHead(C.city||'Город','заглавная заметка')+world+'</div></section>'+
   '<section class="sec" id="cats"><div class="wrap">'+secHead('Разделы кодекса',CATS.length+' разделов · '+totalNotes()+' '+plural(totalNotes(),'запись','записи','записей'))+'<div class="cats">'+cats+'</div></div></section>'+
-  '<section class="sec" id="tools" style="padding-top:0"><div class="wrap">'+secHead('Инструменты рассказчика',TOOLS.length+' инструментов')+'<div class="cats">'+tools+'</div></div></section>'+
+  '<section class="u-pt0 sec" id="tools"><div class="wrap">'+secHead('Инструменты рассказчика',TOOLS.length+' инструментов')+'<div class="cats">'+tools+'</div></div></section>'+
   '<section class="sec cons" id="cons"><div class="wrap">'+secHead('Последствия',SESSIONS.length+' '+plural(SESSIONS.length,'сессия','сессии','сессий')+' в журнале')+
-    '<p class="lede" style="margin:0 0 24px">Что котерия натворила и чем это обернулось. Эффекты событий сразу двигают Статус, Маскарад, долги и узы.</p>'+
+    '<p class="u-m0-0-24 lede">Что котерия натворила и чем это обернулось. Эффекты событий сразу двигают Статус, Маскарад, долги и узы.</p>'+
     journalHtml()+
-    (statusSeries().length&&SESSIONS.length?'<div class="sec-head" style="margin:34px 0 16px"><h3>Динамика Статуса</h3><span class="eyebrow">по сессиям</span></div>'+statusChart():'')+
+    (statusSeries().length&&SESSIONS.length?'<div class="u-m34-0-16 sec-head"><h3>Динамика Статуса</h3><span class="eyebrow">по сессиям</span></div>'+statusChart():'')+
   '</div></section>';
   document.getElementById('footL').textContent='Кодекс Ночи'+(C.title?' — '+C.title:'')+' · рабочая энциклопедия хроники';
   if(anchor){var el=document.getElementById(anchor);if(el)requestAnimationFrame(function(){el.scrollIntoView({block:'start',behavior:'smooth'});});}
 }
 function totalNotes(){var n=PCS.length;CATS.forEach(function(c){n+=c.arr.length;});return n;}
 
-/* ================= ПАНЕЛЬ АКТИВНОЙ СЕССИИ ================= */
 function tmin(s){var m=/^(\d{1,2}):(\d{2})$/.exec(s||'');return m?(+m[1])*60+(+m[2]):null;}
 function fmtT(m){m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+':'+pad(m%60);}
 function nightState(){var N=ACTIVE_SESSION.night||{};var s=STORE.get('night',null)||{};
@@ -70,7 +67,7 @@ function nightHtml(){
   return '<div class="dawn-big'+(left<=60?' urgent':'')+'">'+(left<=0?'Рассвет':h+' ч '+pad(m)+' мин')+'</div>'+
     '<div class="tsub">'+(left<=0?'солнце встаёт — в убежище!':'до рассвета · сейчас '+fmtT(nw))+'</div>'+
     '<div class="dawn-bar"><i style="width:'+(el/total*100).toFixed(1)+'%"></i></div>'+
-    '<div class="ctl" style="display:flex;gap:6px;flex-wrap:wrap"><button class="mini" data-nt="-15">−15 м</button><button class="mini" data-nt="15">+15 м</button>'+
+    '<div class="u-flex u-gap6 u-fwrap ctl"><button class="mini" data-nt="-15">−15 м</button><button class="mini" data-nt="15">+15 м</button>'+
     '<button class="mini" data-nt="30">+ сцена 30 м</button><button class="mini pri" data-nt="60">+1 ч</button></div>'+
     '<div class="times"><label>Закат<input type="time" data-nf="sunset" value="'+n.sunset+'"></label><label>Рассвет<input type="time" data-nf="sunrise" value="'+n.sunrise+'"></label>'+
     '<label>Сейчас<input type="time" data-nf="now" value="'+n.now+'"></label></div>';
@@ -78,17 +75,17 @@ function nightHtml(){
 function orderState(){return STORE.get('order',null)||{list:[],cur:0,round:1};}
 function orderHtml(){
   var o=orderState();
-  return '<div class="tsub">Раунд '+o.round+(o.list.length?' · ходит: <b style="color:var(--acc)">'+esc((o.list[o.cur]||{}).n||'')+'</b>':'')+'</div>'+
+  return '<div class="tsub">Раунд '+o.round+(o.list.length?' · ходит: <b class="u-c-acc">'+esc((o.list[o.cur]||{}).n||'')+'</b>':'')+'</div>'+
     '<ul class="order">'+o.list.map(function(x,i){return '<li class="'+(i===o.cur?'cur':'')+'"><span class="v">'+esc(x.v)+'</span><span class="nm">'+esc(x.n)+'</span><button data-od="'+i+'" title="Убрать">✕</button></li>';}).join('')+'</ul>'+
     '<div class="addrow"><input id="odN" placeholder="Имя"><input id="odV" class="sm" type="number" placeholder="№"><button class="mini" data-oa="add">+</button></div>'+
-    '<div class="ctl" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="mini pri" data-oa="next">Следующий ход</button><button class="mini" data-oa="sort">Сортировать</button>'+
+    '<div class="u-flex u-gap6 u-fwrap u-mt8 ctl"><button class="mini pri" data-oa="next">Следующий ход</button><button class="mini" data-oa="sort">Сортировать</button>'+
     (PCS.length?'<button class="mini" data-oa="coterie">+ котерия</button>':'')+'<button class="mini" data-oa="clear">Очистить</button></div>'+
     '<div class="tsub">В V5 нет броска инициативы: порядок задаёт рассказчик (обычно по пулу действия или Сообразительности + Бдительности).</div>';
 }
 function sessFlow(nodes){return '<ul class="sflow">'+nodes.map(function(n){return '<li><span class="nd'+(n.cls?' '+n.cls:'')+'">'+md(n.t)+'</span>'+(n.kids?sessFlow(n.kids):'')+'</li>';}).join('')+'</ul>';}
 function renderSession(){
   var S=ACTIVE_SESSION||{},filled=!!(S.n||(S.flow&&S.flow.length));
-  document.getElementById('sessTitle').innerHTML=filled?'Сессия '+(S.n||'')+(S.name?' — '+(S.place?'<a href="'+esc(S.place)+'" style="color:var(--acc);text-decoration:none">'+esc(S.name)+'</a>':esc(S.name)):'')
+  document.getElementById('sessTitle').innerHTML=filled?'Сессия '+(S.n||'')+(S.name?' — '+(S.place?'<a href="'+esc(S.place)+'" class="u-c-acc u-td-none">'+esc(S.name)+'</a>':esc(S.name)):'')
     :'План не задан';
   document.getElementById('sessSub').textContent=filled?(S.sub||''):'Инструменты ночи работают и без плана';
   var h='<details class="sess-sec" open><summary>Ночь · до рассвета</summary><div class="in" id="nightBox">'+nightHtml()+'</div></details>';
@@ -97,17 +94,17 @@ function renderSession(){
   h+='<details class="sess-sec"><summary>Очерёдность</summary><div class="in" id="orderBox">'+orderHtml()+'</div></details>';
   var v=masqNow(),L=masqLevel(v);
   h+='<details class="sess-sec"><summary>Маскарад · '+esc(L[1])+' '+v+'</summary><div class="in">'+masqGauge(v,true)+
-    '<div class="ctl" style="display:flex;gap:6px;margin-top:10px"><button class="mini" data-sq="-1">−1</button><button class="mini pri" data-sq="1">+1 нарушение</button><a class="mini" href="#/tool/masq" style="text-decoration:none">шкала →</a></div></div></details>';
-  if(!filled) h+='<div class="in" style="padding:16px"><div class="sess-note"><b>План пуст</b>Сцены, развилки, таблицы и плейлисты следующей сессии появятся здесь.</div></div>';
+    '<div class="u-flex u-gap6 u-mt10 ctl"><button class="mini" data-sq="-1">−1</button><button class="mini pri" data-sq="1">+1 нарушение</button><a class="u-td-none mini" href="#/tool/masq">шкала →</a></div></div></details>';
+  if(!filled) h+='<div class="u-p16 in"><div class="sess-note"><b>План пуст</b>Сцены, развилки, таблицы и плейлисты следующей сессии появятся здесь.</div></div>';
   else{
     if(S.flow&&S.flow.length) h+='<details class="sess-sec" open><summary>Структура сессии</summary><div class="in">'+sessFlow(S.flow)+(S.priority?'<div class="sess-note"><b>При нехватке времени</b>'+md(S.priority)+'</div>':'')+'</div></details>';
     if(S.decisions&&S.decisions.length) h+='<details class="sess-sec"><summary>Ключевые решения</summary><div class="in"><ul class="sess-list">'+S.decisions.map(function(x){return '<li>'+md(x)+'</li>';}).join('')+'</ul></div></details>';
     if(S.tables&&S.tables.length) h+='<details class="sess-sec"><summary>Таблицы</summary><div class="in">'+S.tables.map(function(t){
-      return '<h4 style="font-size:19px;margin-top:10px">'+esc(t.name)+'</h4>'+(t.note?'<div class="sess-note">'+md(t.note)+'</div>':'')+(t.groups||[]).map(function(g){return (g.sub?'<div class="eyebrow" style="margin-top:8px">'+esc(g.sub)+'</div>':'')+tableHtml(g.table);}).join('');}).join('')+'</div></details>';
+      return '<h4 class="u-fs19 u-mt10">'+esc(t.name)+'</h4>'+(t.note?'<div class="sess-note">'+md(t.note)+'</div>':'')+(t.groups||[]).map(function(g){return (g.sub?'<div class="u-mt8 eyebrow">'+esc(g.sub)+'</div>':'')+tableHtml(g.table);}).join('');}).join('')+'</div></details>';
     if(S.afterLog&&S.afterLog.length) h+='<details class="sess-sec"><summary>После сессии — в журнал</summary><div class="in"><ul class="sess-list">'+S.afterLog.map(function(x){return '<li>'+md(x)+'</li>';}).join('')+'</ul></div></details>';
   }
   if(S.playlists&&S.playlists.length) h+='<details class="sess-sec"><summary>Плейлисты</summary><div class="in">'+S.playlists.map(function(p){
-    return '<div class="sess-note"><b>'+esc(p[0])+'</b>'+(/^https?:\/\//.test(p[1])?'<a href="'+esc(p[1])+'" target="_blank" rel="noopener" style="color:var(--acc)">открыть ↗</a>':md(p[1]))+'</div>';}).join('')+'</div></details>';
+    return '<div class="sess-note"><b>'+esc(p[0])+'</b>'+(/^https?:\/\//.test(p[1])?'<a href="'+esc(p[1])+'" target="_blank" rel="noopener" class="u-c-acc">открыть ↗</a>':md(p[1]))+'</div>';}).join('')+'</div></details>';
   var body=document.getElementById('sessBody');
   var open={};[].forEach.call(body.querySelectorAll('details'),function(d,i){open[i]=d.open;});
   body.innerHTML=h;
@@ -145,15 +142,6 @@ function initSession(){
   if(pref===true||(pref==null&&ACTIVE_SESSION&&ACTIVE_SESSION.n&&window.matchMedia('(min-width:1180px)').matches)) setOpen(true);
 }
 
-/* ================= ПОИСК ================= */
-/* v1.76 — поиск по весам (сказано рассказчиком: запись должна идти выше,
-   чем случайное совпадение слова в тексте). Слои, от сильного к слабому:
-     имя (начало 100 / начало слова 90 / внутри 80) → алиасы 75 →
-     теги 70 (ручные tags:[…] записи + авто: клан, секта, роль, вид,
-     держатель) → короткое описание и заголовки блоков 40 → текст 10
-     (+ до 5 за частоту). Заготовки без своей записи идут ниже настоящих.
-   Запрос из нескольких слов: каждое слово должно найтись, очки складываются.
-   Окончания: «Гекаты» находит «Геката» (слово без 1–2 последних букв, ×0.8). */
 var IDX=null;
 function plainText(t){return String(t||'').replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g,'$2').replace(/\[\[([^\]]+)\]\]/g,'$1').replace(/\*\*/g,'');}
 function buildIndex(){
@@ -189,7 +177,6 @@ function scoreWord(e,w){
 function scoreEntry(e,words){
   var total=0,why='',ti=-1,hitW='';
   for(var i=0;i<words.length;i++){var w=words[i],r=scoreWord(e,w),f=1;
-    /* лучший из трёх вариантов: слово как есть и без 1–2 последних букв (×0.8) */
     [1,2].forEach(function(cut){if(words[i].length<4+cut)return;var w2=words[i].slice(0,-cut),r2=scoreWord(e,w2);
       if(r2.s*.8>r.s*f){r=r2;f=.8;w=w2;}});
     if(!r.s)return null;
@@ -229,11 +216,7 @@ function initSearch(){
   document.addEventListener('keydown',function(e){if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();q.focus();}});
 }
 
-/* ================= РОУТЕР ================= */
 function dispatch(){
-  /* уходим со страницы — снимаем подписку на живой лист персонажа, если она
-     была; если новый маршрут снова #/pc/<живой>, viewPC() откроет её заново
-     (см. startPcSyncIfLive() в p3g_pcsync.js) */
   stopPcSync();
   var h=location.hash.replace(/^#\/?/,''),m;
   if(!h){viewHome();return 'top';}
@@ -246,21 +229,18 @@ function dispatch(){
   if(h==='master/gm'){if(canGm()){viewGmLayer();return 'top';}viewHome();return 'top';}
   if(h==='admin/users'){if(SESSION&&SESSION.role==='admin'){viewAdminUsers();return 'top';}viewHome();return 'top';}
   if((m=/^([\w-]+)\/([\w-]+)$/.exec(h))){var cc=catByRoute(m[1]);
-    /* запись-ссылка (поле see): точка на карте ведёт на полную заметку */
-    var sx=cc?findIn(cc.arr,m[2]):null;if(sx&&sx.see){location.replace('#/'+sx.see);return 'keep';}
+    if(m[1]==='domain'&&!findIn(DOMAINS,m[2])&&findIn(PLACES,m[2])){location.replace('#/place/'+m[2]);return 'keep';}
     if(cc){viewEntry(cc,m[2]);return cc.kind==='cards'&&!cc.full?'keep':'top';}}
   viewHome();return 'top';
 }
 function route(){var r=dispatch();if(r==='top')window.scrollTo(0,0);activateRolls(app);}
 window.addEventListener('hashchange',route);
-/* Раньше здесь сразу вызывался route() — теперь всё приложение стартует только
-   после успешного входа, см. bootAuth() в p3f_auth.js (§1.3 в комментарии). */
 bootAuth(function(){
   initDock();
   initSearch();
   initSession();
-  startCoterieSync(); /* см. p3h_coterie.js — самостоятельные чарники игроков, живая подписка на всю сессию, не только на страницу */
-  startGmLayer(); /* p3i_gm.js — мастерский слой (туман войны): игроку ничего, мастеру тайны из Firestore */
+  startCoterieSync();
+  startGmLayer();
   route();
 });
 </script>

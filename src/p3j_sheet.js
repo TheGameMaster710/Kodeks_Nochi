@@ -1,26 +1,4 @@
 
-/* ================= ИНТЕРАКТИВНЫЙ ЧАРНИК V5 (самостоятельные чарники, с v1.45) =================
-   См. §1.3.5 в комментарии. Сказано рассказчиком: в Котерии должен быть
-   полноценный интерактивный лист вампира — атрибуты, навыки, дисциплины,
-   метод охоты и т.п., плюс встроенный бросок. Страница #/coterie/<id>
-   (viewLivePC в p3h_coterie.js) рисует лист через sheetHtml(x).
-
-   ДАННЫЕ в документе pcs/{id} (Firestore НЕ принимает массив внутри
-   массива — поэтому строки хранятся объектами, а в памяти страницы
-   переводятся в привычные [[…]] функциями pcFromFs/pcToFs ниже):
-     attrs:{str,dex,sta,cha,man,com,int,wit,res}   1..5 (нет поля = 1)
-     skills:{ath,…}                                0..5 (нет поля = 0)
-     specs:'текст'          специализации, свободным текстом
-     disciplines:[{n,d,p}]  название, точки, силы (строки через \n)
-     advantages:[{n,d,k,t}] достоинства/недостатки/фоны: k = merit|flaw|bg
-     predator, huntA, huntS тип хищника и пул охоты (ключ атрибута + навыка)
-     xpTotal, xpSpent, notes, hBonus, wBonus
-     concept:[{l,t}], convictions:[{c,a}]
-   Здоровье = Выносливость+3(+hBonus), Сила воли = Самообладание+Решимость
-   (+wBonus) — считает pcDerived(), трекер берёт отсюда (trkGet в p3c_dice.js).
-   Правка — только владелец (правила pcs), в режиме «Правка листа»;
-   сохранение само, с задержкой (sheetQueueSave). Бросок — у всех, кто
-   видит лист: клик по атрибуту/навыку/дисциплине кладёт его в пул. */
 
 var SHEET_ATTRS=[
  ['Физические',[['str','Сила'],['dex','Ловкость'],['sta','Выносливость']]],
@@ -32,15 +10,8 @@ var SHEET_SKILLS=[
  ['Социальные',[['ani','Обращение с животными'],['eti','Этикет'],['ins','Проницательность'],['itm','Запугивание'],['lea','Лидерство'],['prf','Исполнение'],['prs','Убеждение'],['str2','Знание улиц'],['sub','Хитрость']]],
  ['Ментальные',[['aca','Гуманитарные науки'],['awa','Бдительность'],['fin','Финансы'],['inv','Расследование'],['med','Медицина'],['occ','Оккультизм'],['pol','Политика'],['sci','Наука'],['tec','Технологии']]]
 ];
-/* типы хищника из книги — только названия; способы охоты хроники (PREDATORS)
-   идут в списке первыми */
-/* «Уличная кошка» из книги в хронике называется «Бродячий кот» и есть в PREDATORS (v2.08) */
 var PRED_REF=['Мешочник','Кровавая пиявка','Тесак','Консенсуалист','Фермер','Осирис','Песочный человек','Королева сцены','Сирена'];
 var ADV_KINDS={merit:'Достоинство',flaw:'Недостаток',bg:'Фон'};
-/* v1.64 — достоинства/недостатки на листе выбираются из MERITS сайта
-   (сказано рассказчиком), а не вписываются руками. Вид (k) и допустимое
-   число точек берутся из записи: kind → k, dots ('••' или '•–•••••') →
-   диапазон. Старые, вписанные вручную строки сохраняются как «своё». */
 var ADV_KIND_OF={'Достоинство':'merit','Недостаток':'flaw','Предыстория':'bg','Фон':'bg'};
 function advFind(n){n=String(n||'').trim();if(!n)return null;for(var i=0;i<MERITS.length;i++)if(MERITS[i].name===n)return MERITS[i];return null;}
 function advRange(n){var m=advFind(n);if(!m||!m.dots)return [0,5];
@@ -54,18 +25,8 @@ function advOptions(cur){
   if(cur&&!advFind(cur)) h+='<optgroup label="Своё (нет на сайте)"><option value="'+esc(cur)+'" selected>'+esc(cur)+'</option></optgroup>';
   return h;}
 
-/* v2.04 (сказано рассказчиком) — на листе преимущество показывается
-   текстовыми блоками, как в заметках, и только с действующими эффектами.
-   Ступени накопительные (steps:'stack') — по блоку на каждую набранную
-   ступень подряд; заменяющие (steps:'replace') — один блок текущей ступени.
-   Если steps нет, вид берётся из строки «Ступени» концепции заметки
-   («накапливаются» / «заменяет»), иначе считается накопительным.
-   Фон: достоинство — зелёный, недостаток — красный, фон — обычный. */
 function advSteps(m){if(m.steps)return m.steps;var r='';(m.concept||[]).forEach(function(c){if(/^Ступени/i.test(c[0]))r=c[1];});
   return /замен/i.test(r)?'replace':'stack';}
-/* Точки меняются только в режиме «Правка листа» (сказано рассказчиком:
-   иначе возможны случайные изменения). В просмотре — название и точки один
-   раз, под ними блоки ступеней; в правке те же блоки идут под строкой выбора. */
 function advBlocks(a){
   var name=a[0]||'',dots=+a[1]||0,k=a[2]||'merit',m=advFind(name),rg=advRange(name);
   var head='<div class="adv-h"><span class="adv-n">'+(m?wikiTag(name,esc(name)):esc(name||'—'))+'</span>'+
@@ -90,11 +51,10 @@ function advBody(a,edit){
   }
   return body;
 }
-var SHEET_EDIT={};  /* id → true, пока открыт режим «Правка листа» */
-var SHEET_SEL={};   /* id → {t:['a:str','s:bra','d:0'], mod, dif, surge} — выбранный пул */
+var SHEET_EDIT={};
+var SHEET_SEL={};
 var SHEET_TIMER={};
 
-/* ---------- формат Firestore ↔ память ---------- */
 function pcFromFs(d){
   function rows(v,a,b){return (v||[]).map(function(r){return Array.isArray(r)?r:[r[a]||'',r[b]||''];});}
   d.concept=rows(d.concept,'l','t');
@@ -112,7 +72,6 @@ function pcToFs(data){
   return o;
 }
 
-/* ---------- значения и производные ---------- */
 function sAttr(x,k){var v=(x.attrs||{})[k];return v==null?1:+v;}
 function sSkill(x,k){return +((x.skills||{})[k]||0);}
 function traitName(k){
@@ -120,7 +79,7 @@ function traitName(k){
   if(p[0]==='d') return null;
   list.forEach(function(g){g[1].forEach(function(t){if(t[0]===p[1])out=t[1];});});return out;
 }
-function traitGroup(k){ /* 0 физ, 1 соц, 2 мент — для штрафа ослабления */
+function traitGroup(k){
   var p=k.split(':'),list=p[0]==='a'?SHEET_ATTRS:p[0]==='s'?SHEET_SKILLS:null,g=-1;
   if(list) list.forEach(function(gr,i){gr[1].forEach(function(t){if(t[0]===p[1])g=i;});});return g;
 }
@@ -138,7 +97,6 @@ function pcDerived(x){
 function bpRow(x){var b=Math.max(0,Math.min(10,+x.bp||0));return BP_TABLE[b]||BP_TABLE[0];}
 function surgeDice(x){var m=/(\d+)/.exec(bpRow(x)[1]||'');return m?+m[1]:0;}
 
-/* ---------- пул броска ---------- */
 function sheetSel(x){return SHEET_SEL[x.id]||(SHEET_SEL[x.id]={t:[],mod:0,dif:0,surge:false});}
 function sheetPool(x){
   var s=sheetSel(x),key=trkKey(x),st=trkGet(key),parts=[],sum=0;
@@ -170,7 +128,6 @@ function sheetRollHtml(x){
     '<button class="mini" type="button" data-sh="clear">Очистить пул</button></div></div>';
 }
 
-/* ---------- отрисовка ---------- */
 function sDots(x,k,val,min,max,edit){
   var s='';for(var i=1;i<=max;i++){var on=i<=val;
     s+=edit?'<button type="button" class="sd'+(on?' on':'')+'" data-sh="dot" data-k="'+k+'" data-v="'+i+'" data-min="'+min+'" aria-label="'+i+'"></button>'
@@ -203,9 +160,6 @@ function skillOpts(sel){var o='<option value="">—</option>';SHEET_SKILLS.forEa
 function sheetHtml(x,editable){
   var edit=editable&&!!SHEET_EDIT[x.id],out='';
   out+='<div class="sheet" data-pc="'+esc(x.id)+'">';
-  /* сказано рассказчиком (v1.47): кнопку правки листа тяжело заметить —
-     теперь это крупная кнопка на всю ширину; в режиме правки панель липнет
-     к верху экрана, чтобы «Готово» всегда было под рукой */
   if(editable) out+='<div class="sh-bar'+(edit?' editing':'')+'"><button type="button" class="sh-edit" data-sh="edit">'+
     (edit?'✓ Готово — закончить правку':'✎ Править лист персонажа')+'</button>'+
     '<span class="sh-hint" id="shSaved">'+(edit?'Нажимайте на точки, чтобы менять значения; всё сохраняется само.':'Здесь меняются атрибуты, навыки, дисциплины, охота, опыт и заметки.')+'</span></div>';
@@ -213,8 +167,7 @@ function sheetHtml(x,editable){
   out+=section('Атрибуты','',statsGrid(x,SHEET_ATTRS,'a',1,edit));
   out+=section('Навыки','',statsGrid(x,SHEET_SKILLS,'s',0,edit)+
     (edit?'<label class="sh-lab">Специализации</label><textarea class="grow" id="sh_specs" rows="2" placeholder="Например: Драка (ножи), Оккультизм (Тремер)">'+esc(x.specs||'')+'</textarea>'
-         :(x.specs?'<div class="panel" style="margin-top:12px"><b>Специализации:</b> '+esc(x.specs)+'</div>':'')));
-  /* дисциплины */
+         :(x.specs?'<div class="u-mt12 panel"><b>Специализации:</b> '+esc(x.specs)+'</div>':'')));
   var disc=x.disciplines||[],cd=clanDiscs(x),dh;
   if(edit){
     dh='<div class="sh-disc-ed">'+disc.map(function(d,i){
@@ -230,9 +183,8 @@ function sheetHtml(x,editable){
         (pw.length?'<ul>'+pw.map(function(p){return '<li>'+esc(p)+'</li>';}).join('')+'</ul>':'')+'</div>';}).join('')+'</div>'
       :emptyBox('Дисциплин пока нет',editable?'Откройте «Правка листа», чтобы добавить.':'Владелец листа ещё не выбрал дисциплины.');
   }
-  if(cd.length) dh+='<div class="tsub" style="margin-top:8px">Клановые дисциплины: '+cd.map(esc).join(', ')+'</div>';
+  if(cd.length) dh+='<div class="u-mt8 tsub">Клановые дисциплины: '+cd.map(esc).join(', ')+'</div>';
   out+=section('Дисциплины',disc.length,dh);
-  /* охота */
   var hp=x.huntA&&x.huntS?sAttr(x,x.huntA)+sSkill(x,x.huntS):null,hn=x.huntA&&x.huntS?traitName('a:'+x.huntA)+' + '+traitName('s:'+x.huntS):'';
   out+=section('Охота','',edit?
     '<div class="g3"><div><label class="sh-lab">Тип хищника</label><select data-shf="pred">'+optList(allPredNames(),x.predator)+'</select></div>'+
@@ -240,18 +192,14 @@ function sheetHtml(x,editable){
     '<div><label class="sh-lab">навык</label><select data-shf="huntS">'+skillOpts(x.huntS)+'</select></div></div>'
     :'<div class="defs"><div class="def"><span class="l">Тип хищника</span><div class="v">'+(x.predator?wikiTag(x.predator,esc(x.predator)):'<span class="blank">не выбран</span>')+'</div></div>'+
      '<div class="def"><span class="l">Пул охоты</span><div class="v">'+(hp!=null?esc(hn)+' = '+hp:'<span class="blank">не задан</span>')+'</div></div></div>');
-  /* мощь крови */
   var bp=bpRow(x);
   out+=section('Мощь крови',String(+x.bp||0),'<div class="defs">'+
     [['Всплеск крови',bp[1]],['Восстановление',bp[2]],['Бонус к силе дисциплин',bp[3]],['Переброс пробуждения',bp[4]],['Суровость проклятия',bp[5]],['Штраф к кормлению',bp[6]]]
     .map(function(r){return '<div class="def"><span class="l">'+r[0]+'</span><div class="v">'+esc(r[1])+'</div></div>';}).join('')+'</div>');
-  /* достоинства и недостатки */
   var adv=x.advantages||[],ah;
   if(edit){
     ah='<div class="sh-adv-ed">'+adv.map(function(a,i){
       var rg=advRange(a[0]);
-      /* закреплённое преимущество (a[4]) сменить нельзя — только удалить строку
-         и добавить новую; точки и пояснение остаются редактируемыми */
       return '<div class="sh-arow">'+(a[4]&&a[0]?'<span class="sh-alock" title="Закреплено. Чтобы заменить, удалите строку и добавьте новую.">'+(advFind(a[0])?wikiTag(a[0],esc(a[0])):esc(a[0]))+' <i>закреплено</i></span>'
         :'<select data-shf="an" data-i="'+i+'">'+advOptions(a[0])+'</select>')+
         '<span class="tag">'+(ADV_KINDS[a[2]]||'')+'</span>'+
@@ -264,7 +212,6 @@ function sheetHtml(x,editable){
       :emptyBox('Пока пусто','Достоинства, недостатки и фоны появятся здесь.');
   }
   out+=section('Достоинства, недостатки, фоны',adv.length,ah);
-  /* опыт и заметки */
   var xt=+x.xpTotal||0,xs=+x.xpSpent||0;
   out+=section('Опыт','',edit?
     '<div class="g3"><div><label class="sh-lab">Всего получено</label><input type="number" min="0" data-shf="xpTotal" value="'+xt+'"></div>'+
@@ -276,7 +223,6 @@ function sheetHtml(x,editable){
   return out+'</div>';
 }
 
-/* ---------- правка и сохранение ---------- */
 function sheetQueueSave(x){
   var el=document.getElementById('shSaved');if(el)el.textContent='Сохранение…';
   clearTimeout(SHEET_TIMER[x.id]);
@@ -337,7 +283,7 @@ function sheetField(e){
   var w=el.closest('.sheet');if(!w)return;
   var x=findLivePc(w.getAttribute('data-pc'));if(!x)return;
   var s=sheetSel(x);
-  if(el.id==='shMod'){s.mod=+el.value||0;if(e.type==='change')setTimeout(function(){sheetRedraw(x);},0);return;} /* отложено: перерисовка во время change ломала DOM при потере фокуса */
+  if(el.id==='shMod'){s.mod=+el.value||0;if(e.type==='change')setTimeout(function(){sheetRedraw(x);},0);return;}
   if(el.id==='shDif'){s.dif=+el.value||0;return;}
   if(el.id==='shSurge'){s.surge=el.checked;sheetRedraw(x);return;}
   if(!canEditLivePc(x)||!SHEET_EDIT[x.id])return;

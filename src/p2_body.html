@@ -1,0 +1,68 @@
+<body>
+
+<div id="authGate" class="hidden" aria-live="polite"></div>
+
+<div class="fx" aria-hidden="true"></div>
+<div class="vig" aria-hidden="true"></div>
+<div id="bgfx" aria-hidden="true"></div>
+
+<header class="bar">
+  <a class="brand" href="#/">КОДЕКС <span>НОЧИ</span></a>
+  <nav class="crumbs" id="crumbs" aria-label="Навигация"></nav>
+  <div class="srch"><input id="q" type="search" placeholder="Поиск по кодексу  ( / )" autocomplete="off" aria-label="Поиск по кодексу">
+    <div class="srch-res" id="qres" hidden></div></div>
+  <span id="userBadge"></span>
+</header>
+
+<main id="app"></main>
+
+<footer>
+  <div class="wrap">
+    <p id="footL">Кодекс Ночи — рабочая энциклопедия хроники</p>
+    <p class="sp">Vampire: The Masquerade · 5-я редакция</p>
+  </div>
+</footer>
+
+<button class="dk-fab" id="dkFab" type="button" aria-haspopup="dialog">Кости</button>
+<div class="dk-backdrop" id="dkBack"></div>
+<aside class="dock" id="dock" role="dialog" aria-modal="true" aria-label="Кости">
+  <div class="dk-head"><b>Кости</b><span class="sp"></span><button class="dk-x" type="button" id="dkClose" aria-label="Закрыть">✕</button></div>
+  <div class="dk-body">
+    <div class="dk-row">
+      <label class="dk-pcl">Персонаж<select id="dkPc"><option value="">— вручную —</option></select></label>
+    </div>
+    <div class="dk-row dk-traits dk-sh">
+      <div class="dk-col"><span class="dk-lab">Атрибут</span><div class="dk-list" id="dkAttrs"></div><button class="dk-add" type="button" data-dkadd="a">+ атрибут</button></div>
+      <div class="dk-col"><span class="dk-lab">Навык</span><div class="dk-list" id="dkSkills"></div><button class="dk-add" type="button" data-dkadd="s">+ навык</button></div>
+      <div class="dk-col" id="dkDiscCol"><span class="dk-lab">Дисциплина</span><div class="dk-list" id="dkDiscs"></div><button class="dk-add" type="button" data-dkadd="d">+ дисциплина</button></div>
+    </div>
+    <div class="dk-row">
+      <label class="dk-man">Пул<input id="dkPool" type="number" min="1" max="30" value="5"></label>
+      <label class="dk-sh">Модиф.<input id="dkMod" type="number" min="-10" max="10" value="0"></label>
+      <label>Голод<input id="dkHun" type="number" min="0" max="5" value="1"></label>
+      <label>Сложн.<input id="dkDif" type="number" min="0" max="15" value="0" title="0 — не задана"></label>
+    </div>
+    <div class="dk-sum" id="dkSum"></div>
+    <div class="dk-btns">
+      <button class="mini pri" type="button" id="dkRoll">Бросить</button>
+      <button class="mini" type="button" id="dkRouse" title="Проверка пробуждения: 6+ на к10 — Голод не растёт">Пробуждение</button>
+      <button class="mini" type="button" id="dkRouse2" title="Проверка пробуждения с перебросом от Мощи крови">Пробуждение ×2</button>
+      <button class="mini" type="button" id="dkWp" disabled title="Переброс до 3 обычных костей за 1 поверхностный урон Силе воли">Переброс СВ</button>
+    </div>
+    <div id="dkOut"></div>
+    <ul class="dk-log" id="dkLog"></ul>
+  </div>
+</aside>
+
+<button class="sess-tab" id="sessTab" type="button">Активная сессия</button>
+<div class="sess-backdrop" id="sessBackdrop"></div>
+<aside class="sess-panel" aria-label="Активная сессия">
+  <div class="sess-head">
+    <div><span class="lbl">Активная сессия</span><h3 id="sessTitle"></h3><div class="sub" id="sessSub"></div></div>
+    <button class="sess-x" id="sessClose" type="button" aria-label="Закрыть">✕</button>
+  </div>
+  <div class="sess-body" id="sessBody"></div>
+</aside>
+
+<script src="data.js"></script>
+<script>

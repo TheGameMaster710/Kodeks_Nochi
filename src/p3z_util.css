@@ -1,0 +1,56 @@
+.u-ai-c{align-items:center!important}
+.u-as-c{align-self:center!important}
+.u-as-e{align-self:end!important}
+.u-c-acc{color:var(--acc)!important}
+.u-c-bad{color:var(--bad)!important}
+.u-c-dim{color:var(--ink-dim)!important}
+.u-cur-def{cursor:default!important}
+.u-flex{display:flex!important}
+.u-igrid{display:inline-grid!important}
+.u-fwrap{flex-wrap:wrap!important}
+.u-f1{flex:1!important}
+.u-fs19{font-size:19px!important}
+.u-fs40{font-size:40px!important}
+.u-gap26{gap:26px!important}
+.u-gap34{gap:34px!important}
+.u-gap6{gap:6px!important}
+.u-span2{grid-column:span 2!important}
+.u-cols320{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))!important}
+.u-h30{height:30px!important}
+.u-inset0{inset:0!important}
+.u-maxw420{max-width:420px!important}
+.u-minw240{min-width:240px!important}
+.u-o35{opacity:.35!important}
+.u-o50{opacity:.5!important}
+.u-o55{opacity:.55!important}
+.u-pi-c{place-items:center!important}
+.u-abs{position:absolute!important}
+.u-td-none{text-decoration:none!important}
+.u-w150{width:150px!important}
+.u-m0{margin:0!important}
+.u-m0-0-20{margin:0 0 20px!important}
+.u-m0-0-24{margin:0 0 24px!important}
+.u-m0-0-26{margin:0 0 26px!important}
+.u-m0-0-30{margin:0 0 30px!important}
+.u-m12-0-0{margin:12px 0 0!important}
+.u-m18-0-0{margin:18px 0 0!important}
+.u-m22-0-12{margin:22px 0 12px!important}
+.u-m30-0-12{margin:30px 0 12px!important}
+.u-m34-0-14{margin:34px 0 14px!important}
+.u-m34-0-16{margin:34px 0 16px!important}
+.u-m40-0-20{margin:40px 0 20px!important}
+.u-m4-0-0{margin:4px 0 0!important}
+.u-m8-0{margin:8px 0!important}
+.u-mt10{margin-top:10px!important}
+.u-mt12{margin-top:12px!important}
+.u-mt14{margin-top:14px!important}
+.u-mt22{margin-top:22px!important}
+.u-mt26{margin-top:26px!important}
+.u-mt8{margin-top:8px!important}
+.u-mb14{margin-bottom:14px!important}
+.u-mb20{margin-bottom:20px!important}
+.u-mb22{margin-bottom:22px!important}
+.u-ml-auto{margin-left:auto!important}
+.u-p16{padding:16px!important}
+.u-pt0{padding-top:0!important}
+.u-pb0{padding-bottom:0!important}
