@@ -22,6 +22,7 @@ TH_('riot','dark','Oswald',{sc:'riot',fx:'sparks',en:'coal',wp:'flag',ru:'Rubik 
 var FAMILY={person:'dossier',player:'dossier',threat:'dossier',lore:'chronicle',item:'vitrine',place:'city',domain:'city',
   clan:'heraldry',sect:'heraldry',merit:'reference',disc:'reference',ritual:'reference',predator:'reference'};
 var ACCENT={'place/eden':'eden','predator/stray-cat':'alley','item/seymour-painting':'gallery','item/payne-diary':'grimoire','sect/anarchs':'riot'};
+var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'}};
 var GLYPH={'sparrow-ring':'sparrow','seymour-painting':'frame','payne-diary':'book',tremere:'tremere',brujah:'brujah',nosferatu:'bat',camarilla:'rose',anarchs:'fist'};
 var CREST={tremere:'#9B4DD6',brujah:'#D7263D',nosferatu:'#7E9B5A',camarilla:'#C9A44C'};
 var TEST_ONLY=false;
@@ -66,6 +67,7 @@ var SCENES={
   'crest-nosferatu':function(){return SCENES.banners()+'<div class="fog"></div>'+sil('tower','s-crest-nosferatu-1')+sil('greyhound','s-crest-nosferatu-2')+sil('greyhound','s-crest-nosferatu-3');},
   'crest-camarilla':function(){return SCENES.banners()+sil('rose','s-crest-camarilla-1')+sil('rose','s-crest-camarilla-2')+sil('rose','s-crest-camarilla-3');},
   riot:function(){return '<div class="smoke a"></div><div class="smoke b"></div><div class="glow"></div>'+sil('crowd','s-riot-1');},
+  moonbeam:function(){return '<div class="beam"></div><div class="glass"></div>';},
   vitrine:function(){return '<div class="velvet"></div><div class="spot"></div>'+sil('sparrow','s-vitrine-1');}
 };
 
@@ -109,7 +111,8 @@ function applyTheme(t,instant){
   ROOT.setAttribute('data-rd',base);ROOT.setAttribute('data-mode',t.mode);
   if(base==='home')ROOT.setAttribute('data-rds',t.key.slice(5));else ROOT.removeAttribute('data-rds');
   loadFont(t.font);if(t.o.ru)loadFont(t.o.ru);
-  if(cur!==t.key){cur=t.key;buildScene(t,deco,instant);}
+  var ck=t.key+'/'+(t.o.sc||'');
+  if(cur!==ck){cur=ck;buildScene(t,deco,instant);}
 }
 function buildScene(t,deco,instant){
   try{if(curScene===t.o.sc)return;curScene=t.o.sc;
@@ -164,6 +167,7 @@ function decorate(){
     var app=document.getElementById('app');
     if(k==='home'){applyTheme(TH['home-hero'],true);enter(app.querySelector('.h-big'),'ember');return;}
     var h=normH(),t=TH[k];
+    if(OVR[h]){t=JSON.parse(JSON.stringify(t));for(var ok in OVR[h])t.o[ok]=OVR[h][ok];}
     if(k==='heraldry'){var cid=h.split('/')[1];if(SCENES['crest-'+cid]){t=JSON.parse(JSON.stringify(t));t.o.sc='crest-'+cid;}}
     applyTheme(t,true);
     var cid2=h.split('/')[1];if(k==='heraldry'&&CREST[cid2])ROOT.setAttribute('data-crest',cid2);else ROOT.removeAttribute('data-crest');
@@ -270,6 +274,12 @@ var WIPES={
       function(){fn();requestAnimationFrame(burn);},
       [[tick,[{opacity:0},{opacity:1}],D+20,'linear']]);
     return st;},
+  shroud:function(W,fn){var pts=['0 0','100% 0'],n=22;
+    for(var i=n;i>=0;i--)pts.push((i*100/n).toFixed(2)+'% '+(i%2?95+Math.random()*2:99+Math.random()*1).toFixed(1)+'%');
+    var d=div(W,'left:-8vw;right:-8vw;top:0;height:132vh;transform-origin:50% 0;transform:translateY(-132vh);clip-path:polygon('+pts.join(',')+');'+
+      'background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 8px,rgba(0,0,0,.34) 8px 24px,rgba(255,255,255,.025) 24px 46px,rgba(0,0,0,.2) 46px 62px),linear-gradient(180deg,#0A090B,#161216 55%,#0A090B)');
+    return seq([[d,[{transform:'translateY(-132vh)'},{transform:'translateY(0)'}],420,'cubic-bezier(.55,0,.6,1)']],fn,
+      [[d,[{transform:'translateY(0) rotate(0deg)'},{transform:'translateY(-60vh) rotate(-1.5deg)',offset:.35},{transform:'translateY(-135vh) rotate(-6deg)'}],700,'cubic-bezier(.5,0,.8,.5)']]);},
   fade:function(W,fn){var d=div(W,'inset:0;background:#08050A;opacity:0');
     return seq([[d,[{opacity:0},{opacity:1}],220,'ease-in']],fn,[[d,[{opacity:1},{opacity:0}],260,'ease-out']]);}
 };
@@ -279,7 +289,7 @@ function wipeKind(href){
   var to=routeKey(href),kt=kindOf(href),kf=kindOf();
   if(running.length&&Date.now()-lastNav<700)return null;
   if(kt==='home'&&kf!=='home')return 'ash';
-  if(kt==='note'&&(kf==='home'||kf==='list')&&to&&WIPE_OF[to])return WIPE_OF[to];
+  if(kt==='note'&&(kf==='home'||kf==='list')&&to&&WIPE_OF[to]){var ov=OVR[normH(href)];return ov&&ov.wp?ov.wp:WIPE_OF[to];}
   return null;}
 function div(W,st){var d=document.createElement('div');d.style.cssText='position:absolute;'+st;W.appendChild(d);return d;}
 var GLYPH_IMG={rose:1};
