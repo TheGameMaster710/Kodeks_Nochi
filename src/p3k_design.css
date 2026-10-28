@@ -7,6 +7,8 @@ html[data-rd="city"]{--rbg:#070A10;--rbg2:#0D121B;--rcard:#111824;--rfg:#E8ECF1;
 html[data-rd="heraldry"]{--rbg:#0C0710;--rbg2:#150C1A;--rcard:#1A0F20;--rfg:#EFE6F2;--rmut:#AD9BB4;--rline:#3E2A4A;--ra1:#8E3BC4;--ra2:#C9A45C;--ra3:#C8102E;--rglow:142,59,196;--rfont:"Prata"}
 html[data-rd="reference"]{--rbg:#0B0F0E;--rbg2:#111816;--rcard:#141C1A;--rfg:#E7EEEB;--rmut:#A3B5AF;--rline:#2A3B37;--ra1:#7FB5A8;--ra2:#C9A45C;--ra3:#D0243F;--rglow:127,181,168;--rfont:"PT Serif"}
 html[data-rd="alley"]{--rbg:#0A0806;--rbg2:#120D08;--rcard:#16100A;--rfg:#F1E4CC;--rmut:#B9A587;--rline:#3E2C18;--ra1:#E8A33C;--ra2:#9B111E;--ra3:#F2C14E;--rglow:232,163,60;--rfont:"Oswald"}
+html[data-rd="reading"]{--rbg:#0D110C;--rbg2:#131A12;--rcard:#18201A;--rfg:#F1E8D2;--rmut:#B4AA8C;--rline:#3A4A33;--ra1:#D4AF37;--ra2:#2F6B45;--ra3:#B3261E;--rglow:212,175,55;--rfont:"Cormorant Garamond"}
+html[data-rd="ward"]{--rbg:#EDF4EF;--rbg2:#E0ECE5;--rcard:#F8FBF9;--rfg:#16302A;--rmut:#4E6A60;--rline:#B5CFC2;--ra1:#2E8B62;--ra2:#8FBFA6;--ra3:#B3261E;--rglow:46,139,98;--rfont:"PT Sans"}
 html[data-rd="gallery"]{--rbg:#0C1517;--rbg2:#12201F;--rcard:#152524;--rfg:#ECE7DC;--rmut:#A7B2AC;--rline:#2C4140;--ra1:#D4AF37;--ra2:#6FB7B1;--ra3:#A45BD6;--rglow:212,175,55;--rfont:"Bad Script"}
 html[data-rd="grimoire"]{--rbg:#140C07;--rbg2:#1E130B;--rcard:#24170D;--rfg:#F1E3C8;--rmut:#B9A27E;--rline:#4E3519;--ra1:#C9A45C;--ra2:#B3261E;--ra3:#7A5BA8;--rglow:201,164,92;--rfont:"Kurale"}
 html[data-rd="catalog"]{--rbg:#0E0906;--rbg2:#17100B;--rcard:#1B130D;--rfg:#EFE6D8;--rmut:#B2A28C;--rline:#4A3826;--ra1:#D8B97A;--ra2:#C8102E;--ra3:#7FB5A8;--rglow:216,185,122;--rfont:"Playfair Display SC"}
@@ -176,6 +178,20 @@ html[data-rd="alley"] #app .panel,html[data-rd="alley"] #app .def,html[data-rd="
 html[data-rd="alley"] #app .panel{border-left:3px solid #9B111E}
 html[data-rd="alley"] #app .def .l,html[data-rd="alley"] #app .strip .l{color:#E8A33C}
 html[data-rd="alley"] #app .portrait{border-radius:2px;border:1px solid #3E2C18;box-shadow:0 20px 40px -18px #000}
+html[data-rd="ward"] #app .back,html[data-rd="ward"] #app .eyebrow{color:#4E6A60}
+html[data-rd="ward"] #app .jcard{background:#F8FBF9;border:1px solid #B5CFC2;border-top:6px solid #2E8B62;border-radius:3px;box-shadow:0 10px 22px -16px rgba(22,48,42,.45)}
+html[data-rd="ward"] #app .jcard h1{font-family:"PT Sans",sans-serif;font-weight:700;letter-spacing:.01em;color:#1B5E43;text-shadow:none}
+html[data-rd="ward"] #app .jcard .princ{color:#2C463E;font-family:"PT Sans",sans-serif}
+html[data-rd="ward"] #app .sec-head h2{font-family:"PT Sans",sans-serif;font-weight:700;letter-spacing:.02em;color:#1B5E43}
+html[data-rd="ward"] #app .panel,html[data-rd="ward"] #app .def,html[data-rd="ward"] #app .card{background:#F8FBF9;border-radius:3px}
+html[data-rd="ward"] #app .panel{border:1px solid #CFE0D6;border-left:4px solid #2E8B62}
+html[data-rd="ward"] #app .def .l,html[data-rd="ward"] #app .strip .l{color:#2E8B62}
+html[data-rd="ward"] #app .strip{background:#E4EFE8;border-top:1px solid #B5CFC2}
+html[data-rd="ward"] #app .portrait{border-radius:3px;border:1px solid #B5CFC2;box-shadow:0 14px 26px -16px rgba(22,48,42,.55)}
+html[data-rd="ward"] #app .defs{background:#CFE0D6}
+html[data-rd="ward"] #app .def{background:#F8FBF9}
+html[data-rd="ward"] #app .gm-block{border-left-color:#B3261E}
+html[data-rd="ward"] #app .wiki{color:#1B5E43;background:rgba(143,191,166,.28);border-color:rgba(46,139,98,.4)}
 .sc{position:absolute;inset:0}
 .sc-sil{position:absolute;background:var(--rfg);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-position:center;mask-position:center}
 @keyframes rdSmoulder{from{opacity:.7}to{opacity:1;transform:scaleX(1.05)}}
@@ -298,3 +314,13 @@ html[data-rd="riot"] #app .portrait{border-radius:2px;border:1px solid #4A2414;b
   -webkit-mask-image:linear-gradient(180deg,#000 35%,transparent);mask-image:linear-gradient(180deg,#000 35%,transparent);animation:rdMoon 14s ease-in-out infinite alternate}
 @keyframes rdMoon{from{opacity:.6}to{opacity:1}}
 @media (max-width:700px){.sc-moonbeam .beam{width:56vw}.sc-moonbeam .glass{width:46vw}}
+html[data-rd="reading"] #app .jcard{background:linear-gradient(180deg,#1B2419,#141B13);border:1px solid #3A4A33;border-top:6px solid #2F6B45;box-shadow:0 0 0 1px rgba(212,175,55,.18) inset,0 14px 30px -18px rgba(0,0,0,.8)}
+html[data-rd="reading"] #app .jcard h1{font-family:"Cormorant Garamond",serif;font-weight:700;letter-spacing:.02em;color:#D9B44A;text-shadow:0 1px 0 rgba(40,28,8,.9)}
+html[data-rd="reading"] #app .sec-head h2{font-family:"Cormorant Garamond",serif;font-weight:700;color:#D9B44A;letter-spacing:.03em}
+html[data-rd="reading"] #app .panel,html[data-rd="reading"] #app .card,html[data-rd="reading"] #app .def{background:#18201A}
+html[data-rd="reading"] #app .panel{border:1px solid #2C3A27;border-left:4px solid #2F6B45}
+html[data-rd="reading"] #app .def .l,html[data-rd="reading"] #app .strip .l{color:#C9A44C}
+html[data-rd="reading"] #app .strip{background:#141B13;border-top:1px solid #3A4A33}
+html[data-rd="reading"] #app .portrait{border:1px solid rgba(212,175,55,.45);box-shadow:0 0 0 4px #141B13,0 0 0 5px rgba(212,175,55,.25),0 16px 30px -16px rgba(0,0,0,.9)}
+html[data-rd="reading"] #app .wiki{color:#E6C766;background:rgba(47,107,69,.28);border-color:rgba(212,175,55,.35)}
+html[data-rd="reading"] #app .gm-block{border-left-color:#B3261E}

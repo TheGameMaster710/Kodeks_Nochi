@@ -80,7 +80,49 @@ function catById(id){for(var i=0;i<CATS.length;i++)if(CATS[i].id===id)return CAT
 function catByRoute(r){for(var i=0;i<CATS.length;i++)if(CATS[i].route===r)return CATS[i];return null;}
 function toolById(id){for(var i=0;i<TOOLS.length;i++)if(TOOLS[i].id===id)return TOOLS[i];return null;}
 function findIn(arr,id){for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];return null;}
-function numOf(arr,x){return pad(arr.indexOf(x)+1);}
+/* Порядок карточек так, как их видит игрок в сетке раздела. По нему считаются
+   номер на карточке, «запись №» на странице и «Дело №» на папке личности. */
+function gridOrder(c){
+  var a=c.arr;
+  if(c.id==='people'){
+    var gr={},ord=[];
+    a.forEach(function(x){var g=x.clan||'Без клана';if(!gr[g]){gr[g]=[];ord.push(g);}gr[g].push(x);});
+    ord.sort(function(p,q){if(p==='Без клана')return q==='Без клана'?0:1;if(q==='Без клана')return -1;return p.localeCompare(q,'ru');});
+    return ord.reduce(function(r,g){return r.concat(gr[g].slice().sort(function(p,q){return (p.name||'').localeCompare(q.name||'','ru');}));},[]);
+  }
+  if(c.id==='loresheets'){
+    var it=a.map(function(x,i){return {x:x,y:x.year==null?Infinity:x.year,i:i};})
+      .concat((GHOSTS.loresheets||[]).filter(function(n){return !LINKS[n];}).map(function(n,i){
+        var y=(typeof LORE_YEARS!=='undefined'?LORE_YEARS[n]:null);return {x:null,y:y==null?Infinity:y,i:a.length+i};}));
+    it.sort(function(p,q){return p.y-q.y||p.i-q.i;});
+    return it.filter(function(o){return o.x;}).map(function(o){return o.x;});
+  }
+  if(c.id==='domains'){
+    var kinds=Object.keys(DOMAIN_KINDS);
+    return kinds.reduce(function(r,k){return r.concat(a.filter(function(d){return d.kind===k;}));},[])
+      .concat(a.filter(function(d){return !DOMAIN_KINDS[d.kind];}));
+  }
+  if(c.id==='places'){
+    var out=[];
+    function add(p){if(out.indexOf(p)<0)out.push(p);}
+    function domPlaces(d){PLACES.filter(function(p){return p.domain===d.id;}).forEach(add);
+      DOMAINS.filter(function(x){return x.domain===d.id;}).forEach(domPlaces);}
+    var areas=(CITY_MAP.areas||[]).slice();
+    PLACES.concat(DOMAINS).forEach(function(x){if(x.area&&areas.indexOf(x.area)<0)areas.push(x.area);});
+    areas.forEach(function(ar){
+      PLACES.filter(function(p){return p.area===ar&&!(p.domain&&findIn(DOMAINS,p.domain));}).forEach(add);
+      DOMAINS.filter(function(d){return d.area===ar&&!(d.domain&&findIn(DOMAINS,d.domain));}).forEach(domPlaces);});
+    PLACES.filter(function(p){return !p.area;}).forEach(add);
+    PLACES.forEach(add);
+    return out;
+  }
+  return a;
+}
+function numOf(arr,x){
+  var c=null;for(var i=0;i<CATS.length;i++){if(CATS[i].arr===arr){c=CATS[i];break;}}
+  var k=(c?gridOrder(c):arr).indexOf(x);
+  return pad((k<0?arr.indexOf(x):k)+1);
+}
 function rgba(hex,a){var h=hex.replace('#','');if(h.length===3)h=h.replace(/./g,'$&$&');
   var n=parseInt(h,16);return 'rgba('+(n>>16&255)+','+(n>>8&255)+','+(n&255)+','+a+')';}
 function R(a,b){return a+Math.random()*(b-a);}
