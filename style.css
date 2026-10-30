@@ -1061,6 +1061,10 @@ html[data-rd="reading"] #app .strip{background:#141B13;border-top:1px solid #3A4
 html[data-rd="reading"] #app .portrait{border:1px solid rgba(212,175,55,.45);box-shadow:0 0 0 4px #141B13,0 0 0 5px rgba(212,175,55,.25),0 16px 30px -16px rgba(0,0,0,.9)}
 html[data-rd="reading"] #app .wiki{color:#E6C766;background:rgba(47,107,69,.28);border-color:rgba(212,175,55,.35)}
 html[data-rd="reading"] #app .gm-block{border-left-color:#B3261E}
+.sc-ashfall .fib{position:absolute;inset:0;background:repeating-linear-gradient(8deg,rgba(106,82,56,.035) 0 2px,transparent 2px 7px)}
+.sc-ashfall .haze{position:absolute;left:-10vw;right:-10vw;top:-10vh;height:60vh;background:radial-gradient(ellipse at 40% 0,rgba(214,150,150,.20),transparent 65%);filter:blur(10px)}
+.sc-ashfall .ruins{position:absolute;left:0;right:0;bottom:0;height:22vh;opacity:.13;background:#2A1C11;clip-path:polygon(0 100%,0 62%,4% 62%,4% 40%,7% 40%,7% 58%,11% 58%,11% 30%,12.5% 30%,12.5% 52%,17% 52%,17% 70%,21% 70%,21% 44%,24% 38%,27% 44%,27% 66%,32% 66%,32% 24%,34% 24%,34% 56%,39% 56%,39% 74%,44% 74%,44% 50%,46% 34%,48% 50%,48% 64%,53% 64%,53% 36%,55% 36%,55% 60%,60% 60%,60% 78%,64% 78%,64% 46%,66% 46%,66% 28%,68% 28%,68% 54%,73% 54%,73% 68%,78% 68%,78% 42%,81% 42%,81% 60%,86% 60%,86% 32%,88% 32%,88% 58%,93% 58%,93% 72%,97% 72%,97% 48%,100% 48%,100% 100%)}
+.sc-ashfall .vign{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 60%,rgba(70,60,52,.16) 88%,rgba(40,32,26,.26))}
 .u-ai-c{align-items:center!important}
 .u-as-c{align-self:center!important}
 .u-as-e{align-self:end!important}

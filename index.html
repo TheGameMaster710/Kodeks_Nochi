@@ -2,13 +2,13 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="version" content="v2.11">
+<meta name="version" content="v2.12">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Кодекс Ночи — хроника V5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2.11">
+<link rel="stylesheet" href="style.css?v=2.12">
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
@@ -79,7 +79,7 @@
   <div class="sess-body" id="sessBody"></div>
 </aside>
 
-<script src="data.js?v=2.11"></script>
+<script src="data.js?v=2.12"></script>
 <script>
 
 var CATS=[
@@ -2558,7 +2558,7 @@ TH_('reading','dark','Cormorant Garamond',{sc:'none',en:'gilt',wp:'leaves'});
 var FAMILY={person:'dossier',player:'dossier',threat:'dossier',lore:'chronicle',item:'vitrine',place:'city',domain:'city',
   clan:'heraldry',sect:'heraldry',merit:'reference',disc:'reference',ritual:'reference',predator:'reference'};
 var ACCENT={'place/eden':'eden','predator/stray-cat':'alley','predator/bagger':'ward','place/library':'reading','item/seymour-painting':'gallery','item/payne-diary':'grimoire','sect/anarchs':'riot'};
-var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'}};
+var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'},'lore/great-fire':{sc:'ashfall',wp:'smoke',en:'burn',fx:'ash'}};
 var GLYPH={'sparrow-ring':'sparrow','seymour-painting':'frame','payne-diary':'book',tremere:'tremere',brujah:'brujah',nosferatu:'bat',camarilla:'rose',anarchs:'fist'};
 var CREST={tremere:'#9B4DD6',brujah:'#D7263D',nosferatu:'#7E9B5A',camarilla:'#C9A44C'};
 var TEST_ONLY=false;
@@ -2604,6 +2604,7 @@ var SCENES={
   'crest-camarilla':function(){return SCENES.banners()+sil('rose','s-crest-camarilla-1')+sil('rose','s-crest-camarilla-2')+sil('rose','s-crest-camarilla-3');},
   riot:function(){return '<div class="smoke a"></div><div class="smoke b"></div><div class="glow"></div>'+sil('crowd','s-riot-1');},
   moonbeam:function(){return '<div class="beam"></div><div class="glass"></div>';},
+  ashfall:function(){return '<div class="fib"></div><div class="haze"></div><div class="ruins"></div><div class="vign"></div>';},
   vitrine:function(){return '<div class="velvet"></div><div class="spot"></div>'+sil('sparrow','s-vitrine-1');}
 };
 
@@ -2616,7 +2617,7 @@ function fxSet(kind,t){
     var c=FX.cv,dpr=Math.min(2,window.devicePixelRatio||1);c.width=innerWidth*dpr;c.height=innerHeight*dpr;FX.ctx.setTransform(dpr,0,0,dpr,0,0);
     FX.ctx.clearRect(0,0,innerWidth,innerHeight);
     if(!kind)return;
-    var n=Math.min(70,Math.round(innerWidth*innerHeight/(kind==='rain'?16000:22000)));
+    var n=Math.min(70,Math.round(innerWidth*innerHeight/(kind==='rain'?16000:kind==='ash'?18000:22000)));
     for(var i=0;i<n;i++)FX.parts.push(spawn(kind,true));
     var last=performance.now();
     function step(now){var dt=Math.min(50,now-last)/16.7;last=now;draw(dt);if(!RM)FX.raf=requestAnimationFrame(step);}
@@ -2624,11 +2625,15 @@ function fxSet(kind,t){
   }catch(e){}
 }
 function spawn(kind,init){var W=innerWidth,H=innerHeight;
+  if(kind==='ash')return {x:Math.random()*W,y:init?Math.random()*H:-10,r:Math.random()*2.2+.8,vy:Math.random()*.35+.18,ph:Math.random()*6.28,snow:Math.random()<.45};
   if(kind==='embers'||kind==='sparks')return {x:Math.random()*W,y:init?Math.random()*H:H+10,r:Math.random()*1.8+.6,vy:-(Math.random()*.6+.25),vx:(Math.random()-.5)*.3,ph:Math.random()*6.28,life:Math.random()};
   return {x:Math.random()*(W+200)-100,y:init?Math.random()*H:-20,l:Math.random()*14+8,v:Math.random()*4+7};}
 function draw(dt){var g=FX.ctx,W=innerWidth,H=innerHeight;g.clearRect(0,0,W,H);
   FX.parts.forEach(function(p,i){
-    if(FX.kind==='embers'||FX.kind==='sparks'){var sp=FX.kind==='sparks';p.ph+=.03*dt;p.x+=(p.vx+Math.sin(p.ph)*.25)*dt;p.y+=p.vy*(sp?1.8:1)*dt;
+    if(FX.kind==='ash'){p.ph+=.02*dt;p.y+=p.vy*dt;p.x+=Math.sin(p.ph)*.35*dt;
+      g.fillStyle=p.snow?'rgba(255,255,255,.85)':'rgba(70,64,60,.45)';if(p.snow){g.shadowColor='rgba(60,50,40,.35)';g.shadowBlur=2;}else g.shadowBlur=0;
+      g.beginPath();g.arc(p.x,p.y,p.r,0,6.283);g.fill();g.shadowBlur=0;if(p.y>H+10)FX.parts[i]=spawn('ash');}
+    else if(FX.kind==='embers'||FX.kind==='sparks'){var sp=FX.kind==='sparks';p.ph+=.03*dt;p.x+=(p.vx+Math.sin(p.ph)*.25)*dt;p.y+=p.vy*(sp?1.8:1)*dt;
       var a=.35+.45*Math.abs(Math.sin(p.ph*1.7));g.fillStyle=sp?'rgba(255,'+(100+Math.round(70*a))+',30,'+(a*.85).toFixed(2)+')':'rgba(240,'+(175+Math.round(45*a))+',80,'+(a*.8).toFixed(2)+')';
       g.beginPath();g.arc(p.x,p.y,p.r,0,6.283);g.fill();if(p.y<-10)FX.parts[i]=spawn(FX.kind);}
     else{p.y+=p.v*dt;p.x-=p.v*.18*dt;g.strokeStyle='rgba(170,190,220,.16)';g.lineWidth=1;g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.x+p.l*.18,p.y-p.l);g.stroke();
@@ -2670,6 +2675,7 @@ var ENTER={
   stamp:{kf:[{opacity:0,transform:'scale(1.8)'},{opacity:1,transform:'scale(.96)',offset:.7},{opacity:1,transform:'scale(1)'}],dur:420,each:.06},
   coal:{kf:[{opacity:0,color:'#3A0E05',textShadow:'0 0 0 rgba(255,120,30,0)'},{opacity:1,color:'#FFE2A8',textShadow:'0 0 22px rgba(255,140,40,.95)',offset:.4},{opacity:1}],dur:1000,each:.05},
   gilt:{kf:[{opacity:0,color:'#5A4520',textShadow:'0 0 0 rgba(212,175,55,0)'},{opacity:1,color:'#FFF1B8',textShadow:'0 0 16px rgba(240,200,90,.95)',offset:.45},{opacity:1,color:'#D9B44A',textShadow:'0 1px 0 rgba(40,28,8,.9)'}],dur:1100,each:.05},
+  burn:{kf:[{opacity:0,color:'#FFD48A',filter:'blur(3px)',textShadow:'0 0 18px rgba(255,120,30,.95)'},{opacity:1,color:'#E8641A',filter:'blur(0)',textShadow:'0 0 12px rgba(255,90,20,.8)',offset:.35},{opacity:1,color:'#7A2A10',textShadow:'0 0 4px rgba(200,60,10,.5)',offset:.7},{opacity:1,color:'#2A1C11',textShadow:'0 0 0 rgba(0,0,0,0)'}],dur:1300,each:.05},
   engrave:{kf:[{opacity:0,transform:'translateY(8px)',color:'#FFF6D8'},{opacity:1,transform:'translateY(0)',color:'#FFF6D8',offset:.5},{opacity:1}],dur:1000,each:.05}
 };
 function splitLetters(el){
@@ -2834,6 +2840,14 @@ var WIPES={
       inA.push([e,[{transform:'rotateY(-100deg)'},{transform:'rotateY(-100deg)',offset:i/(n+1)},{transform:'rotateY(0deg)'}],520+i*70,'cubic-bezier(.45,0,.25,1)']);}
     els.forEach(function(e,i){outA.push([e,[{transform:'rotateY(0deg)'},{transform:'rotateY(0deg)',offset:i/(n+2)},{transform:'rotateY(100deg)'}],460+i*70,'cubic-bezier(.6,0,.6,1)']);});
     outA.push([back,[{opacity:1},{opacity:1,offset:.6},{opacity:0}],620,'linear']);
+    return seq(inA,fn,outA);},
+  smoke:function(W,fn){var inA=[],outA=[],els=[],n=9,Wd=innerWidth,H=innerHeight,R0=Math.max(Wd,H);
+    var base=div(W,'inset:0;background:#5E5852;opacity:0');inA.push([base,[{opacity:0},{opacity:0,offset:.3},{opacity:.92}],640,'ease-in']);
+    for(var i=0;i<n;i++){var r=R0*(.3+Math.random()*.3),x=(i+.5)*Wd/n+(Math.random()-.5)*Wd/n,y=H*(.35+Math.random()*.7),g=Math.round(45+Math.random()*130);
+      var e=div(W,'left:'+(x-r)+'px;top:'+(y-r)+'px;width:'+(2*r)+'px;height:'+(2*r)+'px;border-radius:50%;filter:blur(28px);background:radial-gradient(circle,rgba('+g+','+(g-4)+','+(g-8)+',.95),rgba('+g+','+(g-4)+','+(g-8)+',0) 70%);opacity:0;transform:scale(.4) translateY(45vh)');els.push(e);
+      inA.push([e,[{opacity:0,transform:'scale(.4) translateY(45vh)'},{opacity:1,transform:'scale(1) translateY(0)',offset:.75},{opacity:1,transform:'scale(1.1) translateY(-4vh)'}],600+i*25,'cubic-bezier(.3,.6,.4,1)']);
+      outA.push([e,[{opacity:1,transform:'scale(1.1) translateY(-4vh)'},{opacity:0,transform:'scale(1.4) translateY(-45vh)'}],700+i*30,'ease-out']);}
+    outA.push([base,[{opacity:1},{opacity:0}],520,'ease-out']);
     return seq(inA,fn,outA);},
   fade:function(W,fn){var d=div(W,'inset:0;background:#08050A;opacity:0');
     return seq([[d,[{opacity:0},{opacity:1}],220,'ease-in']],fn,[[d,[{opacity:1},{opacity:0}],260,'ease-out']]);}
