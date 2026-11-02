@@ -328,3 +328,15 @@ html[data-rd="reading"] #app .gm-block{border-left-color:#B3261E}
 .sc-ashfall .haze{position:absolute;left:-10vw;right:-10vw;top:-10vh;height:60vh;background:radial-gradient(ellipse at 40% 0,rgba(214,150,150,.20),transparent 65%);filter:blur(10px)}
 .sc-ashfall .ruins{position:absolute;left:0;right:0;bottom:0;height:22vh;opacity:.13;background:#2A1C11;clip-path:polygon(0 100%,0 62%,4% 62%,4% 40%,7% 40%,7% 58%,11% 58%,11% 30%,12.5% 30%,12.5% 52%,17% 52%,17% 70%,21% 70%,21% 44%,24% 38%,27% 44%,27% 66%,32% 66%,32% 24%,34% 24%,34% 56%,39% 56%,39% 74%,44% 74%,44% 50%,46% 34%,48% 50%,48% 64%,53% 64%,53% 36%,55% 36%,55% 60%,60% 60%,60% 78%,64% 78%,64% 46%,66% 46%,66% 28%,68% 28%,68% 54%,73% 54%,73% 68%,78% 68%,78% 42%,81% 42%,81% 60%,86% 60%,86% 32%,88% 32%,88% 58%,93% 58%,93% 72%,97% 72%,97% 48%,100% 48%,100% 100%)}
 .sc-ashfall .vign{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 60%,rgba(70,60,52,.16) 88%,rgba(40,32,26,.26))}
+
+.sil-bowl{-webkit-mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cpath%20d%3D%22M12%2046%20H88%20Q86%2072%2064%2080%20L66%2088%20H34%20L36%2080%20Q14%2072%2012%2046%20Z%22%2F%3E%3Cpath%20d%3D%22M22%2046%20Q30%2036%2040%2040%20Q48%2032%2056%2039%20Q66%2033%2078%2046%20Z%22%2F%3E%3C%2Fsvg%3E");mask-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cpath%20d%3D%22M12%2046%20H88%20Q86%2072%2064%2080%20L66%2088%20H34%20L36%2080%20Q14%2072%2012%2046%20Z%22%2F%3E%3Cpath%20d%3D%22M22%2046%20Q30%2036%2040%2040%20Q48%2032%2056%2039%20Q66%2033%2078%2046%20Z%22%2F%3E%3C%2Fsvg%3E")}
+.sc-candles .flick{position:absolute;width:46vmax;height:46vmax;border-radius:50%;filter:blur(30px);background:radial-gradient(circle,rgba(255,170,70,.20),rgba(255,140,40,.07) 45%,transparent 70%);animation:rdCandle 2.6s ease-in-out infinite alternate}
+.sc-candles .flick.a{left:-18vmax;bottom:-20vmax}
+.sc-candles .flick.b{right:-18vmax;bottom:-16vmax;animation-duration:3.3s;animation-delay:-1.2s}
+.sc-candles .flick.c{right:-22vmax;top:-26vmax;opacity:.6;animation-duration:4.1s;animation-delay:-.6s}
+.sc-candles .vign{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.35))}
+@keyframes rdCandle{0%{opacity:.55;transform:scale(1)}30%{opacity:.9}55%{opacity:.7;transform:scale(1.04)}80%{opacity:1}100%{opacity:.65;transform:scale(.98)}}
+.sc-glowsnow .glow{position:absolute;left:-10vw;right:-10vw;bottom:-8vh;height:36vh;filter:blur(18px);background:radial-gradient(ellipse at 50% 100%,rgba(255,110,30,.38),rgba(220,70,20,.16) 45%,transparent 72%);animation:rdSmoulder 3.4s ease-in-out infinite alternate}
+.sc-glowsnow .ice{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 62%,rgba(160,200,230,.10) 85%,rgba(160,200,230,.18))}
+.sc-glowsnow .vign{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),transparent 30%)}
+@media (prefers-reduced-motion: reduce){.sc-candles .flick,.sc-glowsnow .glow{animation:none}}
