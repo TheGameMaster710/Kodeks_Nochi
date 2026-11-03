@@ -24,8 +24,8 @@ TH_('reading','dark','Cormorant Garamond',{sc:'none',en:'gilt',wp:'leaves'});
 var FAMILY={person:'dossier',player:'dossier',threat:'dossier',lore:'chronicle',item:'vitrine',place:'city',domain:'city',
   clan:'heraldry',sect:'heraldry',merit:'reference',disc:'reference',ritual:'reference',predator:'reference'};
 var ACCENT={'place/eden':'eden','predator/stray-cat':'alley','predator/bagger':'ward','place/library':'reading','item/seymour-painting':'gallery','item/payne-diary':'grimoire','sect/anarchs':'riot'};
-var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'},'lore/great-fire':{sc:'ashfall',wp:'smoke',en:'burn',fx:'ash'},'merit/ash-child':{sc:'candles',wp:'candles',en:'smoke',fx:'ashlite'},'merit/fire-brand':{sc:'glowsnow',wp:'ice',en:'freeze',fx:'ash'}};
-var GLYPH={'ash-child':'bowl','sparrow-ring':'sparrow','seymour-painting':'frame','payne-diary':'book',tremere:'tremere',brujah:'brujah',nosferatu:'bat',camarilla:'rose',anarchs:'fist'};
+var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'},'person/van-hart':{sc:'lamp',wp:'casefile'},'lore/great-fire':{sc:'ashfall',wp:'smoke',en:'burn',fx:'ash'},'merit/ash-child':{sc:'candles',wp:'candles',en:'smoke',fx:'ashlite'},'merit/fire-brand':{sc:'glowsnow',wp:'ice',en:'freeze',fx:'ash'}};
+var GLYPH={'ash-child':'bowl','van-hart':'rose','sparrow-ring':'sparrow','seymour-painting':'frame','payne-diary':'book',tremere:'tremere',brujah:'brujah',nosferatu:'bat',camarilla:'rose',anarchs:'fist'};
 var CREST={tremere:'#9B4DD6',brujah:'#D7263D',nosferatu:'#7E9B5A',camarilla:'#C9A44C'};
 var TEST_ONLY=false;
 var TEST=[['','Титул','лента сцен'],['cat/people','Списки разделов','каталожный ящик'],['person/heinz','Личности','досье'],
@@ -71,6 +71,7 @@ var SCENES={
   riot:function(){return '<div class="smoke a"></div><div class="smoke b"></div><div class="glow"></div>'+sil('crowd','s-riot-1');},
   moonbeam:function(){return '<div class="beam"></div><div class="glass"></div>';},
   ashfall:function(){return '<div class="fib"></div><div class="haze"></div><div class="ruins"></div><div class="vign"></div>';},
+  lamp:function(){return '<div class="paper"></div><div class="glow"></div><div class="vign"></div>';},
   candles:function(){return '<div class="flick a"></div><div class="flick b"></div><div class="flick c"></div><div class="vign"></div>';},
   glowsnow:function(){return '<div class="glow"></div><div class="ice"></div><div class="vign"></div>';},
   vitrine:function(){return '<div class="velvet"></div><div class="spot"></div>'+sil('sparrow','s-vitrine-1');}
@@ -202,6 +203,11 @@ var WIPES={
     var r=div(W,'right:0;top:0;bottom:0;width:51vw;background:'+fold+';box-shadow:inset 20px 0 30px rgba(0,0,0,.5);transform:translateX(100%)');
     return seq([[l,[{transform:'translateX(-100%)'},{transform:'translateX(0)'}],460,'cubic-bezier(.6,0,.4,1)'],[r,[{transform:'translateX(100%)'},{transform:'translateX(0)'}],460,'cubic-bezier(.6,0,.4,1)']],fn,
       [[l,[{transform:'translateX(0)'},{transform:'translateX(-100%)'}],560,'cubic-bezier(.6,0,.4,1)'],[r,[{transform:'translateX(0)'},{transform:'translateX(100%)'}],560,'cubic-bezier(.6,0,.4,1)']]);},
+  casefile:function(W,fn){W.style.perspective='1800px';
+    var d=div(W,'left:0;right:0;top:0;height:100vh;background:linear-gradient(135deg,#C9A877,#B48F5C);border-top:12px solid #A57E4C;box-shadow:0 -10px 30px rgba(0,0,0,.45);transform-origin:0 50%;transform:translateY(100%)');
+    var g=glyph(W,W.dataset.glyph||'rose','#1E1A15');
+    return seq([[d,[{transform:'translateY(100%)'},{transform:'translateY(0)'}],420,'cubic-bezier(.3,.7,.3,1)'],[g,[{opacity:0,transform:'scale(.85)'},{opacity:.9,transform:'scale(1)'}],260,'ease-out']],fn,
+      [[g,[{opacity:.9},{opacity:0}],160,'linear'],[d,[{transform:'rotateY(0deg)',opacity:1},{transform:'rotateY(-88deg)',opacity:.6}],520,'cubic-bezier(.55,0,.6,1)']]);},
   folder:function(W,fn){var d=div(W,'left:0;right:0;top:0;height:100vh;background:#E6DCC6;border-top:10px solid #C9B68C;box-shadow:0 -10px 30px rgba(0,0,0,.4);transform:translateY(100%)');
     return seq([[d,[{transform:'translateY(100%)'},{transform:'translateY(0)'}],420,'cubic-bezier(.3,.7,.3,1)']],fn,[[d,[{transform:'translateY(0)'},{transform:'translateY(-105%)'}],460,'cubic-bezier(.6,0,.6,1)']]);},
   ink:function(W,fn,pt){var x=pt?pt.x:innerWidth/2,y=pt?pt.y:innerHeight/2,R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y))+20;

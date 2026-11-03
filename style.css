@@ -1077,6 +1077,12 @@ html[data-rd="reading"] #app .gm-block{border-left-color:#B3261E}
 .sc-glowsnow .ice{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,transparent 62%,rgba(160,200,230,.10) 85%,rgba(160,200,230,.18))}
 .sc-glowsnow .vign{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),transparent 30%)}
 @media (prefers-reduced-motion: reduce){.sc-candles .flick,.sc-glowsnow .glow{animation:none}}
+
+.sc-lamp .paper{position:absolute;inset:0;background:radial-gradient(rgba(94,85,71,.06) 1px,transparent 1.2px) 0 0/6px 6px}
+.sc-lamp .glow{position:absolute;left:50%;top:-22vh;width:110vw;height:90vh;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 30%,rgba(255,196,110,.30),rgba(232,163,60,.12) 40%,transparent 68%);animation:rdLamp 6s ease-in-out infinite alternate}
+.sc-lamp .vign{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 18%,transparent 40%,rgba(40,24,10,.18) 70%,rgba(30,18,8,.34))}
+@keyframes rdLamp{0%{opacity:.85}100%{opacity:1}}
+@media (prefers-reduced-motion: reduce){.sc-lamp .glow{animation:none}}
 .u-ai-c{align-items:center!important}
 .u-as-c{align-self:center!important}
 .u-as-e{align-self:end!important}
