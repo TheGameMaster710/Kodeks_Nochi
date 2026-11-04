@@ -306,6 +306,7 @@ function commonTail(x){
     if(r.gm) return '<li class="gm-li">'+md(r.text)+' '+gmBadge()+'</li>';
     return '<li>'+md(r.text)+r.parts.map(function(p){return ' <span class="gm-inl">'+gmBadge()+' '+md(p)+'</span>';}).join('')+'</li>';}).join('')+'</ul></div>');
   if(typeof localWebHtml==='function') out+=localWebHtml(x);
+  if(typeof musicHtml==='function') out+=musicHtml(x);
   out+=playlistHtml(x.playlist);
   out+=backlinksHtml(x);
   return out;

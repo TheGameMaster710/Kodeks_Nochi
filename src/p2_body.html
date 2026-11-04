@@ -23,7 +23,11 @@
   </div>
 </footer>
 
-<button class="dk-fab" id="dkFab" type="button" aria-haspopup="dialog">Кости</button>
+<button class="dk-fab" id="dkFab" type="button" aria-haspopup="menu" aria-expanded="false">Приложения<i class="mp-dot" aria-hidden="true"></i></button>
+<div class="app-menu" id="appMenu" role="menu" aria-label="Приложения">
+  <button type="button" role="menuitem" data-app="dice"><b>Кости</b><span>Броски и пробуждение</span></button>
+  <button type="button" role="menuitem" data-app="music"><b>Проигрыватель</b><span id="appMusicSub">Музыка хроники</span></button>
+</div>
 <div class="dk-backdrop" id="dkBack"></div>
 <aside class="dock" id="dock" role="dialog" aria-modal="true" aria-label="Кости">
   <div class="dk-head"><b>Кости</b><span class="sp"></span><button class="dk-x" type="button" id="dkClose" aria-label="Закрыть">✕</button></div>
@@ -53,6 +57,29 @@
     <ul class="dk-log" id="dkLog"></ul>
   </div>
 </aside>
+<div class="mp-backdrop" id="mpBack"></div>
+<aside class="dock mp-dock" id="mpDock" role="dialog" aria-modal="true" aria-label="Проигрыватель">
+  <div class="dk-head"><b>Проигрыватель</b><span class="sp"></span><button class="dk-x" type="button" id="mpClose" aria-label="Закрыть">✕</button></div>
+  <div class="dk-body">
+    <div class="mp-now">
+      <div class="mp-meta"><span class="mp-cat" id="mpNowCat">Тишина</span><b id="mpNowTitle">Ничего не играет</b><span class="mp-mode" id="mpNowMode"></span></div>
+      <div class="mp-bar" id="mpBar" role="slider" aria-label="Позиция трека" tabindex="0"><i id="mpFill"></i></div>
+      <div class="mp-time"><span id="mpCur">0:00</span><span id="mpDur">0:00</span></div>
+      <div class="mp-ctl">
+        <button class="mini" type="button" id="mpPlay" disabled>▶ Играть</button>
+        <button class="mini" type="button" id="mpNext" disabled title="Следующий трек категории с мягким переходом">Дальше ⇢</button>
+        <button class="mini" type="button" id="mpStop" disabled>■ Стоп</button>
+        <label class="mp-vol">Громкость<input id="mpVol" type="range" min="0" max="100" value="70"></label>
+      </div>
+    </div>
+    <div id="mpList"></div>
+    <div class="mp-miss" id="mpMiss" hidden>
+      <p id="mpMissText"></p>
+      <label class="mini mp-pick">Указать файлы…<input type="file" id="mpPick" accept="audio/*" multiple hidden></label>
+    </div>
+  </div>
+</aside>
+
 
 <button class="sess-tab" id="sessTab" type="button">Активная сессия</button>
 <div class="sess-backdrop" id="sessBackdrop"></div>

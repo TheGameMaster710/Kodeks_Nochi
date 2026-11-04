@@ -1342,6 +1342,17 @@ var PLACES=[
   short:'Готический вампирский клуб в Челси и Элизиум города под личным покровительством Гекаты',
   tags:['клуб','Элизиум','Челси','пентхаус','Сердце вампира'],
   img:'images/eden.jpg', imgPos:'50% 40%',
+  music:[
+   {name:'Ночь в клубе', id:'eden-night', mood:'calm', tracks:[
+    {title:'The Velvet Lure', id:'eden-night-1', file:'eden/The_Velvet_Lure_Audio.mp3', gain:.58},
+    {title:'The Velvet Lure · дубль 2', id:'eden-night-2', file:'eden/The_Velvet_Lure_Take_2_Audio.mp3', gain:.54}]},
+   {name:'Пентхаус и Двор', id:'eden-court', mood:'intrigue', tracks:[
+    {title:'Whispers in C# Minor', id:'eden-court-1', file:'eden/Whispers_in_C_Minor_Audio.mp3', gain:1},
+    {title:'Whispers in C# Minor · дубль 2', id:'eden-court-2', file:'eden/Whispers_in_C_Minor_Take_2_Audio.mp3', gain:.95}]},
+   {name:'Тревога в Эдене', id:'eden-alarm', mood:'battle', tracks:[
+    {title:'Glass and Blood', id:'eden-alarm-1', file:'eden/Glass_and_Blood_Audio.mp3', gain:.69},
+    {title:'Glass and Blood · дубль 2', id:'eden-alarm-2', file:'eden/Glass_and_Blood_Take_2_Audio.mp3', gain:.6}]}
+  ],
   concept:[
    ['Формально','Ночной клуб для поклонников готики и мрачной романтики. Весь персонал одет вампирами'],
    ['Расположение','Центр Челси. Готическая архитектура: чёрный камень, тёмный дуб, красный бархат'],
@@ -1989,3 +2000,38 @@ var LORE_YEARS={
  'Occupy Wall Street':2011,
  'Климатические забастовки':2019
 };
+
+/* ═══ МУЗЫКА МИРА (v2.15): лежит в проигрывателе всегда, только для мастеров ═══
+   Та же форма, что поле music у заметки. Файлы — на Cloudflare (MUSIC_BASE в p3l_music.js),
+   пути вида папка/файл. gain выравнивает громкость (замер LUFS 4 ноября 2026). */
+var WORLD_MUSIC=[
+ {name:'Мир', kind:'опенинг и эндинг', music:[
+  {name:'Опенинг', id:'world-opening', mood:'intrigue', tracks:[
+   {title:'Cinis et Corona', id:'world-opening-1', file:'world/Cinis_et_Corona_Audio.mp3', gain:.71}]},
+  {name:'Эндинг', id:'world-ending', mood:'calm', tracks:[
+   {title:'Echos of C Minor', id:'world-ending-1', file:'world/Echos_of_C_Minor_Audio.mp3', gain:.71},
+   {title:'Echos of C Minor · дубль 2', id:'world-ending-2', file:'world/Echos_of_C_Minor_Take_2_Audio.mp3', gain:1}]}
+ ]},
+ {name:'Манхэттен', kind:'район', music:[
+  {name:'Ночные улицы', id:'manhattan-streets', mood:'calm', tracks:[
+   {title:'Immortality in the Rain', id:'manhattan-streets-1', file:'manhattan/Immortality_in_the_Rain_Audio.mp3', gain:.62},
+   {title:'Manhattan Solitude', id:'manhattan-streets-2', file:'manhattan/Manhattan_Solitude_Audio.mp3', gain:.68}]},
+  {name:'Охота', id:'manhattan-hunt', mood:'intrigue', tracks:[
+   {title:'Night Hunt in Manhattan', id:'manhattan-hunt-1', file:'manhattan/Night_Hunt_in_Manhattan_Audio.mp3', gain:.49},
+   {title:'The Beast Below', id:'manhattan-hunt-2', file:'manhattan/The_Beast_Below_Audio.mp3', gain:.5}]},
+  {name:'Схватка', id:'manhattan-fight', mood:'battle', tracks:[
+   {title:'Rooftop Pursuit', id:'manhattan-fight-1', file:'manhattan/Rooftop_Pursuit_Audio.mp3', gain:.6},
+   {title:'Manhattan Hunted', id:'manhattan-fight-2', file:'manhattan/Manhattan_Hunted_Audio.mp3', gain:.63}]}
+ ]},
+ {name:'Бруклин', kind:'район', music:[
+  {name:'Набережная', id:'brooklyn-shore', mood:'calm', tracks:[
+   {title:'Brooklyn Waterfront at Night', id:'brooklyn-shore-1', file:'brooklyn/Brooklyn_Waterfront_at_Night_Audio.mp3', gain:.63},
+   {title:'Brooklyn Waterfront at Night · дубль 2', id:'brooklyn-shore-2', file:'brooklyn/Brooklyn_Waterfront_at_Night_Take_2_Audio.mp3', gain:.63}]},
+  {name:'Охота', id:'brooklyn-hunt', mood:'intrigue', tracks:[
+   {title:'Stalking the Industrial Waterfront', id:'brooklyn-hunt-1', file:'brooklyn/Stalking_the_Industrial_Waterfront_Audio.mp3', gain:.49},
+   {title:'Stalking the Industrial Waterfront · дубль 2', id:'brooklyn-hunt-2', file:'brooklyn/Stalking_the_Industrial_Waterfront_Take_2_Audio.mp3', gain:.65}]},
+  {name:'Схватка', id:'brooklyn-fight', mood:'battle', tracks:[
+   {title:'Brooklyn Alley Brawl', id:'brooklyn-fight-1', file:'brooklyn/Brooklyn_Alley_Brawl_Audio.mp3', gain:.8},
+   {title:'Brooklyn Alley Brawl · дубль 2', id:'brooklyn-fight-2', file:'brooklyn/Brooklyn_Alley_Brawl_Take_2_Audio.mp3', gain:.54}]}
+ ]}
+];

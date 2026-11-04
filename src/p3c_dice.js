@@ -290,7 +290,6 @@ function initDock(){
     if(b.dataset.dkadd)DKT[b.dataset.dkadd].push('');else DKT[b.dataset.dkdel].splice(+b.dataset.i,1);
     dkTraitsHtml();dkMode();dkFit();});
   dkHun.addEventListener('change',function(){var k=dkPc.value;if(k){var st=trkGet(k);st.hunger=Math.max(0,Math.min(5,+dkHun.value||0));trkSet(k,st);}dkMode();});
-  document.getElementById('dkFab').addEventListener('click',openDock);
   document.getElementById('dkClose').addEventListener('click',closeDock);
   document.getElementById('dkBack').addEventListener('click',closeDock);
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.body.classList.contains('dk-open'))closeDock();});

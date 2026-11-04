@@ -236,7 +236,7 @@ function dispatch(){
 function route(){var r=dispatch();if(r==='top')window.scrollTo(0,0);activateRolls(app);}
 window.addEventListener('hashchange',route);
 bootAuth(function(){
-  initDock();
+  initDock();initMusic();
   initSearch();
   initSession();
   startCoterieSync();

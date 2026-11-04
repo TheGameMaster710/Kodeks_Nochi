@@ -3,8 +3,8 @@ cd /home/claude/v5
 if grep -q "gm:true" data.js; then echo "ОШИБКА: gm:true в data.js — перенеси в p2_gm.js"; exit 1; fi
 V=$(sed -n 's/.*<meta name="version" content="v\([0-9.]*\)".*/\1/p' p1_head.html)
 # Сайт = три файла рядом: index.html (страница и код), style.css (оформление), data.js (тексты хроники)
-cat p1_style.css p3k_design.css p3z_util.css > style.css
-{ cat p1_head.html p2_body.html p3a_core.js p3b_pages.js p3c_dice.js p3d_tools.js p3f_auth.js p3g_pcsync.js p3h_coterie.js p3i_gm.js p3j_sheet.js p3k_design.js p3e_home.js; } \
+cat p1_style.css p3k_design.css p3z_util.css p3l_music.css > style.css
+{ cat p1_head.html p2_body.html p3a_core.js p3b_pages.js p3c_dice.js p3d_tools.js p3f_auth.js p3g_pcsync.js p3h_coterie.js p3i_gm.js p3j_sheet.js p3k_design.js p3l_music.js p3e_home.js; } \
   | sed "s|href=\"style.css\"|href=\"style.css?v=$V\"|; s|src=\"data.js\"|src=\"data.js?v=$V\"|" > index.html
 # kodeks-nochi.html — тот же сайт одним файлом (офлайн, проверки, тесты, предпросмотр)
 python3 -c "
