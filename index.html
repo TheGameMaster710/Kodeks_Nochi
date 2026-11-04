@@ -3005,14 +3005,18 @@ window.RD_TEST={TH:TH,applyTheme:applyTheme,decorate:decorate,wipeTo:wipeTo};
 var MUSIC_BASE='https://kodeks-nochi-audio.vladpod1825.workers.dev/'; /* Cloudflare, статические файлы; пути треков — папка/файл */
 var MUSIC_EMBED=null; /* {trackId:'data:audio/mpeg;base64,…'} — музыка внутри офлайн-файла для телефона */
 var MP_MOODS={calm:'спокойная',intrigue:'интрига',battle:'боевая'};
+/* цвет заметки в проигрывателе — её собственный (как на её странице), а не активной страницы */
+var MP_NOTE_COLOR={'place/eden':'#FF2A4F'};
+var MP_WORLD_COLOR={'Мир':'#D8B97A','Манхэттен':'#E8A33C','Бруклин':'#5C86C0'};
+function mpColor(c,x){var k=c.route+'/'+x.id;return MP_NOTE_COLOR[k]||c.c||'#C9A45C';}
 var MP={XF:5, a:[], cur:0, mode:null, cat:null, i:0, vol:.8, fading:false, t0:0, out:0,
   blob:{}, miss:{}, dur:{}, on:false, prev:null, pvRoute:null, saved:[]};
 
 /* ── библиотека: все заметки с полем music ── */
 function mpLib(){var L=[];
-  if(typeof WORLD_MUSIC!=='undefined')WORLD_MUSIC.forEach(function(w){L.push({x:w,href:'',name:w.name,kind:w.kind||'мир',cats:w.music,world:true});});
+  if(typeof WORLD_MUSIC!=='undefined')WORLD_MUSIC.forEach(function(w){L.push({x:w,href:'',name:w.name,kind:w.kind||'мир',cats:w.music,world:true,color:MP_WORLD_COLOR[w.name]||'#C9A45C'});});
   CATS.forEach(function(c){(c.arr||[]).forEach(function(x){
-  if(x.music&&x.music.length)L.push({x:x,href:'#/'+c.route+'/'+x.id,name:x.name,kind:c.one,cats:x.music});});});return L;}
+  if(x.music&&x.music.length)L.push({x:x,href:'#/'+c.route+'/'+x.id,name:x.name,kind:c.one,cats:x.music,color:mpColor(c,x)});});});return L;}
 function mpFindCat(id){var L=mpLib();for(var k=0;k<L.length;k++)for(var c=0;c<L[k].cats.length;c++)
   if(L[k].cats[c].id===id)return {lib:L[k],cat:L[k].cats[c]};return null;}
 function mpFind(tid){var L=mpLib();for(var k=0;k<L.length;k++)for(var c=0;c<L[k].cats.length;c++){var C=L[k].cats[c];
@@ -3101,17 +3105,17 @@ function mpList(){var box=document.getElementById('mpList'),all=mpLib().filter(f
   W=all.filter(function(l){return l.world;}),N=all.filter(function(l){return !l.world;});
   var cur=MP.mode?MP.a[MP.cur]._t:null,h='';
   function loc(l){var cs=l.cats.filter(function(c){return mpIsSaved(c.id);}),r='';
-    r+='<section class="mp-loc"><div class="mp-lochead">'+(l.world?'<b>'+esc(l.name)+'</b>':'<a href="'+l.href+'" data-mpgo>'+esc(l.name)+'</a>')
+    r+='<section class="mp-loc" style="--lc:'+l.color+'"><div class="mp-lochead">'+(l.world?'<b>'+esc(l.name)+'</b>':'<a href="'+l.href+'" data-mpgo>'+esc(l.name)+'</a>')
       +'<span>'+esc(l.kind)+(l.world?'':' · '+cs.length+' из '+l.cats.length)+'</span>'
-      +(l.world?'':'<button class="dk-x" type="button" data-mpdel="'+cs.map(function(c){return c.id;}).join(',')+'" title="Убрать всю заметку из проигрывателя" aria-label="Убрать заметку">✕</button>')+'</div>';
+      +(l.world?'':'<button class="dk-x" type="button" data-mpdel="'+cs.map(function(c){return c.id;}).join(',')+'" title="Убрать всю заметку из проигрывателя" aria-label="Убрать заметку">✕</button>')+'</div><div class="mp-cats">';
     cs.forEach(function(c){var catOn=MP.mode==='cat'&&MP.cat===c;
-      r+='<section class="mp-catbox'+(catOn?' on':'')+'"><div class="mp-cathead"><b>'+esc(c.name)+'</b><span>'+esc(MP_MOODS[c.mood]||'')+'</span>'
+      r+='<section class="mp-catbox mood-'+esc(c.mood||'calm')+(catOn?' on':'')+'"><div class="mp-cathead"><b>'+esc(c.name)+'</b><span>'+esc(MP_MOODS[c.mood]||'')+'</span>'
         +'<button class="mini'+(catOn?' pri':'')+'" type="button" data-mpcat="'+c.id+'">'+(catOn?(MP.on?'⇄ Играет':'⇄ Пауза'):'⇄ Категория')+'</button>'
         +(l.world?'':'<button class="dk-x" type="button" data-mpdel="'+c.id+'" title="Убрать категорию из проигрывателя" aria-label="Убрать категорию">✕</button>')+'</div><ol>';
       c.tracks.forEach(function(t){var lp=cur===t&&MP.mode==='track';
         r+=mpTrackRow(t,'<button class="mini'+(lp?' pri':'')+'" type="button" data-mptrack="'+t.id+'">'+(lp?(MP.on?'↻ Играет':'↻ Пауза'):'↻ Трек')+'</button>');});
       r+='</ol></section>';});
-    return r+'</section>';}
+    return r+'</div></section>';}
   if(W.length){h+='<h3 class="mp-grp">Мир и районы</h3>';W.forEach(function(l){h+=loc(l);});}
   h+='<h3 class="mp-grp">Из заметок</h3>';
   if(!N.length)h+='<div class="mp-empty"><b>Из заметок пока ничего не сохранено</b>Открой заметку с музыкой, например «<a href="#/place/eden" data-mpgo>Эден</a>», и сохрани категорию или всю заметку целиком.</div>';

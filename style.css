@@ -1220,3 +1220,26 @@ body.mp-open .dock.mp-dock,body.mp-open .mp-backdrop{display:block}
   cursor:pointer;font-size:11px;line-height:1;display:grid;place-items:center}
 .mn-play:hover,.mn-cat li.on .mn-play{background:var(--mc,var(--acc));color:#0B0407}
 .mn-cat>.mini{align-self:flex-start}
+
+/* ── шире и с цветными границами (v2.15): окно проигрывателя; заметка — её цветом, категория — цветом настроения ── */
+.dock.mp-dock{width:min(1040px,calc(100vw - 32px))}
+.mp-loc{--lc:var(--acc);margin-top:16px;padding:14px 16px 16px;border:1px solid color-mix(in srgb,var(--lc) 55%,transparent);
+  border-left:6px solid var(--lc);border-radius:var(--r);background:color-mix(in srgb,var(--lc) 7%,transparent)}
+.mp-lochead{padding:0 0 10px;margin-bottom:12px;border-bottom:1px solid color-mix(in srgb,var(--lc) 40%,transparent)}
+.mp-lochead a,.mp-lochead b{color:var(--lc)}
+.mp-lochead a{border-bottom-color:color-mix(in srgb,var(--lc) 50%,transparent)}
+.mp-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.mp-loc .mp-catbox{--mc:var(--lc);margin-top:0;border:1px solid color-mix(in srgb,var(--mc) 55%,transparent);
+  border-top:4px solid var(--mc);background:rgba(0,0,0,.28)}
+.mp-catbox.mood-calm{--mc:#7FB5A8}.mp-catbox.mood-intrigue{--mc:#D4AF37}.mp-catbox.mood-battle{--mc:#E0142F}
+.mp-loc .mp-catbox.on{border-color:var(--mc);box-shadow:0 0 0 1px var(--mc),0 8px 24px -12px var(--mc)}
+.mp-loc .mp-cathead{border-bottom:1px solid color-mix(in srgb,var(--mc) 40%,transparent)}
+.mp-cathead b{color:var(--ink)}
+.mp-cathead span{color:var(--mc)}
+.mp-loc .mp-catbox ol{display:flex;flex-direction:column;gap:6px;padding:10px}
+.mp-loc .mp-catbox li{padding:8px 10px;border:1px solid color-mix(in srgb,var(--mc) 30%,transparent);border-radius:var(--r);background:rgba(255,255,255,.03)}
+.mp-loc .mp-catbox li.on{border-color:var(--mc);background:color-mix(in srgb,var(--mc) 18%,transparent)}
+.mp-grp{padding-bottom:6px;border-bottom:1px solid var(--line)}
+@media (max-width:560px){.mp-loc{padding:10px;border-left-width:5px}.mp-cats{grid-template-columns:1fr}}
+.mp-cathead .mini,.mp-cathead .dk-x{flex:none;white-space:nowrap}
+.mp-cathead b{min-width:0}
