@@ -24,9 +24,9 @@ TH_('reading','dark','Cormorant Garamond',{sc:'none',en:'gilt',wp:'leaves'});
 var FAMILY={person:'dossier',player:'dossier',threat:'dossier',lore:'chronicle',item:'vitrine',place:'city',domain:'city',
   clan:'heraldry',sect:'heraldry',merit:'reference',disc:'reference',ritual:'reference',predator:'reference'};
 var ACCENT={'place/eden':'eden','predator/stray-cat':'alley','predator/bagger':'ward','place/library':'reading','item/seymour-painting':'gallery','item/payne-diary':'grimoire','sect/anarchs':'riot'};
-var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'},'person/van-hart':{sc:'lamp',wp:'casefile'},'lore/great-fire':{sc:'ashfall',wp:'smoke',en:'burn',fx:'ash'},'merit/ash-child':{sc:'candles',wp:'candles',en:'smoke',fx:'ashlite'},'clan/gangrel':{en:'claw'},'merit/fire-brand':{sc:'glowsnow',wp:'ice',en:'freeze',fx:'ash'}};
-var GLYPH={'ash-child':'bowl','van-hart':'rose','sparrow-ring':'sparrow','seymour-painting':'frame','payne-diary':'book',tremere:'tremere',brujah:'brujah',nosferatu:'bat',camarilla:'rose',anarchs:'fist',gangrel:'eagle'};
-var CREST={tremere:'#9B4DD6',brujah:'#D7263D',nosferatu:'#7E9B5A',camarilla:'#C9A44C',gangrel:'#8C6A3F'};
+var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'},'person/van-hart':{sc:'lamp',wp:'casefile'},'lore/great-fire':{sc:'ashfall',wp:'smoke',en:'burn',fx:'ash'},'merit/ash-child':{sc:'candles',wp:'candles',en:'smoke',fx:'ashlite'},'clan/gangrel':{en:'claw'},'clan/malkavian':{en:'shake'},'merit/fire-brand':{sc:'glowsnow',wp:'ice',en:'freeze',fx:'ash'}};
+var GLYPH={'ash-child':'bowl','van-hart':'rose','sparrow-ring':'sparrow','seymour-painting':'frame','payne-diary':'book',tremere:'tremere',brujah:'brujah',nosferatu:'bat',camarilla:'rose',anarchs:'fist',gangrel:'eagle',malkavian:'ball'};
+var CREST={tremere:'#9B4DD6',brujah:'#D7263D',nosferatu:'#7E9B5A',camarilla:'#C9A44C',gangrel:'#8C6A3F',malkavian:'#4FB3C8'};
 var TEST_ONLY=false;
 var TEST=[['','Титул','лента сцен'],['cat/people','Списки разделов','каталожный ящик'],['person/heinz','Личности','досье'],
   ['domain/brownsville','Домены и локации','уличный указатель'],['place/eden','Ключевая запись','личный акцент'],['lore/hecate-war','Лоршиты','летопись'],
@@ -68,6 +68,7 @@ var SCENES={
   'crest-brujah':function(){return SCENES.banners()+'<div class="fence"></div><div class="glow"></div>';},
   'crest-nosferatu':function(){return SCENES.banners()+'<div class="fog"></div>'+sil('tower','s-crest-nosferatu-1')+sil('greyhound','s-crest-nosferatu-2')+sil('greyhound','s-crest-nosferatu-3');},
   'crest-gangrel':function(){return SCENES.banners()+'<div class="moon"></div><div class="fog a"></div><div class="fog b"></div>';},
+  'crest-malkavian':function(){return SCENES.banners()+'<div class="ray"></div><div class="shard a"></div><div class="shard b"></div><div class="shard c"></div><div class="shard d"></div><div class="shard e"></div><div class="fog a"></div>';},
   'crest-camarilla':function(){return SCENES.banners()+sil('rose','s-crest-camarilla-1')+sil('rose','s-crest-camarilla-2')+sil('rose','s-crest-camarilla-3');},
   riot:function(){return '<div class="smoke a"></div><div class="smoke b"></div><div class="glow"></div>'+sil('crowd','s-riot-1');},
   moonbeam:function(){return '<div class="beam"></div><div class="glass"></div>';},
@@ -150,6 +151,7 @@ var ENTER={
   smoke:{kf:[{opacity:0,filter:'blur(10px)',transform:'translateY(-10px)',color:'#9A938C'},{opacity:.7,filter:'blur(4px)',transform:'translateY(-4px)',color:'#B9B2AA',offset:.5},{opacity:1,filter:'blur(0)',transform:'none'}],dur:1300,each:.05},
   freeze:{kf:[{opacity:0,color:'#FFD48A',textShadow:'0 0 18px rgba(255,130,40,.95)'},{opacity:1,color:'#FF9A3C',textShadow:'0 0 14px rgba(255,110,30,.9)',offset:.3},{opacity:1,color:'#CFE6F5',textShadow:'0 0 10px rgba(170,215,245,.85)',offset:.65},{opacity:1}],dur:1200,each:.05},
   claw:{kf:[{opacity:0,clipPath:'inset(0 100% 0 0)',transform:'skewX(-14deg) translateY(-6px)',color:'#F2E6CC',textShadow:'0 0 12px rgba(190,40,40,.85)'},{opacity:1,clipPath:'inset(0 0 0 0)',transform:'skewX(0) translateY(0)',color:'#F2E6CC',textShadow:'0 0 8px rgba(190,40,40,.6)',offset:.45},{opacity:1}],dur:520,each:.07},
+  shake:{kf:[{opacity:0,transform:'translate(-7px,4px)',color:'#CFEFF6',textShadow:'4px 0 rgba(79,179,200,.8),-4px 0 rgba(190,40,60,.55)'},{opacity:1,transform:'translate(5px,-3px)',color:'#CFEFF6',textShadow:'-3px 0 rgba(79,179,200,.7),3px 0 rgba(190,40,60,.45)',offset:.3},{opacity:1,transform:'translate(-3px,2px)',color:'#CFEFF6',textShadow:'2px 0 rgba(79,179,200,.55),-2px 0 rgba(190,40,60,.35)',offset:.6},{opacity:1,transform:'translate(1px,-1px)',offset:.85},{opacity:1,transform:'none'}],dur:640,each:.06},
   engrave:{kf:[{opacity:0,transform:'translateY(8px)',color:'#FFF6D8'},{opacity:1,transform:'translateY(0)',color:'#FFF6D8',offset:.5},{opacity:1}],dur:1000,each:.05}
 };
 function splitLetters(el){
