@@ -382,7 +382,7 @@ a.lrow:hover{border-color:var(--c,var(--acc));transform:translateX(4px)}
   background:transparent;cursor:pointer;transition:background .15s,color .15s}
 .dc-showmap:hover{background:var(--c,var(--acc));color:#0a0a0a}
 
-.web{position:relative;border:1px solid var(--line);border-radius:var(--r);background:rgba(0,0,0,.35);overflow:hidden;touch-action:none}
+.web{position:relative;border:1px solid var(--line);border-radius:var(--r);background:#0B0909;overflow:hidden;touch-action:none}
 .web svg{display:block;width:100%;height:min(70vh,640px);cursor:grab}
 .web svg:active{cursor:grabbing}
 .web.local{touch-action:pan-y}
