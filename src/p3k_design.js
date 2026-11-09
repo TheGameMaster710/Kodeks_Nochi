@@ -24,7 +24,7 @@ TH_('reading','dark','Cormorant Garamond',{sc:'none',en:'gilt',wp:'leaves'});
 var FAMILY={person:'dossier',player:'dossier',threat:'dossier',lore:'chronicle',item:'vitrine',place:'city',domain:'city',
   clan:'heraldry',sect:'heraldry',merit:'reference',disc:'reference',ritual:'reference',predator:'reference'};
 var ACCENT={'place/eden':'eden','predator/stray-cat':'alley','predator/bagger':'ward','place/library':'reading','item/seymour-painting':'gallery','item/payne-diary':'grimoire','sect/anarchs':'riot'};
-var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'},'person/van-hart':{sc:'lamp',wp:'casefile'},'lore/great-fire':{sc:'ashfall',wp:'smoke',en:'burn',fx:'ash'},'merit/ash-child':{sc:'candles',wp:'candles',en:'smoke',fx:'ashlite'},'clan/gangrel':{en:'claw'},'clan/malkavian':{en:'shake'},'merit/fire-brand':{sc:'glowsnow',wp:'ice',en:'freeze',fx:'ash'}};
+var OVR={'person/vasiliu':{sc:'moonbeam',wp:'shroud',en:'ink'},'person/van-hart':{sc:'lamp',wp:'casefile'},'lore/great-fire':{sc:'ashfall',wp:'smoke',en:'burn',fx:'ash'},'merit/ash-child':{sc:'candles',wp:'candles',en:'smoke',fx:'ashlite'},'clan/gangrel':{en:'claw'},'clan/malkavian':{en:'shake'},'person/shaw':{en:'shake'},'merit/fire-brand':{sc:'glowsnow',wp:'ice',en:'freeze',fx:'ash'}};
 var GLYPH={'ash-child':'bowl','van-hart':'rose','sparrow-ring':'sparrow','seymour-painting':'frame','payne-diary':'book',tremere:'tremere',brujah:'brujah',nosferatu:'bat',camarilla:'rose',anarchs:'fist',gangrel:'eagle',malkavian:'ball'};
 var CREST={tremere:'#9B4DD6',brujah:'#D7263D',nosferatu:'#7E9B5A',camarilla:'#C9A44C',gangrel:'#8C6A3F',malkavian:'#4FB3C8'};
 var TEST_ONLY=false;
@@ -954,32 +954,65 @@ GART.rose={b:'M50 58 C38 57 27 50 25.5 38 C24.5 30 28 23 33.5 19 C31.5 25 35.5 2
   p:'M67 41 C71 39 75 42 73 46 C71 49 67 47 67 41 Z'};
 
 
-/* Гангрел (v2.29): белоголовый орёл в полёте, крылья подняты, маховые перья веером;
-   белые голова и хвост — цветом чернил, глаз — цветом заливки */
-(function(){function F(v){return v.toFixed(1);}
- function wing(bf,bb,c1,c2,ts,te,a0,a1,lens,wf,cv){var d='M'+F(bf[0])+' '+F(bf[1])+' C'+F(c1[0])+' '+F(c1[1])+' '+F(c2[0])+' '+F(c2[1])+' '+F(ts[0])+' '+F(ts[1]),
-   n=lens.length,ex=te[0]-ts[0],ey=te[1]-ts[1],el=Math.hypot(ex,ey),ux=ex/el,uy=ey/el,ln=[],tips=[];
-   for(var k=0;k<n;k++){var t=(k+.5)/n,cx=ts[0]+ex*t,cy=ts[1]+ey*t,a=(a0+(a1-a0)*k/(n-1))*Math.PI/180,dx=Math.cos(a),dy=Math.sin(a),L=lens[k],
-     lx=cx-ux*wf/2,ly=cy-uy*wf/2,rx=cx+ux*wf/2,ry=cy+uy*wf/2,tx=cx+dx*L,ty=cy+dy*L;
-     d+=' L'+F(lx)+' '+F(ly)+' L'+F(lx+dx*L*.8)+' '+F(ly+dy*L*.8)+' Q'+F(tx)+' '+F(ty)+' '+F(rx+dx*L*.8)+' '+F(ry+dy*L*.8)+' L'+F(rx)+' '+F(ry);
-     tips.push([tx,ty]);ln.push('M'+F(cx-dx*6)+' '+F(cy-dy*6)+' L'+F(cx+dx*L*.82)+' '+F(cy+dy*L*.82));}
-   d+=' L'+F(te[0])+' '+F(te[1])+' C'+F(cv[0][0])+' '+F(cv[0][1])+' '+F(cv[1][0])+' '+F(cv[1][1])+' '+F(bb[0])+' '+F(bb[1])+' Z';
-   /* кроющие перья: две дуги поперёк крыла, «чешуя» на нижней */
-   [.42,.68].forEach(function(f,m){var p0=[bf[0]+(ts[0]-bf[0])*f,bf[1]+(ts[1]-bf[1])*f],p1=[bb[0]+(te[0]-bb[0])*f,bb[1]+(te[1]-bb[1])*f],
-     mx=(p0[0]+p1[0])/2,my=(p0[1]+p1[1])/2;var q='M'+F(p0[0])+' '+F(p0[1]);
-     if(m===0){for(var s2=1;s2<=5;s2++){var a2=s2/5,x2=p0[0]+(p1[0]-p0[0])*a2,y2=p0[1]+(p1[1]-p0[1])*a2,xm=p0[0]+(p1[0]-p0[0])*(a2-.1),ym=p0[1]+(p1[1]-p0[1])*(a2-.1);
-       q+=' Q'+F(xm+(-(p1[1]-p0[1]))*.06)+' '+F(ym+(p1[0]-p0[0])*.06)+' '+F(x2)+' '+F(y2);}}
-     else q+=' Q'+F(mx-(p1[1]-p0[1])*.12)+' '+F(my+(p1[0]-p0[0])*.12)+' '+F(p1[0])+' '+F(p1[1]);ln.push(q);});
-   return {d:d,l:ln};}
- var far=wing([47,53],[33,57],[45,40],[40,27],[33,17],[10,29],-100,-158,[13,15,15,14,11],4.2,[[16,40],[26,50]]),
-     near=wing([64,53],[50,55],[66,40],[68,26],[71,13],[46,9],-62,-112,[13,15,16,15,12],4.4,[[44,24],[46,42]]);
- var head='M66 52 C66 46 70 43 76 43 C80 43 83 45 85 48 C85 51 83 54 80 56 C76 58 71 58 68 57 C66 56 66 54 66 52 Z',
-     tail='M32 57 L13 54 L10 57 L12 59.5 L9 61.5 L12 63.5 L10 66.5 L14 67.5 L32 66 Z';
- GART.eagle={b:far.d+' '+near.d+' M30 56 C40 50 56 50 66 52 C72 53 74 58 72 62 C64 67 46 68 32 66 C28 64 27 59 30 56 Z '+
-   'M84 46.5 C88.5 46 92.5 48 93.5 51.5 C93.8 54.5 91.5 56 90 54 C89 52.8 87 53.8 84 55 Z M48 65 L50 73 L53.5 72.5 L55 65 Z '+head+' '+tail,
-  s:'M0 0 H45 L51 56 H0 Z M0 61 H100 V100 H0 Z',w:1.5,
-  l:far.l.concat(near.l,['M40 61 L44 58 L47 62 M48 58 L52 55 L55 59 M56 60 L60 57 L62 61','M49 73 L47.5 76.5 M51.5 73 L51.5 77 M53.5 72.5 L55.5 75.5','M85.5 52 C87.5 52.8 89.5 52.8 91.5 52']),
-  d:head+' '+tail,e:C_(78,48.6,1.2)+' M73.5 46.4 C76 45.6 79 45.8 81.5 46.8 L81 47.6 C78.5 46.9 76 46.8 73.8 47.3 Z M81 48 L84.5 49.2 L81 49.3 Z'};})();
+/* Гангрел (v2.29, перерисован): белоголовый орёл в парящем полёте, вид снизу — крылья раскинуты, голова в профиль.
+   Крыло = кроющие перья + ряд маховых пёрышко к пёрышку (первостепенные «пальцы» веером на конце, второстепенные
+   вдоль заднего края), у каждого пера стержень; хвост веером; голова, хвост и клюв цветом чернил, глаз, бровь,
+   разрез клюва и перья затылка — цветом заливки */
+(function(){function F(v){return (Math.round(v*10)/10).toString();}function P(x,y){return F(x)+' '+F(y);}
+ var B='',L=[],D='',E='';
+ function wing(sg){var X=function(x){return 50+sg*(x-50);};
+   var S=[X(55.5),40],Wr=[X(83),26],Sb=[X(55),58];
+   /* база маховых: от запястья вниз к телу; первые 5 — первостепенные */
+   var base=[[83,26],[86.2,29.4],[87.4,33.6],[87,38],[85.2,42.2],[82.4,45.8],[78.6,48.6],[74.6,50.8],[70.6,52.8],[66.6,54.6],[62.6,56],[58.6,57.2],[55,58]];
+   var ang=[-62,-42,-22,-3,16,42,56,64,70,75,80,85],len=[12.5,15,16,15.5,14,10.5,10,9.6,9.2,8.6,8,7.2],k;
+   /* кроющие: передний край от плеча к запястью, затем база маховых обратно к телу */
+   var cov='M'+P(S[0],S[1])+' C'+P(X(62),34.5)+' '+P(X(73),27.5)+' '+P(Wr[0],Wr[1]);
+   for(k=0;k<base.length;k++)cov+=' L'+P(X(base[k][0]),base[k][1]);cov+=' L'+P(Sb[0],Sb[1])+' Z';B+=cov+' ';
+   for(k=0;k<base.length-1;k++){var a=ang[k]*Math.PI/180,dx=sg*Math.cos(a),dy=Math.sin(a),l=len[k],
+       b0=[X(base[k][0]),base[k][1]],b1=[X(base[k+1][0]),base[k+1][1]],prim=k<5,
+       w=Math.hypot(b1[0]-b0[0],b1[1]-b0[1]),nx=-dy*sg,ny=dx*sg,
+       m=[(b0[0]+b1[0])/2,(b0[1]+b1[1])/2],t=[m[0]+dx*l,m[1]+dy*l],
+       nar=prim?1:.95,
+       s0=[m[0]+(b0[0]-m[0])*nar+dx*l*.78,m[1]+(b0[1]-m[1])*nar+dy*l*.78],s1=[m[0]+(b1[0]-m[0])*nar+dx*l*.78,m[1]+(b1[1]-m[1])*nar+dy*l*.78];
+     B+='M'+P(b0[0],b0[1])+' C'+P(b0[0]+dx*l*.4,b0[1]+dy*l*.4)+' '+P(s0[0]-dx*l*.15,s0[1]-dy*l*.15)+' '+P(s0[0],s0[1])+
+        ' C'+P(s0[0]+dx*l*.14,s0[1]+dy*l*.14)+' '+P(t[0]+(s0[0]-m[0]-dx*l*.78)*.55,t[1]+(s0[1]-m[1]-dy*l*.78)*.55)+' '+P(t[0],t[1])+
+        ' C'+P(t[0]+(s1[0]-m[0]-dx*l*.78)*.55,t[1]+(s1[1]-m[1]-dy*l*.78)*.55)+' '+P(s1[0]+dx*l*.14,s1[1]+dy*l*.14)+' '+P(s1[0],s1[1])+
+        ' C'+P(s1[0]-dx*l*.15,s1[1]-dy*l*.15)+' '+P(b1[0]+dx*l*.4,b1[1]+dy*l*.4)+' '+P(b1[0],b1[1])+' Z ';
+     /* стержень и бородки */
+     L.push({d:'M'+P(m[0]-dx*1.5,m[1]-dy*1.5)+' L'+P(m[0]+dx*l*.86,m[1]+dy*l*.86),w:.7});
+     if(prim)L.push({d:'M'+P(m[0]+dx*l*.3+(b0[0]-m[0])*.5,m[1]+dy*l*.3+(b0[1]-m[1])*.5)+' L'+P(m[0]+dx*l*.55,m[1]+dy*l*.55)+' M'+P(m[0]+dx*l*.45+(b0[0]-m[0])*.45,m[1]+dy*l*.45+(b0[1]-m[1])*.45)+' L'+P(m[0]+dx*l*.7,m[1]+dy*l*.7),w:.5,o:.7});}
+   /* ряды кроющих: чешуя полукругами, параллельно базе маховых */
+   [.3,.58].forEach(function(f,r){var d='';for(var q=r;q<base.length-1;q+=1){var bx=X(base[q][0]),by=base[q][1],bx2=X(base[q+1][0]),by2=base[q+1][1],
+       cx=bx+(S[0]-bx)*f*(1-q/base.length*.5),cy=by+(S[1]-by)*f*(1-q/base.length*.5)+(r?-1:0),cx2=bx2+(S[0]-bx2)*f*(1-(q+1)/base.length*.5),cy2=by2+(S[1]-by2)*f*(1-(q+1)/base.length*.5)+(r?-1:0);
+       var mx=(cx+cx2)/2-(by2-by)*.35*sg,my=(cy+cy2)/2+(bx2-bx)*.35*sg;
+       d+=(q===r?'M'+P(cx,cy):'')+' Q'+P(mx,my)+' '+P(cx2,cy2);}L.push({d:d,w:.75});});
+   /* перо-крылышко у запястья и линия переднего края */
+   L.push({d:'M'+P(X(58),40.5)+' C'+P(X(64),36)+' '+P(X(73),30)+' '+P(X(81),27.4),w:.7,o:.8});
+ }
+ wing(1);wing(-1);
+ /* тело и «штаны» */
+ B+='M43.5 40 C42.5 35.5 46 33 50 33 C54 33 57.5 35.5 56.5 40 C59.5 48 59.5 58 56 65 C54 68.5 46 68.5 44 65 C40.5 58 40.5 48 43.5 40 Z ';
+ B+='M44.4 58 C40.6 62 39.8 67 41.2 70.6 L44.6 70.4 L46.6 63 Z M55.6 58 C59.4 62 60.2 67 58.8 70.6 L55.4 70.4 L53.4 63 Z ';
+ for(var r=0;r<6;r++){var y=40+r*4.2,n=r%2?4:5,d='';for(var c=0;c<n;c++){var x=50+(c-(n-1)/2)*3.1;d+=' M'+P(x-1.5,y)+' Q'+P(x,y+2.6)+' '+P(x+1.5,y);}L.push({d:d,w:.6,o:.8});}
+ L.push({d:'M42.4 63 L41.6 67 M44 62.5 L43.4 68 M45.4 63 L45 67.6 M57.6 63 L58.4 67 M56 62.5 L56.6 68 M54.6 63 L55 67.6',w:.55,o:.7});
+ /* хвост веером (светлый), когти (светлые) */
+ var tail='';for(var t=0;t<7;t++){var a=(90-(t-3)*11)*Math.PI/180,bx=44+t*2,by=65.5,ln=21-Math.abs(t-3)*1.5,tx=bx+Math.cos(a)*ln,ty=by+Math.sin(a)*ln,
+   px=-Math.sin(a),py=Math.cos(a);
+   tail+='M'+P(bx-1.2,by)+' L'+P(tx+px*2.5-Math.cos(a)*1.6,ty+py*2.5-Math.sin(a)*1.6)+' C'+P(tx+px*2.4+Math.cos(a)*.6,ty+py*2.4+Math.sin(a)*.6)+' '+P(tx-px*2.4+Math.cos(a)*.6,ty-py*2.4+Math.sin(a)*.6)+' '+P(tx-px*2.5-Math.cos(a)*1.6,ty-py*2.5-Math.sin(a)*1.6)+' L'+P(bx+1.2,by)+' Z ';
+   if(t>0){var a2=a+.096,sx=bx-1+Math.cos(a2)*6,sy=by+Math.sin(a2)*6,ex=bx-1+Math.cos(a2)*(ln-1.8),ey=by+Math.sin(a2)*(ln-1.8);E+='M'+P(sx-.18,sy)+' L'+P(ex-.18,ey)+' L'+P(ex+.18,ey)+' L'+P(sx+.18,sy)+' Z ';}}
+ B+=tail;D+=tail;
+ var claws='';[[42.2,70.2,-1],[57.8,70.2,1]].forEach(function(f){[-1,0,1].forEach(function(q){var x=f[0]+q*1.5,y=f[1],bx=x+q*1.4,by=y+5.2;
+   claws+='M'+P(x-.55,y)+' L'+P(bx-.5,by-1.2)+' C'+P(bx-.4,by+.6)+' '+P(bx+1.1,by+.8)+' '+P(bx+1.5,by-.4)+' C'+P(bx+.6,by)+' '+P(bx+.5,by-.8)+' '+P(bx+.55,by-1.4)+' L'+P(x+.55,y)+' Z ';});});
+ E+=claws;
+ /* голова в профиль: белая, с рваной кромкой перьев на шее; клюв крюком */
+ var head='M44.6 33 C43.6 26 46.6 20 52.6 19 C56.6 18.4 60.6 20 62.1 23 C63.1 25.5 62.1 28.5 59.6 30 L57.2 31.6 L58.4 33.6 L55.8 33.4 L56.4 35.8 L53.6 34.8 L52.6 37.2 L50.8 35 L48.8 37 L48.2 34.4 L45.6 35.6 L46.2 33.4 Z',
+     beak='M61.2 21 C65.6 20.4 69.6 22.4 70.8 26 C71.4 29.2 69.4 31 67.7 29.3 C66.9 28.2 65.6 28.7 63.4 30 C62.4 27.2 61.8 24.4 61.2 21 Z';
+ B+=head+' '+beak;D+=' '+head+' '+beak;
+ E+=C_(56.4,23.6,1.3)+' M52.8 21.4 C55.4 20.2 58.6 20.4 61.2 21.8 L60.8 22.8 C58.3 21.7 55.6 21.6 53.1 22.5 Z'+
+   ' M63.5 27.6 C65.4 27 67.1 27.3 68.8 28.1 L68.6 28.8 C67 28.1 65.4 27.9 63.7 28.4 Z M65.6 23.6 C66.4 23.1 67.3 23.2 67.9 23.7 L67.6 24.2 C67 23.9 66.4 23.9 65.8 24.1 Z'+
+   ' M47.4 26 L49.6 25 L48.2 26.7 Z M46.8 29.4 L49 28.6 L47.6 30.2 Z M50.4 30.6 L52.4 29.6 L51.2 31.4 Z';
+ GART.eagle={b:B,s:'M0 47 H100 V100 H0 Z M50 0 H100 V47 H50 Z',l:L,w:1.25,hs:2.6,d:D,e:E};
+})();
 
 /* широкие гравюры фонов: viewBox своей формы */
 function ART_W(vb,par,o){o.vb=vb;o.par=par;return o;}
